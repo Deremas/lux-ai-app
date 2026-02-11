@@ -20,6 +20,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+      DATABASE_URL: ${DATABASE_URL}
     container_name: luxapp-web
     restart: unless-stopped
     env_file:
