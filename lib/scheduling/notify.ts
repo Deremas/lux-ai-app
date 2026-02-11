@@ -85,18 +85,16 @@ function buildGoogleCalendarUrl(args: {
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
-function normalizeRecipients(primary: string | null, notifyEmails: string[] | null) {
+function getScheduleAdminRecipients() {
+  return (
+    process.env.SCHEDULE_ADMIN_EMAILS?.split(",").map((email) => email.trim()) ?? []
+  ).filter(Boolean);
+}
+
+function normalizeRecipients(primary: string | null) {
   const recipients = new Set<string>();
   if (typeof primary === "string" && primary.trim()) recipients.add(primary.trim());
-  if (typeof process.env.CONTACT_TO_EMAIL === "string" && process.env.CONTACT_TO_EMAIL.trim()) {
-    recipients.add(process.env.CONTACT_TO_EMAIL.trim());
-  }
-  if (Array.isArray(notifyEmails)) {
-    notifyEmails
-      .map((item) => item.trim())
-      .filter(Boolean)
-      .forEach((email) => recipients.add(email));
-  }
+  getScheduleAdminRecipients().forEach((email) => recipients.add(email));
   return Array.from(recipients);
 }
 
@@ -494,10 +492,7 @@ export async function sendBookingEmails(params: { appointmentId: string }) {
           })
         )?.email ?? null
       : null;
-    const staffRecipients = normalizeRecipients(
-      staffEmail,
-      Array.isArray(ctx.notifyEmails) ? ctx.notifyEmails : null
-    );
+    const staffRecipients = normalizeRecipients(staffEmail);
     stage = "prepare-times";
     const startIso = toIsoUtc(ctx.startAtUtc);
     const endIso = toIsoUtc(ctx.endAtUtc);
@@ -781,10 +776,7 @@ export async function sendStatusEmails(params: {
           })
         )?.email ?? null
       : null;
-    const staffRecipients = normalizeRecipients(
-      staffEmail,
-      Array.isArray(ctx.notifyEmails) ? ctx.notifyEmails : null
-    );
+    const staffRecipients = normalizeRecipients(staffEmail);
     stage = "prepare-times";
     const startIso = toIsoUtc(ctx.startAtUtc);
     const endIso = toIsoUtc(ctx.endAtUtc);
@@ -1064,10 +1056,7 @@ export async function sendRescheduleRequestEmails(params: {
         })
       )?.email ?? null
     : null;
-  const staffRecipients = normalizeRecipients(
-    staffEmail,
-    Array.isArray(ctx.notifyEmails) ? ctx.notifyEmails : null
-  );
+  const staffRecipients = normalizeRecipients(staffEmail);
 
   if (staffRecipients.length === 0) {
     await logNotification({
@@ -1140,9 +1129,7 @@ export async function sendTestNotifications(params: {
     if (!settings.notifyEmailEnabled) {
       return { ok: false, error: "Email notifications are disabled" };
     }
-    const recipients = Array.isArray(settings.notifyEmails)
-      ? settings.notifyEmails
-      : [];
+    const recipients = getScheduleAdminRecipients();
     if (recipients.length === 0) {
       return { ok: false, error: "No email recipients configured" };
     }

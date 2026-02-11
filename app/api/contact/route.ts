@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
-import { render } from "@react-email/render";
-import ContactRequestEmail from "@/emails/contact/ContactRequestEmail";
 import {
   isBodyTooLarge,
   isValidEmail,
@@ -122,42 +120,41 @@ export async function POST(req: Request) {
       );
     }
 
-    const to = process.env.CONTACT_TO_EMAIL || "derejemasresha27@gmail.com";
-    const from = process.env.CONTACT_FROM_EMAIL || "onboarding@resend.dev";
+    const adminEmail = process.env.CONTACT_ADMIN_EMAIL;
+    const from = process.env.CONTACT_FROM_EMAIL;
 
-    const subject = `New contact request — ${name} (${company})`;
+    if (!adminEmail || !from) {
+      return NextResponse.json(
+        { ok: false, error: "Email not configured" },
+        { status: 500 }
+      );
+    }
 
-    const text =
-      `New contact request\n` +
-      `Name: ${name}\n\n` +
-      `Email: ${email}\n\n` +
-      `Phone: ${phoneE164}\n\n` +
-      `Country: ${phoneCountry}\n\n` +
-      `Company: ${company}\n\n` +
-      `Task:\n\n${taskDescription}\n`;
-
-    const html = render(
-      ContactRequestEmail({
-        name,
-        email,
-        phone: phoneE164,
-        country: phoneCountry,
-        company,
-        taskDescription,
-      })
-    );
-
-    const result = await resend.emails.send({
+    const adminResult = await resend.emails.send({
       from,
-      to,
-      replyTo: email,
-      subject,
-      text,
-      html,
+      to: adminEmail,
+      subject: "New Contact Submission",
+      html: `
+        <h2>New Contact Message</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Message:</strong> ${taskDescription}</p>
+      `,
+    });
+
+    await resend.emails.send({
+      from,
+      to: email,
+      subject: "We received your message",
+      html: `
+        <h2>Thank you for contacting Lux AI Automation</h2>
+        <p>Hi ${name},</p>
+        <p>We have received your message and will be in touch shortly.</p>
+      `,
     });
 
     return NextResponse.json(
-      { ok: true, id: result.data?.id },
+      { ok: true, id: adminResult.data?.id },
       { status: 200 }
     );
   } catch {
