@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1768477823303,
+      "tag": "0000_wakeful_nebula",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1768489857895,
+      "tag": "0001_glorious_demogoblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768502660000,
+      "tag": "0002_crazy_the_watchers",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1769065293777,
+      "tag": "0003_remarkable_talkback",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1769067222496,
+      "tag": "0004_skinny_lady_deathstrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1769537896662,
+      "tag": "0005_pink_bill_hollister",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1769539771880,
+      "tag": "0006_empty_speed_demon",
+      "breakpoints": true
+    }
+  ]
+}

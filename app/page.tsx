@@ -243,6 +243,127 @@ export default function Home() {
     [lang]
   );
 
+  const scheduling = useMemo(() => {
+    const copy: Record<
+      Lang,
+      {
+        eyebrow: string;
+        title: string;
+        subtitle: string;
+        cta: string;
+        bullets: string[];
+        cards: Array<{ title: string; desc: string }>;
+      }
+    > = {
+      en: {
+        eyebrow: "Scheduling",
+        title: "Sync calendars, match the right expert, balance demand.",
+        subtitle:
+          "Turn interest into confirmed meetings with smart availability, staff matching, and buffer-aware booking flows.",
+        cta: "View availability",
+        bullets: [
+          "Unified availability across staff calendars",
+          "Automatic buffers to prevent back-to-back overload",
+          "Role-aware approvals for higher value sessions",
+        ],
+        cards: [
+          {
+            title: "Sync",
+            desc: "Connect team calendars and expose real-time open slots.",
+          },
+          {
+            title: "Match",
+            desc: "Assign the best-fit specialist based on meeting type.",
+          },
+          {
+            title: "Balance",
+            desc: "Distribute bookings evenly with smart rules and buffers.",
+          },
+        ],
+      },
+      fr: {
+        eyebrow: "Planification",
+        title: "Synchronisez, associez les bons experts, équilibrez la demande.",
+        subtitle:
+          "Transformez l’intérêt en rendez-vous confirmés avec une disponibilité intelligente et des buffers automatiques.",
+        cta: "Voir les disponibilités",
+        bullets: [
+          "Disponibilités unifiées des équipes",
+          "Buffers automatiques pour éviter la surcharge",
+          "Approbations adaptées aux rendez-vous clés",
+        ],
+        cards: [
+          {
+            title: "Synchroniser",
+            desc: "Reliez les agendas et exposez les créneaux en temps réel.",
+          },
+          {
+            title: "Associer",
+            desc: "Attribuez le spécialiste idéal selon le type de réunion.",
+          },
+          {
+            title: "Équilibrer",
+            desc: "Répartissez les réservations avec des règles intelligentes.",
+          },
+        ],
+      },
+      de: {
+        eyebrow: "Terminplanung",
+        title: "Synchronisieren, passende Experten zuweisen, Nachfrage ausgleichen.",
+        subtitle:
+          "Machen Sie aus Interesse bestätigte Termine mit smarter Verfügbarkeit und Puffer-Regeln.",
+        cta: "Verfügbarkeit ansehen",
+        bullets: [
+          "Gemeinsame Verfügbarkeit im Team",
+          "Automatische Puffer gegen Überlastung",
+          "Freigaben für wertvolle Termine",
+        ],
+        cards: [
+          {
+            title: "Sync",
+            desc: "Kalender verbinden und freie Slots in Echtzeit zeigen.",
+          },
+          {
+            title: "Match",
+            desc: "Den passenden Spezialisten pro Meeting-Typ zuweisen.",
+          },
+          {
+            title: "Balance",
+            desc: "Buchungen mit Regeln und Puffern sauber verteilen.",
+          },
+        ],
+      },
+      lb: {
+        eyebrow: "Rendez-vous",
+        title: "Synchroniséiert, passt Experten, gläicht d’Nofro aus.",
+        subtitle:
+          "Maacht aus Interesse confirméiert Rendez-vous mat smarter Verfügbarkeet a Bufferen.",
+        cta: "Disponibilitéit kucken",
+        bullets: [
+          "Verfügbarkeet iwwer d’Team hinweg",
+          "Automatesch Bufferen géint Iwwerlaaschtung",
+          "Passend Geneemegunge fir wichteg Sessiounen",
+        ],
+        cards: [
+          {
+            title: "Sync",
+            desc: "Kalennere verbannen a fräi Slots live weisen.",
+          },
+          {
+            title: "Match",
+            desc: "De richtegen Expert fir all Meeting-Typ zouweisen.",
+          },
+          {
+            title: "Balance",
+            desc: "Buchungen intelligent verdeelen mat Buffer-Regelen.",
+          },
+        ],
+      },
+    };
+
+    return copy[lang];
+  }, [lang]);
+
   function knowingText(v: string) {
     return typeof v === "string" && v.trim().length > 0;
   }
@@ -777,6 +898,70 @@ export default function Home() {
               </div>
             </Link>
           </AnimatedSection>
+        </div>
+      </AnimatedSection>
+
+      {/* Scheduling Section */}
+      <AnimatedSection className="py-28 bg-[radial-gradient(circle_at_top,_#e0f2fe_0%,_#f8fafc_35%,_#ffffff_70%)] dark:bg-[radial-gradient(circle_at_top,_#1e293b_0%,_#0f172a_55%,_#0b1120_100%)]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-12 items-center">
+            <div className="space-y-6">
+              <span className="inline-flex items-center rounded-full border border-primary-200/60 bg-white/80 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-primary-600 shadow-sm backdrop-blur dark:border-slate-700/70 dark:bg-slate-900/70 dark:text-slate-200">
+                {scheduling.eyebrow}
+              </span>
+              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white leading-tight">
+                {scheduling.title}
+              </h2>
+              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl">
+                {scheduling.subtitle}
+              </p>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {scheduling.bullets.map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-start gap-3 rounded-2xl border border-white/70 bg-white/80 p-4 text-sm text-gray-700 shadow-[0_18px_30px_-24px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/70 dark:bg-slate-900/60 dark:text-gray-200"
+                  >
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-500/10 text-primary-600 dark:bg-slate-800 dark:text-slate-200">
+                      <i className="ri-check-line text-lg" />
+                    </span>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              <Link
+                href="/scheduling"
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary-600 via-blue-600 to-indigo-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+              >
+                {scheduling.cta}
+                <i className="ri-calendar-check-line text-lg" />
+              </Link>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
+              {scheduling.cards.map((card, index) => (
+                <motion.div
+                  key={card.title}
+                  className="rounded-2xl border border-white/70 bg-white/90 p-6 shadow-[0_20px_40px_-30px_rgba(15,23,42,0.5)] backdrop-blur dark:border-slate-700/70 dark:bg-slate-900/70"
+                  whileHover={{ y: -6 }}
+                  transition={{ duration: 0.2, delay: index * 0.05 }}
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-xl font-semibold text-gray-900 dark:text-white">
+                      {card.title}
+                    </p>
+                    <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">
+                      0{index + 1}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                    {card.desc}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
       </AnimatedSection>
 

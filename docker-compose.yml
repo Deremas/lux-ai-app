@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16
+    container_name: luxapp-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: luxdb
+      POSTGRES_USER: luxuser
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U luxuser -d luxdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [appnet]
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: luxapp-web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks: [appnet]
+
+volumes:
+  pgdata:
+
+networks:
+  appnet:

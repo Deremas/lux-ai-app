@@ -194,10 +194,15 @@ tailwind-test.html
 .turbo
 
 # Prisma
-prisma/migrations/
+# prisma/migrations/
 
 # Playwright
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+db\seed_appointments.ts
+db\seed_members.ts
+db\seed_staff_calendar.ts
+db\seed.ts

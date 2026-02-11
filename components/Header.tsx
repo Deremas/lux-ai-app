@@ -168,6 +168,7 @@ export default function Header() {
         about: "About",
         services: "Services",
         how: "How It Works",
+        schedule: "Schedule",
         contact: "Contact",
         started: "Get Started",
       },
@@ -176,6 +177,7 @@ export default function Header() {
         about: "À propos",
         services: "Services",
         how: "Comment ça marche",
+        schedule: "Planifier",
         contact: "Contact",
         started: "Démarrer",
       },
@@ -184,6 +186,7 @@ export default function Header() {
         about: "Über uns",
         services: "Leistungen",
         how: "So funktioniert’s",
+        schedule: "Termin",
         contact: "Kontakt",
         started: "Loslegen",
       },
@@ -192,6 +195,7 @@ export default function Header() {
         about: "Iwwer eis",
         services: "Servicer",
         how: "Wéi et funktionéiert",
+        schedule: "Rendez-vous",
         contact: "Kontakt",
         started: "Starten",
       },
@@ -206,6 +210,7 @@ export default function Header() {
       { name: T.about, href: "/about" },
       { name: T.services, href: "/services" },
       { name: T.how, href: "/how-it-works" },
+      { name: T.schedule, href: "/scheduling" },
       { name: T.contact, href: "/contact" },
     ],
     [T]
@@ -272,7 +277,7 @@ export default function Header() {
           backdropFilter: "blur(12px)",
         }}
       >
-        <div className="mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-7xl px-2 sm:px-4 lg:px-6">
           <div className="flex items-center justify-between h-16 w-full gap-2">
             <Link href="/" className="flex items-center gap-2 min-w-0">
               <span
@@ -303,7 +308,7 @@ export default function Header() {
             </Link>
 
             <nav className="hidden lg:flex flex-1 items-center justify-center min-w-0">
-              <div className="flex items-center gap-6 xl:gap-8 min-w-0">
+              <div className="flex items-center gap-4 xl:gap-6 min-w-0">
                 {navigation.map((item) => (
                   <Link
                     key={item.name}
@@ -497,5 +502,3 @@ export default function Header() {
     </>
   );
 }
-
-

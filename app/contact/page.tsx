@@ -10,8 +10,7 @@ import { useInView } from "react-intersection-observer";
 import { useLanguage } from "@/components/LanguageProvider";
 import { t } from "@/lib/site-copy";
 
-import { PhoneInput } from "react-international-phone";
-import "react-international-phone/style.css";
+import SearchablePhoneInput from "@/components/PhoneInputField";
 
 function AlertModal({
   open,
@@ -282,24 +281,18 @@ export default function ContactPage() {
                         {t(lang, "contact.form.phone")}
                       </label>
 
-                      <div className="rounded-lg border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 px-3 py-2">
-                        <PhoneInput
-                          defaultCountry="lu"
-                          value={formData.phone}
-                          onChange={(phone) =>
-                            setFormData((p) => ({ ...p, phone }))
-                          }
-                          inputClassName="w-full bg-transparent outline-none text-sm text-gray-900 dark:text-white py-2"
-                          countrySelectorStyleProps={{
-                            buttonClassName:
-                              "bg-transparent border-0 outline-none",
-                          }}
-                          placeholder={t(
-                            lang,
-                            "contact.form.placeholders.phone"
-                          )}
-                        />
-                      </div>
+                      <SearchablePhoneInput
+                        defaultCountry="lu"
+                        value={formData.phone}
+                        onChange={(phone) =>
+                          setFormData((p) => ({ ...p, phone }))
+                        }
+                        placeholder={t(lang, "contact.form.placeholders.phone")}
+                        containerClassName="rounded-lg border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 px-3 py-2"
+                        inputContainerClassName="border-0 shadow-none focus-within:ring-0"
+                        inputClassName="text-sm text-gray-900 dark:text-white"
+                        buttonClassName="text-gray-700 dark:text-gray-200"
+                      />
 
                       {errors.phone && (
                         <p className="mt-2 text-sm text-red-600">

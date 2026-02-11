@@ -196,9 +196,9 @@ export const copy: Record<Lang, DeepRecord> = {
       team: {
         molla: {
           name: "Molla Sisay Jemere",
-          role: "CEO & Founder · Full-Stack & AI Automation Strategist",
+          role: "Founder & CEO · Full-Stack & AI Automation Strategist · MuleSoft Certified Integration Professional",
           quote:
-            "Leads the company’s vision and strategy, focusing on simplifying complex business processes through intelligent automation and scalable AI-driven systems that improve efficiency and reduce operational bottlenecks.",
+            "Leads the company's vision and overall direction, focusing on simplifying complex business processes through intelligent automation, integrations, and scalable AI-driven systems.",
         },
         fikre: {
           name: "Fikremariam Mekonnen",
@@ -1037,9 +1037,9 @@ export const copy: Record<Lang, DeepRecord> = {
       team: {
         molla: {
           name: "Molla Sisay Jemere",
-          role: "Stratège en automatisation IA",
+          role: "Fondateur & CEO · Stratège Full-Stack & Automatisation IA · Professionnel Certifié d'Intégration MuleSoft",
           quote:
-            "J’aide les entreprises à simplifier des processus complexes et à concevoir des systèmes d’automatisation qui améliorent l’efficacité et réduisent les goulots d’étranglement.",
+            "Porte la vision et l'orientation générale de l'entreprise, en se concentrant sur la simplification des processus métiers complexes grâce à l'automatisation intelligente, aux intégrations et aux systèmes IA évolutifs.",
           tags: {
             tag1: "Automatisation des processus",
             tag2: "Conception de workflows",
@@ -1048,9 +1048,9 @@ export const copy: Record<Lang, DeepRecord> = {
         },
         fikre: {
           name: "Fikremariam Mekonnen",
-          role: "Ingénieur IA & intégrations",
+          role: "Co-Fondateur · Ingénieur Full-Stack, IA & Intégrations",
           quote:
-            "Je conçois des intégrations et des systèmes d’automatisation évolutifs, fiables et adaptés à des environnements métiers réels.",
+            "Spécialisé dans la conception et la construction d'intégrations système robustes et d'architectures d'automatisation qui fonctionnent de manière fiable dans des environnements métiers réels et s'adaptent à la croissance organisationnelle.",
           tags: {
             tag1: "Intégrations API",
             tag2: "Ingénierie d’automatisation",
@@ -1829,9 +1829,9 @@ export const copy: Record<Lang, DeepRecord> = {
       team: {
         molla: {
           name: "Molla Sisay Jemere",
-          role: "KI-Automation Strategist",
+          role: "Gründer & CEO · Full-Stack- & KI-Automatisierungsstratege · Zertifizierter MuleSoft-Integrationsprofi",
           quote:
-            "Ich helfe Unternehmen, komplexe Prozesse zu vereinfachen und Automationssysteme zu entwerfen, die Effizienz steigern und Engpässe reduzieren.",
+            "Verantwortet Vision und Gesamtrichtung des Unternehmens mit Fokus auf die Vereinfachung komplexer Geschäftsprozesse durch intelligente Automatisierung, Integrationen und skalierbare KI-gestützte Systeme.",
           tags: {
             tag1: "Prozessautomatisierung",
             tag2: "Workflow-Design",
@@ -1840,9 +1840,9 @@ export const copy: Record<Lang, DeepRecord> = {
         },
         fikre: {
           name: "Fikremariam Mekonnen",
-          role: "KI- & Integrationsingenieur",
+          role: "Mitgründer · Full-Stack-, KI- & Integrationsingenieur",
           quote:
-            "Ich entwickle skalierbare Integrationen und Automationssysteme, die in realen Business-Umgebungen zuverlässig funktionieren.",
+            "Spezialisiert auf die Entwicklung und den Aufbau robuster Systemintegrationen und Automatisierungsarchitekturen, die zuverlässig in realen Geschäftsumgebungen arbeiten und mit dem organisatorischen Wachstum skalieren.",
           tags: {
             tag1: "API-Integrationen",
             tag2: "Automation Engineering",
@@ -2614,9 +2614,9 @@ export const copy: Record<Lang, DeepRecord> = {
       team: {
         molla: {
           name: "Molla Sisay Jemere",
-          role: "KI-Automatiséierungs-Strateg",
+          role: "Grënner & CEO · Full-Stack & AI-Automatiséierungs-Strateg · MuleSoft Zertifizéierten Integratiounsprofessionnel",
           quote:
-            "Ech hëllefen Entreprisen, komplex Prozesser ze vereinfachen an Automatiséierungs-Systemer ze designen, déi d’Effizienz erhéijen an Engpäss reduzéieren.",
+            "Leet d'Visioun an d'Gesamtrichtung vun der Entreprise, mat Fokus op d'Vereinfachung vu komplexe Business-Prozesser duerch intelligent Automatisatioun, Integratiounen a skaléierbar AI-gedriwwe Systemer.",
           tags: {
             tag1: "Prozess-Automatiséierung",
             tag2: "Workflow-Design",
@@ -2625,9 +2625,9 @@ export const copy: Record<Lang, DeepRecord> = {
         },
         fikre: {
           name: "Fikremariam Mekonnen",
-          role: "KI & Integratiounen Engineer",
+          role: "Co-Grënner · Full-Stack, AI & Integratiounen Engineer",
           quote:
-            "Ech bauen skaléierbar Integratiounen an Automatiséierungs-Systemer, déi zouverlässeg am Business-Alldag funktionéieren.",
+            "Spezialiséiert op d'Design a Konstruktioun vu robust System-Integratiounen an Automatiséierungs-Architekturen, déi zouverlässeg a realen Business-Ëmfelder funktionéieren a mat organisatoreschem Wuesstum skaléieren.",
           tags: {
             tag1: "API-Integratiounen",
             tag2: "Automatiséierungs-Engineering",

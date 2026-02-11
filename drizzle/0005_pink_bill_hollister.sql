@@ -1,0 +1,1 @@
+ALTER TABLE "notification_log" ADD COLUMN "seen" boolean DEFAULT false NOT NULL;

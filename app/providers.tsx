@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import type { AppLanguage } from "@/lib/i18n";
@@ -13,9 +14,11 @@ export default function Providers({
   initialLang?: AppLanguage | string;
 }) {
   return (
-    <LanguageProvider initialLang={initialLang}>
-      <ThemeProvider>{children}</ThemeProvider>
-    </LanguageProvider>
+    <SessionProvider>
+      <LanguageProvider initialLang={initialLang}>
+        <ThemeProvider>{children}</ThemeProvider>
+      </LanguageProvider>
+    </SessionProvider>
   );
 }
 

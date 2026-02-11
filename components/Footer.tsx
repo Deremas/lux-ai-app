@@ -9,7 +9,7 @@ export default function Footer() {
   const { lang } = useLanguage();
 
   return (
-    <footer className="bg-primary-500 text-white ">
+    <footer className="bg-primary-500 text-white mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-7">
         <div
           className="

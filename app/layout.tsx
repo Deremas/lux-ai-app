@@ -6,6 +6,7 @@ import LenisProvider from "@/components/LenisProvider";
 import ScrollToTop from "@/components/ScrollToTop";
 import ChatWidget from "@/components/ChatWidget";
 import CookieConsent from "@/components/CookieConsent";
+import { Toaster } from "@/components/ui/sonner";
 
 import Providers from "./providers";
 import { cookies } from "next/headers";
@@ -114,6 +115,7 @@ export default function RootLayout({
         </LenisProvider>
 
         <CookieConsent />
+        <Toaster position="top-right" offset={80} />
 
         <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] flex flex-col gap-3">
           <ScrollToTop />

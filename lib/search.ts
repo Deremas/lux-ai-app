@@ -1,6 +1,5 @@
-import { cosineDistance, desc, gt, sql } from "drizzle-orm";
-import { db } from "./db-config";
-import { documents } from "./db-schema";
+import { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { generateEmbedding } from "./embeddings";
 
 export async function searchDocuments(
@@ -10,21 +9,19 @@ export async function searchDocuments(
 ) {
   const embedding = await generateEmbedding(query);
 
-  const similarity = sql<number>`1 - (${cosineDistance(
-    documents.embedding,
-    embedding
-  )})`;
+  const embeddingLiteral = `[${embedding.join(",")}]`;
+  const rows = await prisma.$queryRaw<
+    Array<{ id: string; content: string; similarity: number }>
+  >(Prisma.sql`
+    SELECT
+      id,
+      content,
+      1 - (embedding <=> ${embeddingLiteral}::vector) AS similarity
+    FROM documents
+    WHERE 1 - (embedding <=> ${embeddingLiteral}::vector) > ${threshold}
+    ORDER BY similarity DESC
+    LIMIT ${limit}
+  `);
 
-  const similarDocuments = await db
-    .select({
-      id: documents.id,
-      content: documents.content,
-      similarity,
-    })
-    .from(documents)
-    .where(gt(similarity, threshold))
-    .orderBy(desc(similarity))
-    .limit(limit);
-
-  return similarDocuments;
+  return rows;
 }

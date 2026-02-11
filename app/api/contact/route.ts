@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { render } from "@react-email/render";
+import ContactRequestEmail from "@/emails/contact/ContactRequestEmail";
+import {
+  isBodyTooLarge,
+  isValidEmail,
+  isValidMessage,
+  isValidName,
+  isValidCompany,
+} from "@/lib/validation";
+import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -10,21 +20,27 @@ function clean(v: unknown) {
   return String(v ?? "").trim();
 }
 
-function escapeHtml(input: string) {
-  return input
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
 function isEmailLike(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return isValidEmail(email);
 }
 
 export async function POST(req: Request) {
   try {
+    if (isBodyTooLarge(req, 8192)) {
+      return NextResponse.json(
+        { ok: false, error: "Request too large" },
+        { status: 413 }
+      );
+    }
+
+    const limit = await applyRateLimit(req, RATE_LIMIT_RULES.contact);
+    if (!limit.ok) {
+      return NextResponse.json(
+        { ok: false, error: "Too many requests. Please try again later." },
+        { status: 429, headers: limit.headers }
+      );
+    }
+
     const body = await req.json();
 
     // Honeypot: silently accept
@@ -61,9 +77,33 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!isValidName(name) || !isValidCompany(company)) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid input" },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidMessage(taskDescription, 10, 2000)) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid input" },
+        { status: 400 }
+      );
+    }
+
     // ✅ derive country from phone number
-    const phoneParsed = parsePhoneNumberFromString(phoneRaw);
+    const digitsOnly = phoneRaw.replace(/\D+/g, "");
+    const phoneParsed = parsePhoneNumberFromString(
+      phoneRaw,
+      phoneRaw.startsWith("+") ? undefined : "ET"
+    );
     if (!phoneParsed || !phoneParsed.isValid()) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid phone" },
+        { status: 400 }
+      );
+    }
+    if (digitsOnly.length < 8 || digitsOnly.length > 15) {
       return NextResponse.json(
         { ok: false, error: "Invalid phone" },
         { status: 400 }
@@ -96,22 +136,16 @@ export async function POST(req: Request) {
       `Company: ${company}\n\n` +
       `Task:\n\n${taskDescription}\n`;
 
-    const html = `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <h2>New contact request</h2>
-        <p><b>Name:</b> ${escapeHtml(name)}</p>
-        <p><b>Email:</b> <a href="mailto:${escapeHtml(email)}">${escapeHtml(
-      email
-    )}</a></p>
-        <p><b>Phone:</b> ${escapeHtml(phoneE164)}</p>
-        <p><b>Country:</b> ${escapeHtml(phoneCountry)}</p>
-        <p><b>Company:</b> ${escapeHtml(company)}</p>
-        <p><b>Task:</b></p>
-        <pre style="background:#f6f6f6;padding:12px;border-radius:8px;white-space:pre-wrap;">${escapeHtml(
-          taskDescription
-        )}</pre>
-      </div>
-    `;
+    const html = render(
+      ContactRequestEmail({
+        name,
+        email,
+        phone: phoneE164,
+        country: phoneCountry,
+        company,
+        taskDescription,
+      })
+    );
 
     const result = await resend.emails.send({
       from,

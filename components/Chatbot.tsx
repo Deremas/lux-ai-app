@@ -61,10 +61,10 @@ const UI: Record<
 
 /** ✅ Welcome text per language */
 const WELCOME_TEXT: Record<ChatLanguage, string> = {
-  en: "Hi! I’m your LuxAI automation assistant for Lux AI Consultancy & Automation. I can help with AI integration, automation, workflows, system integrations, and questions about our services. Feel free to ask.",
-  fr: "Bonjour ! Je suis votre assistant LuxAI en automatisation pour Lux AI Consultancy & Automation.Je peux vous aider concernant l’intégration de l’IA, l’automatisation, les workflows, les intégrations de systèmes et les questions sur nos services. N’hésitez pas à poser vos questions.",
-  de: "Hallo! Ich bin Ihr LuxAI-Automatisierungsassistent für Lux AI Consultancy & Automation. Ich unterstütze Sie bei KI-Integration, Automatisierung, Workflows, Systemintegrationen sowie bei Fragen zu unseren Services. Fragen Sie gerne.",
-  lb: "Moien! Ech sinn Ären LuxAI-Automatiséierungsassistent fir Lux AI Consultancy & Automation. Ech hëllefen Iech bei AI-Integratioun, Automatisatioun, Workflows, System-Integratiounen an Froen zu eise Servicer. Frot roueg.",
+  en: "Hi! I'm the LuxAI Assistant for Lux AI Consultancy & Automation. I'm here to provide information and explain anything about our company and services. I can help with AI integration, automation, workflows, system integrations, and questions about our services. How can I help you today?",
+  fr: "Bonjour ! Je suis l'assistant LuxAI pour Lux AI Consultancy & Automation. Je suis ici pour fournir des informations et expliquer tout ce qui concerne notre entreprise et nos services. Je peux vous aider concernant l'intégration de l'IA, l'automatisation, les workflows, les intégrations de systèmes et les questions sur nos services. Comment puis-je vous aider aujourd'hui ?",
+  de: "Hallo! Ich bin der LuxAI-Assistent für Lux AI Consultancy & Automation. Ich bin hier, um Informationen bereitzustellen und alles über unser Unternehmen und unsere Services zu erklären. Ich unterstütze Sie bei KI-Integration, Automatisierung, Workflows, Systemintegrationen sowie bei Fragen zu unseren Services. Wie kann ich Ihnen heute helfen?",
+  lb: "Moien! Ech sinn de LuxAI-Assistent fir Lux AI Consultancy & Automation. Ech sinn hei fir Informatiounen ze ginn an alles iwwer eis Entreprise an eis Servicer ze erklären. Ech hëllefen Iech bei AI-Integratioun, Automatisatioun, Workflows, System-Integratiounen an Froen zu eise Servicer. Wéi kann ech Iech haut hëllefen?",
 };
 
 /** build welcome message for a given language */
@@ -98,7 +98,7 @@ function toSafe(m: any): SafeMessage {
 
   return {
     id: String(
-      m?.id ?? globalThis.crypto?.randomUUID?.() ?? Date.now().toString()
+      m?.id ?? globalThis.crypto?.randomUUID?.() ?? Date.now().toString(),
     ),
     role,
     content,
@@ -152,7 +152,7 @@ export default function Chatbot() {
 
   const loading = useMemo(
     () => status === "submitted" || status === "streaming",
-    [status]
+    [status],
   );
 
   /**
@@ -301,7 +301,7 @@ export default function Chatbot() {
   const renderMessageText = (m: any) => {
     if (m?.parts && Array.isArray(m.parts)) {
       return m.parts.map((p: any, i: number) =>
-        p?.type === "text" ? <Fragment key={i}>{p.text}</Fragment> : null
+        p?.type === "text" ? <Fragment key={i}>{p.text}</Fragment> : null,
       );
     }
     return m?.content ?? "";

@@ -11,6 +11,8 @@ import {
 import { z } from "zod";
 import { searchDocuments } from "@/lib/search";
 import { buildKBContext } from "@/lib/kb-context"; // ✅ new
+import { isBodyTooLarge } from "@/lib/validation";
+import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -56,6 +58,18 @@ export type ChatMessage = UIMessage<never, UIDataTypes, ChatTools>;
 
 export async function POST(req: Request) {
   try {
+    if (isBodyTooLarge(req, 200_000)) {
+      return new Response("Request too large", { status: 413 });
+    }
+
+    const limit = await applyRateLimit(req, RATE_LIMIT_RULES.chat);
+    if (!limit.ok) {
+      return new Response("Too many requests. Please try again later.", {
+        status: 429,
+        headers: limit.headers,
+      });
+    }
+
     const body = (await req.json().catch(() => null)) as {
       messages?: ChatMessage[];
     } | null;
@@ -68,6 +82,9 @@ export async function POST(req: Request) {
     }
 
     const messages = body.messages;
+    if (messages.length > 50) {
+      return new Response("Too many messages", { status: 400 });
+    }
     const lang = getRequestedLanguage(messages);
 
     const kbSystem = buildKBContext(lang);

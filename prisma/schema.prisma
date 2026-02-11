@@ -1,0 +1,433 @@
+// prisma/schema.prisma
+//
+// Refined + safer defaults:
+// - Canonical identity is AppUser (all userId/staffUserId FKs point to AppUser.id).
+// - JSON fields stored as JSONB (not text).
+// - notifyEmails stored as Postgres text[] for validation + easy parsing.
+// - Removed risky unique(name); added optional unique handle instead.
+// - Added missing relations for integrity + easier querying.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DATABASE_MIGRATE_URL")
+}
+
+enum Locale {
+  en
+  fr
+  de
+  lb
+
+  @@map("locale")
+}
+
+enum AppointmentStatus {
+  pending
+  confirmed
+  declined
+  canceled
+  completed
+
+  @@map("appointment_status")
+}
+
+enum ApprovalPolicy {
+  AUTO_APPROVE
+  REQUIRES_APPROVAL
+
+  @@map("approval_policy")
+}
+
+enum PaymentPolicy {
+  FREE
+  PAY_BEFORE_CONFIRM
+  APPROVE_THEN_PAY
+
+  @@map("payment_policy")
+}
+
+enum PaymentStatus {
+  not_required
+  unpaid
+  paid
+
+  @@map("payment_status")
+}
+
+enum MeetingMode {
+  google_meet
+  zoom
+  phone
+  in_person
+
+  @@map("meeting_mode")
+}
+
+enum NotificationChannel {
+  email
+  whatsapp
+  calendar
+
+  @@map("notification_channel")
+}
+
+model AppUser {
+  id           String   @id @db.Uuid
+  email        String   @db.Text
+  name         String?  @db.Text
+  handle       String?  @db.Text
+  phone        String?  @db.Text
+  timezone     String?  @db.Text
+  passwordHash String   @map("password_hash") @db.Text
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  bookingProfile    BookingProfile?
+  orgMemberships    OrgMember[]
+  staffCalendars    StaffCalendar[]
+  blockedTimes      BlockedTime[]
+  appointments      Appointment[]   @relation("AppointmentUser")
+  staffAppointments Appointment[]   @relation("AppointmentStaff")
+  passwordResets    PasswordReset[]
+  auditLogsAsActor  AuditLog[]      @relation("AuditLogActor")
+
+  @@unique([email], map: "app_user_email_unique")
+  @@unique([handle], map: "app_user_handle_unique")
+  @@map("app_user")
+}
+
+model Org {
+  id        String   @id @db.Uuid
+  name      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  settings        OrgSettings?
+  secret          OrgSecret?
+  members         OrgMember[]
+  bookingProfiles BookingProfile[]
+  meetingTypes    MeetingType[]
+  staffCalendars  StaffCalendar[]
+  blockedTimes    BlockedTime[]
+  appointments    Appointment[]
+  auditLogs       AuditLog[]
+
+  @@map("org")
+}
+
+model OrgSettings {
+  id             String         @id @db.Uuid
+  orgId          String         @map("org_id") @db.Uuid
+  approvalPolicy ApprovalPolicy @default(REQUIRES_APPROVAL) @map("approval_policy")
+  paymentPolicy  PaymentPolicy  @default(FREE) @map("payment_policy")
+  defaultLocale  Locale         @default(en) @map("default_locale")
+  defaultTz      String         @default("Europe/Luxembourg") @map("default_tz") @db.Text
+
+  // Store as Postgres text[] for safety + parsing (instead of comma-separated text)
+  notifyEmails String[] @map("notify_emails") @db.Text
+  notifyWhatsapp String[] @map("notify_whatsapp") @db.Text
+  notifyEmailEnabled Boolean @default(true) @map("notify_email_enabled")
+  notifyWhatsappEnabled Boolean @default(false) @map("notify_whatsapp_enabled")
+  notifyCalendarEnabled Boolean @default(false) @map("notify_calendar_enabled")
+  allowedCurrencies String[] @map("allowed_currencies") @db.Text
+
+  // Store structured data as JSONB (instead of text JSON)
+  workingHours Json? @map("working_hours") @db.JsonB
+
+  // Default payment settings (optional)
+  defaultPaymentCents Int?    @map("default_payment_cents")
+  defaultCurrency     String? @map("default_currency") @db.Text
+  maxDailyBookings    Int     @default(5) @map("max_daily_bookings")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId], map: "org_settings_org_id_unique")
+  @@map("org_settings")
+}
+
+model OrgSecret {
+  id                     String   @id @db.Uuid
+  orgId                  String   @map("org_id") @db.Uuid
+  metaWhatsappTokenEnc   String?  @map("meta_whatsapp_token_enc") @db.Text
+  metaWhatsappPhoneIdEnc String?  @map("meta_whatsapp_phone_id_enc") @db.Text
+  twilioAccountSidEnc    String?  @map("twilio_account_sid_enc") @db.Text
+  twilioAuthTokenEnc     String?  @map("twilio_auth_token_enc") @db.Text
+  twilioWhatsappFromEnc  String?  @map("twilio_whatsapp_from_enc") @db.Text
+  telnyxApiKeyEnc        String?  @map("telnyx_api_key_enc") @db.Text
+  telnyxWhatsappFromEnc  String?  @map("telnyx_whatsapp_from_enc") @db.Text
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId], map: "org_secret_org_id_unique")
+  @@map("org_secret")
+}
+
+model OrgMember {
+  id        String   @id @db.Uuid
+  orgId     String   @map("org_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  role      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  org  Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, userId], map: "org_member_org_user_unique")
+  @@index([userId], map: "org_member_user_idx")
+  @@map("org_member")
+}
+
+model BookingProfile {
+  id          String  @id @db.Uuid
+  orgId       String? @map("org_id") @db.Uuid
+  userId      String  @map("user_id") @db.Uuid
+  fullName    String  @map("full_name") @db.Text
+  phone       String  @db.Text
+  company     String? @db.Text
+  companyRole String? @map("company_role") @db.Text
+  timezone    String  @db.Text
+
+  // Notes are user-provided; keep as text. Consider length limits at app-level.
+  notes     String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  org  Org?    @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId], map: "booking_profile_user_unique")
+  @@index([userId], map: "booking_profile_user_idx")
+  @@index([orgId], map: "booking_profile_org_idx")
+  @@map("booking_profile")
+}
+
+model PasswordReset {
+  id        String    @id @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  token     String    @db.Text
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(6)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token], map: "password_reset_token_unique")
+  @@index([userId], map: "password_reset_user_idx")
+  @@map("password_reset")
+}
+
+model EmailVerification {
+  id           String    @id @db.Uuid
+  email        String    @db.Text
+  name         String?   @db.Text
+  passwordHash String    @map("password_hash") @db.Text
+  token        String    @db.Text
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz(6)
+  usedAt       DateTime? @map("used_at") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([email], map: "email_verification_email_unique")
+  @@unique([token], map: "email_verification_token_unique")
+  @@map("email_verification")
+}
+
+model MeetingType {
+  id              String   @id @db.Uuid
+  orgId           String   @map("org_id") @db.Uuid
+  key             String   @db.Text
+  durationMin     Int      @map("duration_min")
+  paymentPolicy   PaymentPolicy? @map("payment_policy")
+  priceCents      Int?     @map("price_cents")
+  currency        String?  @db.Text
+  requiresPayment Boolean  @default(false) @map("requires_payment")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  org          Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  translations MeetingTypeTranslation[]
+  modes        MeetingTypeMode[]
+  appointments Appointment[]
+
+  @@unique([orgId, key], map: "meeting_type_org_key_unique")
+  @@index([orgId], map: "meeting_type_org_idx")
+  @@map("meeting_type")
+}
+
+model MeetingTypeTranslation {
+  id            String  @id @db.Uuid
+  meetingTypeId String  @map("meeting_type_id") @db.Uuid
+  locale        Locale
+  title         String  @db.Text
+  subtitle      String? @db.Text
+  description   String? @db.Text
+
+  meetingType MeetingType @relation(fields: [meetingTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingTypeId, locale], map: "meeting_type_translation_mt_locale_unique")
+  @@index([locale], map: "meeting_type_translation_locale_idx")
+  @@map("meeting_type_translation")
+}
+
+model MeetingTypeMode {
+  id            String      @id @db.Uuid
+  meetingTypeId String      @map("meeting_type_id") @db.Uuid
+  mode          MeetingMode
+  details       Json?       @map("details") @db.JsonB
+
+  meetingType MeetingType @relation(fields: [meetingTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingTypeId, mode], map: "meeting_type_mode_mt_mode_unique")
+  @@map("meeting_type_mode")
+}
+
+model StaffCalendar {
+  id               String  @id @db.Uuid
+  orgId            String  @map("org_id") @db.Uuid
+  staffUserId      String  @map("staff_user_id") @db.Uuid
+  googleCalendarId String? @map("google_calendar_id") @db.Text
+  isActive         Boolean @default(true) @map("is_active")
+
+  workingHours Json? @map("working_hours") @db.JsonB
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  org   Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  staff AppUser @relation(fields: [staffUserId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, staffUserId], map: "staff_calendar_org_staff_unique")
+  @@index([staffUserId], map: "staff_calendar_staff_idx")
+  @@map("staff_calendar")
+}
+
+model BlockedTime {
+  id          String   @id @db.Uuid
+  orgId       String   @map("org_id") @db.Uuid
+  staffUserId String?  @map("staff_user_id") @db.Uuid
+  startAtUtc  DateTime @map("start_at_utc") @db.Timestamptz(6)
+  endAtUtc    DateTime @map("end_at_utc") @db.Timestamptz(6)
+  reason      String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  org   Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  staff AppUser? @relation(fields: [staffUserId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, startAtUtc], map: "blocked_time_org_start_idx")
+  @@index([staffUserId, startAtUtc], map: "blocked_time_staff_start_idx")
+  @@map("blocked_time")
+}
+
+model Appointment {
+  id            String            @id @db.Uuid
+  orgId         String            @map("org_id") @db.Uuid
+  userId        String            @map("user_id") @db.Uuid
+  staffUserId   String?           @map("staff_user_id") @db.Uuid
+  meetingTypeId String            @map("meeting_type_id") @db.Uuid
+  status        AppointmentStatus @default(pending)
+  mode          MeetingMode
+  joinLink      String?           @map("join_link") @db.Text
+  paymentPolicy PaymentPolicy?    @map("payment_policy")
+  paymentStatus PaymentStatus?    @map("payment_status")
+  requiresPayment Boolean?        @map("requires_payment")
+  priceCents     Int?             @map("price_cents")
+  currency       String?          @db.Text
+  startAtUtc    DateTime          @map("start_at_utc") @db.Timestamptz(6)
+  endAtUtc      DateTime          @map("end_at_utc") @db.Timestamptz(6)
+  notes         String?           @db.Text
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  org         Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  meetingType MeetingType @relation(fields: [meetingTypeId], references: [id], onDelete: Restrict)
+
+  user  AppUser  @relation("AppointmentUser", fields: [userId], references: [id], onDelete: Cascade)
+  staff AppUser? @relation("AppointmentStaff", fields: [staffUserId], references: [id], onDelete: SetNull)
+
+  logs NotificationLog[]
+
+  @@index([orgId, startAtUtc], map: "appointment_org_start_idx")
+  @@index([userId, startAtUtc], map: "appointment_user_start_idx")
+  @@index([staffUserId, startAtUtc], map: "appointment_staff_start_idx")
+  @@index([meetingTypeId, startAtUtc], map: "appointment_meeting_type_start_idx")
+  @@index([orgId, status, startAtUtc], map: "appointment_org_status_start_idx")
+  @@map("appointment")
+}
+
+model NotificationLog {
+  id            String              @id @db.Uuid
+  appointmentId String              @map("appointment_id") @db.Uuid
+  channel       NotificationChannel
+  toAddress     String?             @map("to_address") @db.Text
+  templateKey   String?             @map("template_key") @db.Text
+  status        String              @db.Text
+  providerMsgId String?             @map("provider_msg_id") @db.Text
+  error         String?             @db.Text
+  seen          Boolean             @default(false)
+  createdAt     DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([appointmentId, createdAt], map: "notification_log_appt_created_idx")
+  @@index([channel, createdAt], map: "notification_log_channel_created_idx")
+  @@map("notification_log")
+}
+
+model ExchangeRateCache {
+  id        String   @id @db.Uuid
+  base      String   @db.Text
+  rates     Json     @db.JsonB
+  fetchedAt DateTime @map("fetched_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([base], map: "exchange_rate_cache_base_unique")
+  @@map("exchange_rate_cache")
+}
+
+model AuditLog {
+  id          String  @id @db.Uuid
+  orgId       String  @map("org_id") @db.Uuid
+  actorUserId String? @map("actor_user_id") @db.Uuid
+  entityType  String  @map("entity_type") @db.Text
+  entityId    String  @map("entity_id") @db.Text
+  action      String  @db.Text
+
+  // Store structured diffs as JSONB instead of text JSON
+  before Json? @map("before") @db.JsonB
+  after  Json? @map("after") @db.JsonB
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  org   Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  actor AppUser? @relation("AuditLogActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, createdAt], map: "audit_log_org_created_idx")
+  @@index([entityType, entityId], map: "audit_log_entity_idx")
+  @@map("audit_log")
+}
+
+model Documents {
+  id      String @id @db.Uuid
+  content String @db.Text
+
+  // If you plan vector search, migrate to pgvector later.
+  // For now keep float[] for compatibility.
+  embedding Float[] @db.Real
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([createdAt], map: "documents_created_at_idx")
+  @@map("documents")
+}

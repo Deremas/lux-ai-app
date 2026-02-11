@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookieDomain, cookieSecure } from "@/lib/cookieConfig";
+import { isBodyTooLarge } from "@/lib/validation";
 import {
   CONSENT_COOKIE,
   CONSENT_VERSION,
@@ -10,6 +11,10 @@ import {
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
+  if (isBodyTooLarge(req, 1024)) {
+    return NextResponse.json({ error: "Request too large" }, { status: 413 });
+  }
+
   const body = await req.json().catch(() => null);
   const analytics = !!body?.analytics;
 

@@ -1,13 +1,21 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db-config";
-import { documents } from "@/lib/db-schema";
+import { prisma } from "@/lib/prisma";
 import { generateEmbeddings } from "@/lib/embeddings";
 import { chunkContent } from "@/lib/chunking";
+import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
+    const limit = await applyRateLimit(req, RATE_LIMIT_RULES.upload);
+    if (!limit.ok) {
+      return NextResponse.json(
+        { success: false, error: "Too many requests. Please try again later." },
+        { status: 429, headers: limit.headers }
+      );
+    }
+
     const formData = await req.formData();
     const file = formData.get("pdf");
 
@@ -80,7 +88,9 @@ export async function POST(req: Request) {
       embedding: embeddings[i], // must match your schema column name
     }));
 
-    await db.insert(documents).values(records);
+    await prisma.documents.createMany({
+      data: records as any[],
+    });
 
     return NextResponse.json({
       success: true,
