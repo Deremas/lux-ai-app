@@ -93,9 +93,7 @@ export default function MeetingTypesClient({ orgId }: Props) {
     "AUD",
   ]);
 
-  const dashboardHref = orgId
-    ? `/admin/scheduling?orgId=${orgId}`
-    : "/admin/scheduling";
+  const dashboardHref = "/admin/scheduling";
 
   useEffect(() => {
     if (status !== "authenticated") return;

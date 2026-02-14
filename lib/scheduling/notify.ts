@@ -508,7 +508,7 @@ export async function sendBookingEmails(params: { appointmentId: string }) {
     const baseUrl = getBaseUrl();
     const approvalLink =
       ctx.status === "pending" && baseUrl
-        ? `${baseUrl}/admin/scheduling/bookings?orgId=${ctx.orgId}`
+        ? `${baseUrl}/admin/scheduling/bookings`
         : null;
     let calendarLink: string | null = null;
     try {
@@ -1072,7 +1072,7 @@ export async function sendRescheduleRequestEmails(params: {
 
   const baseUrl = getBaseUrl();
   const adminLink = baseUrl
-    ? `${baseUrl}/admin/scheduling/bookings?orgId=${ctx.orgId}`
+    ? `${baseUrl}/admin/scheduling/bookings`
     : null;
   const startIso = toIsoUtc(ctx.startAtUtc);
   const endIso = toIsoUtc(ctx.endAtUtc);

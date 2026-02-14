@@ -196,7 +196,7 @@ export default function NotificationsClient({ orgId, tz }: Props) {
           </p>
         </div>
         <Button variant="outline" asChild>
-          <Link href={`/admin/scheduling?orgId=${encodeURIComponent(orgId)}`}>
+          <Link href="/admin/scheduling">
             Back to dashboard
           </Link>
         </Button>
@@ -558,9 +558,7 @@ export default function NotificationsClient({ orgId, tz }: Props) {
                         Decline
                       </Button>
                       <Button variant="outline" asChild>
-                        <Link
-                          href={`/admin/scheduling/bookings?orgId=${orgId}`}
-                        >
+                        <Link href="/admin/scheduling/bookings">
                           Open approvals
                         </Link>
                       </Button>

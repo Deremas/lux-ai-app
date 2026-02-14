@@ -608,9 +608,13 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
 
   const openBookingDetail = (appointmentId: string) => {
     const params = new URLSearchParams();
-    if (orgId) params.set("orgId", orgId);
     if (chartTz) params.set("tz", chartTz);
-    router.push(`/admin/scheduling/bookings/${appointmentId}?${params.toString()}`);
+    const query = params.toString();
+    router.push(
+      query
+        ? `/admin/scheduling/bookings/${appointmentId}?${query}`
+        : `/admin/scheduling/bookings/${appointmentId}`
+    );
   };
 
   return (
@@ -625,11 +629,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                 </h1>
                 <Link
                   className="ml-auto inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
-                  href={
-                    orgId
-                      ? `/admin/scheduling?orgId=${orgId}`
-                      : "/admin/scheduling"
-                  }
+                    href="/admin/scheduling"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Back

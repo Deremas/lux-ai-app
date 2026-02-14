@@ -14,7 +14,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  directUrl = env("DATABASE_MIGRATE_URL")
+  directUrl = env("DATABASE_URL")
 }
 
 enum Locale {

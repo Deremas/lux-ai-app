@@ -41,12 +41,10 @@ export default async function SchedulingAdminCalendarPage({
   const requestedOrgId = pickParam(searchParams?.orgId);
   const orgContext = await resolveOrgId(requestedOrgId);
   const tz = pickParam(searchParams?.tz) || orgContext?.defaultTz || "Europe/Luxembourg";
-  const dashboardHref = orgContext?.orgId
-    ? `/admin/scheduling?orgId=${orgContext.orgId}`
-    : "/admin/scheduling";
+  const dashboardHref = "/admin/scheduling";
 
   if (orgContext?.orgId) {
-    const returnTo = `/admin/scheduling/calendar?orgId=${orgContext.orgId}`;
+    const returnTo = "/admin/scheduling/calendar";
     await requireAdminOrStaffForOrg(orgContext.orgId, returnTo);
   }
 

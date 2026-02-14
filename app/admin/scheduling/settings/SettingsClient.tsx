@@ -422,7 +422,7 @@ export default function SettingsClient({ orgId }: Props) {
       <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex justify-end">
           <Link
-            href={orgId ? `/admin/scheduling?orgId=${orgId}` : "/admin/scheduling"}
+            href="/admin/scheduling"
             className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500 hover:underline dark:text-gray-400"
           >
             Back to dashboard

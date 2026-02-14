@@ -3,14 +3,14 @@ import { Boxes, LayoutGrid, ShoppingCart, Globe } from "lucide-react";
 export const SUPPORTED_LANGS = ["en", "fr", "de", "lb"] as const;
 export type Lang = (typeof SUPPORTED_LANGS)[number];
 
-
-type DeepValue = string | DeepRecord | readonly string[] | readonly DeepRecord[];
-;
-
+type DeepValue =
+  | string
+  | DeepRecord
+  | readonly string[]
+  | readonly DeepRecord[];
 interface DeepRecord {
   [key: string]: DeepValue;
 }
-
 
 /**
  * Copy:
@@ -44,7 +44,7 @@ export const copy: Record<Lang, DeepRecord> = {
         getFreeConsultation: "Get Free Consultation",
       },
       footer: {
-        brandShort: "AI",
+        brandShort: "Lux",
         brandName: "Lux AI Consultancy & Automation",
         description:
           "Transforming businesses through intelligent automation. We help companies implement AI solutions to boost efficiency, reduce costs, and scale smarter.",
@@ -881,7 +881,7 @@ export const copy: Record<Lang, DeepRecord> = {
         getFreeConsultation: "Obtenir une consultation gratuite",
       },
       footer: {
-        brandShort: "AI",
+        brandShort: "Lux",
         brandName: "Lux AI Consultancy & Automation",
         description:
           "Transformer les entreprises grâce à l’automatisation intelligente. Nous aidons les sociétés à déployer des solutions IA pour gagner en efficacité, réduire les coûts et évoluer plus intelligemment.",
@@ -1675,7 +1675,7 @@ export const copy: Record<Lang, DeepRecord> = {
         getFreeConsultation: "Kostenlose Beratung",
       },
       footer: {
-        brandShort: "AI",
+        brandShort: "Lux",
         brandName: "Lux AI Consultancy & Automation",
         description:
           "Wir transformieren Unternehmen durch intelligente Automatisierung. Wir helfen Firmen, KI-Lösungen einzuführen, um Effizienz zu steigern, Kosten zu senken und smarter zu skalieren.",
@@ -1819,7 +1819,6 @@ export const copy: Record<Lang, DeepRecord> = {
           desc: "Conversion-starke Websites und geschützte Portale mit Chatbots und Wissensdatenbanken.",
         },
       },
-
 
       teamBlock: {
         title: "Unser Team",
@@ -2461,7 +2460,7 @@ export const copy: Record<Lang, DeepRecord> = {
         getFreeConsultation: "Gratis Consultatioun",
       },
       footer: {
-        brandShort: "AI",
+        brandShort: "Lux",
         brandName: "Lux AI Consultancy & Automation",
         description:
           "Mir transforméiere Betriber duerch intelligent Automatiséierung. Mir hëllefen Entreprisen, KI-Léisungen anzeféieren, fir d’Effizienz ze steigeren, Käschten ze reduzéieren an méi intelligent ze skaliéieren.",
@@ -2604,7 +2603,6 @@ export const copy: Record<Lang, DeepRecord> = {
           desc: "Staark Websäiten an authentifizéiert Portale mat Chatbots a Knowledge Base.",
         },
       },
-
 
       teamBlock: {
         title: "Eist Team",

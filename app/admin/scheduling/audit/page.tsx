@@ -39,7 +39,7 @@ export default async function AuditLogPage({
   const orgContext = await resolveOrgId(requestedOrgId);
 
   const orgId = requestedOrgId || orgContext?.orgId || "";
-  const returnTo = orgId ? `/admin/scheduling?orgId=${orgId}` : "/admin/scheduling";
+  const returnTo = "/admin/scheduling";
   if (orgId) {
     await requireAdminOrStaffForOrg(orgId, returnTo);
   }

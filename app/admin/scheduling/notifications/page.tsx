@@ -44,7 +44,7 @@ export default async function SchedulingNotificationsPage({
   const tz = pickParam(searchParams?.tz) || orgContext?.defaultTz || FALLBACK_TZ;
 
   if (orgContext?.orgId) {
-    const returnTo = `/admin/scheduling/notifications?orgId=${orgContext.orgId}`;
+    const returnTo = "/admin/scheduling/notifications";
     await requireAdminOrStaffForOrg(orgContext.orgId, returnTo);
   }
 

@@ -48,11 +48,8 @@ type Profile = {
   email: string | null;
 };
 
-function buildLink(base: string, orgId: string) {
-  if (!orgId) return base;
-  const [path, hash] = base.split("#");
-  const withQuery = `${path}?orgId=${encodeURIComponent(orgId)}`;
-  return hash ? `${withQuery}#${hash}` : withQuery;
+function buildLink(base: string) {
+  return base;
 }
 
 function formatMoney(priceCents?: number | null, currency?: string | null) {
@@ -498,7 +495,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
                     </p>
                     <Link
                       className="text-xs text-blue-600 hover:underline"
-                      href={buildLink("/admin/scheduling/notifications", orgId)}
+                      href={buildLink("/admin/scheduling/notifications")}
                       onClick={() => setNotifOpen(false)}
                     >
                       View all
@@ -617,7 +614,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
                   asChild
                   className="gap-2 rounded-lg px-3 py-2 text-sm font-medium cursor-pointer"
                 >
-                  <Link href={buildLink("/admin/scheduling#profile", orgId)}>
+                  <Link href={buildLink("/admin/scheduling#profile")}>
                     <User className="h-4 w-4 text-gray-500" />
                     Profile
                   </Link>
@@ -626,7 +623,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
                   asChild
                   className="gap-2 rounded-lg px-3 py-2 text-sm font-medium cursor-pointer"
                 >
-                  <Link href={buildLink("/admin/scheduling/settings", orgId)}>
+                  <Link href={buildLink("/admin/scheduling/settings")}>
                     <Settings className="h-4 w-4 text-gray-500" />
                     Settings
                   </Link>
@@ -678,7 +675,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
               Calendar
             </p>
             <Button asChild className="mt-3 w-full">
-              <Link href={buildLink("/admin/scheduling/calendar", orgId)}>
+              <Link href={buildLink("/admin/scheduling/calendar")}>
                 View calendar
               </Link>
             </Button>
@@ -720,7 +717,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
             ].map((item) => (
               <Link
                 key={item.href}
-                href={buildLink(item.href, orgId)}
+                href={buildLink(item.href)}
                 className="rounded-2xl border border-gray-200 bg-white px-4 py-4 text-sm font-semibold text-gray-900 shadow-sm transition hover:border-gray-400 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
               >
                 {item.label}
@@ -969,7 +966,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
                         Decline
                       </Button>
                       <Button variant="outline" asChild>
-                        <Link href={`/admin/scheduling/bookings?orgId=${orgId}`}>
+                        <Link href="/admin/scheduling/bookings">
                           Open approvals
                         </Link>
                       </Button>

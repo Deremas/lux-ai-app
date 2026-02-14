@@ -41,7 +41,7 @@ export default async function SchedulingMeetingTypesPage({
   const orgContext = await resolveOrgId(requestedOrgId);
 
   if (orgContext?.orgId) {
-    const returnTo = `/admin/scheduling/meeting-types?orgId=${orgContext.orgId}`;
+    const returnTo = "/admin/scheduling/meeting-types";
     await requireAdminOrStaffForOrg(orgContext.orgId, returnTo);
   }
 

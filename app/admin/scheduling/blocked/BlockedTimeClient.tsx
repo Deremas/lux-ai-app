@@ -168,9 +168,7 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
     }
   };
 
-  const dashboardHref = orgId
-    ? `/admin/scheduling?orgId=${orgId}`
-    : "/admin/scheduling";
+  const dashboardHref = "/admin/scheduling";
 
   useEffect(() => {
     if (status !== "authenticated") return;

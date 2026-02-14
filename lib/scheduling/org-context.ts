@@ -260,10 +260,26 @@ export async function getOrCreateUserOrgContext(
 }
 
 export async function getFirstOrgContext(): Promise<OrgContext | null> {
-  const row = await prisma.org.findFirst({
+  let row = await prisma.org.findFirst({
     include: { settings: true },
     orderBy: { createdAt: "asc" },
   });
+
+  if (!row) {
+    const shouldAutoProvision = process.env.AUTO_PROVISION_ORG !== "false";
+    if (!shouldAutoProvision) return null;
+
+    const orgName = process.env.SEED_ORG_NAME ?? "Default Organization";
+    const orgId = crypto.randomUUID();
+    await prisma.org.create({
+      data: { id: orgId, name: orgName },
+    });
+    await ensureOrgSettings(orgId);
+    row = await prisma.org.findFirst({
+      where: { id: orgId },
+      include: { settings: true },
+    });
+  }
 
   if (!row) return null;
 

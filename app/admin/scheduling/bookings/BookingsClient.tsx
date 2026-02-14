@@ -292,7 +292,7 @@ export default function BookingsClient({ orgId, tz }: Props) {
     return (
       <div className="mx-auto w-full max-w-6xl px-4 py-12">
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
-          Missing orgId. Add `?orgId=...` to the URL.
+          No organization found for this account.
         </div>
       </div>
     );
@@ -303,7 +303,7 @@ export default function BookingsClient({ orgId, tz }: Props) {
       <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex justify-end">
           <Link
-            href={orgId ? `/admin/scheduling?orgId=${orgId}` : "/admin/scheduling"}
+            href="/admin/scheduling"
             className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500 hover:underline dark:text-gray-400"
           >
             Back to dashboard
@@ -578,9 +578,7 @@ export default function BookingsClient({ orgId, tz }: Props) {
                         <td className="px-4 py-4 text-right">
                           <Button size="sm" variant="outline" asChild>
                             <Link
-                              href={`/admin/scheduling/bookings/${item.id}?orgId=${encodeURIComponent(
-                                orgId
-                              )}`}
+                              href={`/admin/scheduling/bookings/${item.id}`}
                             >
                               View details
                             </Link>

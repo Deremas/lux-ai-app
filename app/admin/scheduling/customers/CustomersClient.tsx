@@ -132,7 +132,7 @@ export default function CustomersClient({ orgId, tz }: Props) {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" asChild>
-            <Link href={`/admin/scheduling?orgId=${encodeURIComponent(orgId)}`}>
+            <Link href="/admin/scheduling">
               Back to dashboard
             </Link>
           </Button>
@@ -191,9 +191,7 @@ export default function CustomersClient({ orgId, tz }: Props) {
             return (
               <Link
                 key={item.id}
-                href={`/admin/scheduling/customers/${item.id}?orgId=${encodeURIComponent(
-                  orgId
-                )}`}
+                href={`/admin/scheduling/customers/${item.id}`}
                 className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-4 text-sm transition hover:border-gray-400 dark:border-slate-700 dark:bg-slate-800/40"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">

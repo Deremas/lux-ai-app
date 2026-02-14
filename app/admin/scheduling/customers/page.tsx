@@ -44,7 +44,7 @@ export default async function SchedulingCustomersPage({
   const tz = pickParam(searchParams?.tz) || orgContext?.defaultTz || FALLBACK_TZ;
 
   if (orgContext?.orgId) {
-    const returnTo = `/admin/scheduling/customers?orgId=${orgContext.orgId}`;
+    const returnTo = "/admin/scheduling/customers";
     await requireAdminOrStaffForOrg(orgContext.orgId, returnTo);
   }
 

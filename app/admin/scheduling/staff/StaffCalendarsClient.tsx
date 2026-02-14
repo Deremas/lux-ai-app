@@ -111,9 +111,7 @@ export default function StaffCalendarsClient({ orgId }: Props) {
   const [staffForm, setStaffForm] = useState<StaffUserForm>(emptyStaffForm());
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
 
-  const dashboardHref = orgId
-    ? `/admin/scheduling?orgId=${orgId}`
-    : "/admin/scheduling";
+  const dashboardHref = "/admin/scheduling";
 
   const timezones = useMemo<string[]>(() => {
     const fallback = [

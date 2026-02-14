@@ -41,7 +41,7 @@ export default async function SchedulingBlockedPage({
   const orgContext = await resolveOrgId(requestedOrgId);
 
   if (orgContext?.orgId) {
-    const returnTo = `/admin/scheduling/blocked?orgId=${orgContext.orgId}`;
+    const returnTo = "/admin/scheduling/blocked";
     await requireAdminOrStaffForOrg(orgContext.orgId, returnTo);
   }
 

@@ -106,7 +106,7 @@ export default function CustomerDetailClient({ orgId, userId, tz }: Props) {
             className="mt-6"
             onClick={() =>
               signIn(undefined, {
-                callbackUrl: `/admin/scheduling/customers/${userId}?orgId=${orgId}`,
+                callbackUrl: `/admin/scheduling/customers/${userId}`,
               })
             }
           >
@@ -133,12 +133,12 @@ export default function CustomerDetailClient({ orgId, userId, tz }: Props) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" asChild>
-            <Link href={`/admin/scheduling/customers?orgId=${encodeURIComponent(orgId)}`}>
+            <Link href="/admin/scheduling/customers">
               Back to customers
             </Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href={`/admin/scheduling?orgId=${encodeURIComponent(orgId)}`}>
+            <Link href="/admin/scheduling">
               Back to dashboard
             </Link>
           </Button>
@@ -226,7 +226,7 @@ export default function CustomerDetailClient({ orgId, userId, tz }: Props) {
           </h2>
           <Link
             className="text-sm text-blue-600 hover:underline"
-            href={`/admin/scheduling/bookings?orgId=${encodeURIComponent(orgId)}`}
+            href="/admin/scheduling/bookings"
           >
             View approvals
           </Link>

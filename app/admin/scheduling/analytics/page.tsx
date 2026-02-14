@@ -42,7 +42,7 @@ export default async function SchedulingAnalyticsPage({
   const tz = pickParam(searchParams?.tz) || orgContext?.defaultTz || "Europe/Luxembourg";
 
   if (orgContext?.orgId) {
-    const returnTo = `/admin/scheduling/analytics?orgId=${orgContext.orgId}`;
+    const returnTo = "/admin/scheduling/analytics";
     await requireAdminOrStaffForOrg(orgContext.orgId, returnTo);
   }
 

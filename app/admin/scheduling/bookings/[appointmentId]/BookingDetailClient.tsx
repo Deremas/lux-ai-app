@@ -95,9 +95,7 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
     return "UTC";
   }, [tz]);
 
-  const backToList = orgId
-    ? `/admin/scheduling/bookings?orgId=${encodeURIComponent(orgId)}`
-    : "/admin/scheduling/bookings";
+  const backToList = "/admin/scheduling/bookings";
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -345,7 +343,7 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
             </Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href={orgId ? `/admin/scheduling?orgId=${orgId}` : "/admin/scheduling"}>
+            <Link href="/admin/scheduling">
               Back to dashboard
             </Link>
           </Button>

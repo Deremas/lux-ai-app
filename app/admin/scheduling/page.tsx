@@ -41,7 +41,7 @@ export default async function SchedulingAdminPage({
   const orgContext = await resolveOrgId(requestedOrgId);
 
   if (orgContext?.orgId) {
-    const returnTo = `/admin/scheduling?orgId=${orgContext.orgId}`;
+    const returnTo = "/admin/scheduling";
     await requireAdminOrStaffForOrg(orgContext.orgId, returnTo);
   }
 

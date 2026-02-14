@@ -11,11 +11,16 @@ WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npx prisma generate
 
 ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
+ARG RESEND_API_KEY
+ARG STRIPE_SECRET_KEY
 
+ENV DATABASE_URL=$DATABASE_URL
+ENV RESEND_API_KEY=$RESEND_API_KEY
+ENV STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY
+
+RUN npx prisma generate
 RUN npm run build
 
 # ---- run ----
