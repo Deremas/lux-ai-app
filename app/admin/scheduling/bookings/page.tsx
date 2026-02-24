@@ -1,12 +1,13 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import BookingsClient from "./BookingsClient";
+import BookingsClient from "./BookingsClientFinal";
 import { getServerSession } from "next-auth/next";
+import ProductShell from "@/components/scheduling/ProductShell";
+import SectionCard from "@/components/scheduling/SectionCard";
 
 import { authOptions } from "@/lib/auth";
 import {
   getFirstOrgContext,
-  getOrgContextById,
   getUserOrgContext,
 } from "@/lib/scheduling/org-context";
 import { requireAdminOrStaffForOrg } from "@/lib/scheduling/admin-guard";
@@ -18,12 +19,7 @@ function pickParam(value: string | string[] | undefined): string {
   return Array.isArray(value) ? value[0] ?? "" : value;
 }
 
-async function resolveOrgId(requestedOrgId: string) {
-  if (requestedOrgId) {
-    const ctx = await getOrgContextById(requestedOrgId);
-    if (ctx) return ctx;
-  }
-
+async function resolveOrgId() {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
   if (userId) {
@@ -37,10 +33,9 @@ async function resolveOrgId(requestedOrgId: string) {
 export default async function SchedulingBookingsPage({
   searchParams,
 }: {
-  searchParams?: { orgId?: string | string[]; tz?: string | string[] };
+  searchParams?: { tz?: string | string[] };
 }) {
-  const requestedOrgId = pickParam(searchParams?.orgId);
-  const orgContext = await resolveOrgId(requestedOrgId);
+  const orgContext = await resolveOrgId();
   const tz = pickParam(searchParams?.tz) || orgContext?.defaultTz || FALLBACK_TZ;
 
   if (orgContext?.orgId) {
@@ -52,7 +47,17 @@ export default async function SchedulingBookingsPage({
     <div className="min-h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors duration-300">
       <Header />
       <div className="flex-1">
-        <BookingsClient orgId={orgContext?.orgId ?? ""} tz={tz} />
+        <ProductShell>
+          {orgContext?.orgId ? (
+            <BookingsClient orgId={orgContext?.orgId ?? ""} tz={tz} />
+          ) : (
+            <SectionCard>
+              <div className="text-sm text-amber-900">
+                No org found for this account.
+              </div>
+            </SectionCard>
+          )}
+        </ProductShell>
       </div>
       <Footer />
     </div>

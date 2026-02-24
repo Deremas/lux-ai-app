@@ -1,6 +1,6 @@
 import { cookieDomain, cookieSecure } from "@/lib/cookieConfig";
 
-export type ThemePref = "light" | "dark";
+export type ThemePref = "light" | "dark" | "system";
 export type LangPref = "en" | "fr" | "de" | "lb";
 
 export const THEME_COOKIE = "theme";
@@ -31,11 +31,22 @@ export function setPrefCookie(name: string, value: string, days = 365) {
 // ✅ add these (Theme)
 export function getThemePref(): ThemePref | null {
   const v = getCookie(THEME_COOKIE);
-  return v === "light" || v === "dark" ? v : null;
+  if (v === "light" || v === "dark" || v === "system") return v;
+  try {
+    const ls = window.localStorage.getItem(THEME_COOKIE);
+    return ls === "light" || ls === "dark" || ls === "system" ? ls : null;
+  } catch {
+    return null;
+  }
 }
 
 export function setThemePref(v: ThemePref) {
   setPrefCookie(THEME_COOKIE, v);
+  try {
+    window.localStorage.setItem(THEME_COOKIE, v);
+  } catch {
+    // ignore storage failures
+  }
 }
 
 // ✅ add these (Language)

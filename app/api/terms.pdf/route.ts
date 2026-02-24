@@ -159,7 +159,7 @@ export async function GET(req: NextRequest) {
   const blocks = buildBlocksFromSections(sections);
 
   // Contact info (in PDF)
-  const contactEmail = "contact@luxaiautomation.com";
+  const contactEmail = "molla@luxaiautomation.com";
   const emailUrl = `mailto:${contactEmail}`;
 
   // PDF setup

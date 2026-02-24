@@ -8,6 +8,7 @@ import {
 import { pickStaffForSlot } from "@/lib/scheduling/auto-assignment";
 import { writeAudit } from "@/lib/scheduling/audit";
 import { isValidUuid } from "@/lib/validation";
+import { resolveOrgIdForRequest } from "@/lib/scheduling/org-resolver";
 
 const FALLBACK_TZ = "Europe/Luxembourg";
 
@@ -32,13 +33,20 @@ export async function POST(
 
   const { id } = await ctx.params;
   const url = new URL(req.url);
-  const orgId = cleanString(url.searchParams.get("orgId"));
-
-  if (!orgId) {
-    return NextResponse.json({ error: "Missing orgId" }, { status: 400 });
-  }
-  if (!isValidUuid(orgId) || !isValidUuid(id)) {
+  if (!isValidUuid(id)) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  }
+
+  const orgId = await resolveOrgIdForRequest({
+    orgId: url.searchParams.get("orgId"),
+    userId: who.userId,
+    allowedRoles: ["admin", "staff"],
+  });
+  if (!orgId) {
+    return NextResponse.json(
+      { error: "No organization found" },
+      { status: 400 }
+    );
   }
 
   const authz = await requireOrgRole({

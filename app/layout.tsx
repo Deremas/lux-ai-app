@@ -44,8 +44,17 @@ export default function RootLayout({
     // theme
     var mTheme = document.cookie.match(/(?:^|; )theme=([^;]*)/);
     var theme = mTheme ? decodeURIComponent(mTheme[1]) : null;
-    if (theme === "dark") document.documentElement.classList.add("dark");
-    if (theme === "light") document.documentElement.classList.remove("dark");
+    if (!theme) {
+      try {
+        theme = localStorage.getItem("theme");
+      } catch (e) {}
+    }
+    var prefersDark =
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var resolved =
+      theme === "dark" ? "dark" : theme === "light" ? "light" : prefersDark ? "dark" : "light";
+    document.documentElement.classList.toggle("dark", resolved === "dark");
 
     // lang
     var mLang = document.cookie.match(/(?:^|; )lang=([^;]*)/);
@@ -111,11 +120,12 @@ export default function RootLayout({
         "
       >
         <LenisProvider>
-          <Providers initialLang={initialLang}>{children}</Providers>
+          <Providers initialLang={initialLang}>
+            {children}
+            <CookieConsent />
+            <Toaster position="top-right" offset={80} />
+          </Providers>
         </LenisProvider>
-
-        <CookieConsent />
-        <Toaster position="top-right" offset={80} />
 
         <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] flex flex-col gap-3">
           <ScrollToTop />

@@ -10,7 +10,6 @@ const BUSY_STATUSES = ["pending", "confirmed", "completed"] as const;
 const MIN_LEAD_MIN = 180;
 
 type Body = {
-  orgId?: string;
   startUtc?: string;
 };
 
@@ -45,28 +44,24 @@ export async function POST(
   }
 
   const appointmentId = cleanString(params.id);
-  const orgId = cleanString(body.orgId);
   const startUtcRaw = cleanString(body.startUtc);
 
   if (!appointmentId || !isValidUuid(appointmentId)) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
-  if (!orgId || !isValidUuid(orgId)) {
-    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
-  }
-
   const startUtc = DateTime.fromISO(startUtcRaw, { zone: "utc" });
   if (!startUtc.isValid) {
     return NextResponse.json({ error: "Invalid start time" }, { status: 400 });
   }
 
   const current = await prisma.appointment.findFirst({
-    where: { id: appointmentId, orgId },
+    where: { id: appointmentId },
     include: { meetingType: true },
   });
   if (!current) {
     return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
   }
+  const orgId = current.orgId;
   if (current.userId !== who.userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

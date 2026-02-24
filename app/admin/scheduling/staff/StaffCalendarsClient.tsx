@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import SearchablePhoneInput from "@/components/PhoneInputField";
+import Badge from "@/components/scheduling/Badge";
+import MrtCardTable from "@/components/scheduling/MrtCardTable";
+import type { MRT_ColumnDef } from "material-react-table";
 
 type Props = {
   orgId: string;
@@ -490,9 +493,90 @@ export default function StaffCalendarsClient({ orgId }: Props) {
     }, {});
   }, [members]);
 
+  const calendarColumns = useMemo<MRT_ColumnDef<StaffCalendar>[]>(
+    () => [
+      {
+        accessorKey: "staffUserId",
+        header: "Staff",
+        Cell: ({ row }) => (
+          <div className="min-w-0">
+            <div className="truncate font-semibold text-gray-900 dark:text-white">
+              {staffNameById[row.original.staffUserId] ?? row.original.staffUserId}
+            </div>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "isActive",
+        header: "Status",
+        Cell: ({ row }) => (
+          <Badge variant={row.original.isActive ? "default" : "secondary"}>
+            {row.original.isActive ? "Active" : "Inactive"}
+          </Badge>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        Cell: ({ row }) => (
+          <Button size="sm" variant="outline" onClick={() => loadCalendarForEdit(row.original)}>
+            Edit
+          </Button>
+        ),
+      },
+    ],
+    [staffNameById]
+  );
+
+  const memberColumns = useMemo<MRT_ColumnDef<OrgMember>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Member",
+        Cell: ({ row }) => (
+          <div className="min-w-0">
+            <div className="truncate font-semibold text-gray-900 dark:text-white">
+              {row.original.name || "Unnamed user"}
+            </div>
+            <div className="truncate text-xs text-gray-500">
+              {row.original.email || "—"}
+            </div>
+            {row.original.phone && (
+              <div className="text-xs text-gray-500">{row.original.phone}</div>
+            )}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "role",
+        header: "Role",
+        Cell: ({ row }) => (
+          <Badge variant={row.original.role === "admin" ? "default" : "secondary"}>
+            {row.original.role}
+          </Badge>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        Cell: ({ row }) => (
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => loadMemberForEdit(row.original)}>
+              Edit
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => handleDeleteMember(row.original.userId)}>
+              Delete
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [members]
+  );
+
   if (status !== "authenticated") {
     return (
-      <div className="mx-auto w-full max-w-4xl px-4 py-12">
+      <div className="space-y-8">
         <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             Sign in to manage staff calendars
@@ -510,7 +594,7 @@ export default function StaffCalendarsClient({ orgId }: Props) {
 
   if (!orgId) {
     return (
-      <div className="mx-auto w-full max-w-4xl px-4 py-12">
+      <div className="space-y-8">
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
           No org found for this account.
         </div>
@@ -522,8 +606,8 @@ export default function StaffCalendarsClient({ orgId }: Props) {
     !form.staffUserId.trim() || !form.workingHoursJson.trim();
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-12">
-      <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div className="space-y-8">
+      <div className="space-y-8">
         <div className="flex justify-end">
           <Link
             href={dashboardHref}
@@ -563,41 +647,27 @@ export default function StaffCalendarsClient({ orgId }: Props) {
         )}
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
-          <div className="space-y-4">
-            {items.length === 0 && !loading ? (
-              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-gray-300">
-                No staff calendars yet.
-              </div>
-            ) : (
-              items.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
-                        Staff
-                      </p>
-                      <h3 className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
-                        {staffNameById[item.staffUserId] ?? item.staffUserId}
-                      </h3>
-                      <p className="mt-1 text-xs text-gray-500">
-                        {item.isActive ? "Active" : "Inactive"}
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => loadCalendarForEdit(item)}
-                    >
-                      Edit
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <MrtCardTable
+            title="Staff calendars"
+            subtitle={items.length ? `${items.length} calendars` : "No staff calendars yet."}
+            table={{
+              columns: calendarColumns,
+              data: items,
+              enablePagination: false,
+              enableSorting: false,
+              enableColumnActions: false,
+              enableColumnFilters: false,
+              enableGlobalFilter: false,
+              enableDensityToggle: false,
+              enableFullScreenToggle: false,
+              enableColumnResizing: false,
+              enableHiding: false,
+              state: { isLoading: loading },
+              renderEmptyRowsFallback: () => (
+                <div className="p-4 text-sm text-gray-600">No staff calendars yet.</div>
+              ),
+            }}
+          />
 
           <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -727,62 +797,33 @@ export default function StaffCalendarsClient({ orgId }: Props) {
               </p>
             </div>
 
-            {membersLoading && (
-              <div className="text-sm text-gray-600 dark:text-gray-300">
-                Loading staff users...
-              </div>
-            )}
             {membersError && (
               <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                 {membersError}
               </div>
             )}
-            {members.length === 0 && !membersLoading ? (
-              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-gray-300">
-                No staff users yet.
-              </div>
-            ) : (
-              members.map((member) => (
-                <div
-                  key={member.id}
-                  className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
-                        Member
-                      </p>
-                      <p className="mt-2 font-semibold text-gray-900 dark:text-white">
-                        {member.name || "Unnamed user"}
-                      </p>
-                      <p className="text-xs text-gray-500">{member.email}</p>
-                      {member.phone && (
-                        <p className="text-xs text-gray-500">{member.phone}</p>
-                      )}
-                      <p className="text-xs text-gray-500">
-                        Role: {member.role}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => loadMemberForEdit(member)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteMember(member.userId)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
+
+            <MrtCardTable
+              title="Staff users"
+              subtitle={members.length ? `${members.length} users` : "No staff users yet."}
+              table={{
+                columns: memberColumns,
+                data: members,
+                enablePagination: false,
+                enableSorting: false,
+                enableColumnActions: false,
+                enableColumnFilters: false,
+                enableGlobalFilter: false,
+                enableDensityToggle: false,
+                enableFullScreenToggle: false,
+                enableColumnResizing: false,
+                enableHiding: false,
+                state: { isLoading: membersLoading },
+                renderEmptyRowsFallback: () => (
+                  <div className="p-4 text-sm text-gray-600">No staff users yet.</div>
+                ),
+              }}
+            />
           </div>
 
           <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">

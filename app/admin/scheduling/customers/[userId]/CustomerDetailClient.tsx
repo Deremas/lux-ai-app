@@ -94,7 +94,7 @@ export default function CustomerDetailClient({ orgId, userId, tz }: Props) {
 
   if (status !== "authenticated") {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-12">
+      <div className="space-y-8">
         <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             Sign in to view customer details
@@ -118,7 +118,7 @@ export default function CustomerDetailClient({ orgId, userId, tz }: Props) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-10">
+    <div className="space-y-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">

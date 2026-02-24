@@ -29,14 +29,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table";
 import {
   ChartContainer,
   ChartLegend,
@@ -116,6 +109,67 @@ type AnalyticsListItem = {
   meetingTypeKey: string;
   customerName: string | null;
   customerEmail: string | null;
+};
+
+type StaffRow = AnalyticsResponse["staff"][number];
+
+const baseRowHoverSx = (theme: any) => ({
+  "&:hover > td": {
+    backgroundColor:
+      theme.palette.mode === "dark"
+        ? "rgba(148,163,184,0.08)" // subtle
+        : "rgba(2,132,199,0.06)", // subtle sky tint
+  },
+});
+
+const mrtSurfaceProps = {
+  muiTablePaperProps: {
+    elevation: 0,
+    sx: (theme: any) => ({
+      backgroundColor: "transparent",
+      boxShadow: "none",
+      color: theme.palette.text.primary,
+    }),
+  },
+  muiTableContainerProps: {
+    sx: (theme: any) => ({
+      borderRadius: 16,
+      border: `1px solid ${theme.palette.divider}`,
+      overflow: "auto",
+    }),
+  },
+  muiTableHeadCellProps: {
+    sx: (theme: any) => ({
+      backgroundColor:
+        theme.palette.mode === "dark"
+          ? "rgba(15,23,42,0.6)"
+          : "rgba(248,250,252,1)",
+      color: theme.palette.text.secondary,
+      fontSize: "0.75rem",
+      fontWeight: 700,
+      textTransform: "uppercase",
+      letterSpacing: "0.08em",
+      borderBottom: `1px solid ${theme.palette.divider}`,
+    }),
+  },
+  muiTableBodyCellProps: {
+    sx: (theme: any) => ({
+      fontSize: "0.875rem",
+      borderBottom: `1px solid ${theme.palette.divider}`,
+    }),
+  },
+  muiTopToolbarProps: {
+    sx: (theme: any) => ({
+      backgroundColor: "transparent",
+      borderBottom: `1px solid ${theme.palette.divider}`,
+    }),
+  },
+  muiBottomToolbarProps: {
+    sx: (theme: any) => ({
+      backgroundColor: "transparent",
+      borderTop: `1px solid ${theme.palette.divider}`,
+    }),
+  },
 };
 
 type AnalyticsListResponse = {
@@ -617,9 +671,175 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
     );
   };
 
+  const listColumns = useMemo<MRT_ColumnDef<AnalyticsListItem>[]>(
+    () => [
+      {
+        accessorKey: "startAtUtc",
+        header: "Date/time",
+        Cell: ({ row }) => (
+          <span className="whitespace-nowrap text-xs text-slate-600">
+            {formatListDate(row.original.startAtUtc)}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "customerName",
+        header: "Customer",
+        Cell: ({ row }) => (
+          <div className="min-w-0">
+            <div className="font-semibold text-slate-900">
+              {row.original.customerName ?? "Customer"}
+            </div>
+            {row.original.customerEmail && (
+              <div className="text-xs text-slate-500">
+                {row.original.customerEmail}
+              </div>
+            )}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "meetingTypeKey",
+        header: "Meeting type",
+        Cell: ({ row }) => (
+          <span>{titleCase(row.original.meetingTypeKey)}</span>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        Cell: ({ row }) => (
+          <Badge variant="secondary" className="bg-slate-100 text-slate-600">
+            {titleCase(row.original.status)}
+          </Badge>
+        ),
+      },
+      {
+        accessorKey: "mode",
+        header: "Mode",
+        Cell: ({ row }) => <span>{titleCase(row.original.mode)}</span>,
+      },
+      {
+        id: "price",
+        header: "Price",
+        Cell: ({ row }) => (
+          <span className="block text-right">
+            {row.original.priceCents !== null
+              ? formatCurrency(row.original.priceCents, row.original.currency)
+              : "—"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "currency",
+        header: "Currency",
+        Cell: ({ row }) => (
+          <span className="block text-center">{row.original.currency ?? "—"}</span>
+        ),
+      },
+      {
+        accessorKey: "paymentStatus",
+        header: "Payment status",
+        Cell: ({ row }) => (
+          <span>
+            {row.original.paymentStatus
+              ? titleCase(row.original.paymentStatus)
+              : "Unpaid"}
+          </span>
+        ),
+      },
+    ],
+    [chartTz]
+  );
+
+  const staffColumns = useMemo<MRT_ColumnDef<StaffRow>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Staff",
+        Cell: ({ row }) => (
+          <div>
+            <p className="font-semibold text-gray-900">
+              {row.original.name ?? "Staff member"}
+            </p>
+            {row.original.email && (
+              <p className="text-xs text-gray-500">{row.original.email}</p>
+            )}
+          </div>
+        ),
+      },
+      {
+        id: "utilization",
+        header: "Utilization",
+        Cell: ({ row }) => {
+          const completion =
+            row.original.total > 0
+              ? Math.round((row.original.completed / row.original.total) * 100)
+              : 0;
+          const utilization = Math.round(
+            (row.original.total / maxStaffTotal) * 100
+          );
+          return (
+            <div className="min-w-[180px]">
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <span>{utilization}%</span>
+                <span className="text-gray-300">·</span>
+                <span>{completion}% completed</span>
+              </div>
+              <Progress value={utilization} className="mt-2" />
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "total",
+        header: "Total",
+        Cell: ({ row }) => (
+          <span className="block text-right font-semibold">{row.original.total}</span>
+        ),
+      },
+      {
+        accessorKey: "pending",
+        header: "Pending",
+        Cell: ({ row }) => (
+          <span className="block text-right">{row.original.pending}</span>
+        ),
+      },
+      {
+        accessorKey: "confirmed",
+        header: "Confirmed",
+        Cell: ({ row }) => (
+          <span className="block text-right">{row.original.confirmed}</span>
+        ),
+      },
+      {
+        accessorKey: "completed",
+        header: "Completed",
+        Cell: ({ row }) => (
+          <span className="block text-right">{row.original.completed}</span>
+        ),
+      },
+      {
+        accessorKey: "declined",
+        header: "Declined",
+        Cell: ({ row }) => (
+          <span className="block text-right">{row.original.declined}</span>
+        ),
+      },
+      {
+        accessorKey: "canceled",
+        header: "Canceled",
+        Cell: ({ row }) => (
+          <span className="block text-right">{row.original.canceled}</span>
+        ),
+      },
+    ],
+    [maxStaffTotal]
+  );
+
   return (
-    <div className="w-full bg-gradient-to-b from-slate-50 via-white to-white">
-      <div className="mx-auto w-full max-w-6xl px-6 py-8 space-y-6">
+    <div className="space-y-6">
+      <div className="space-y-6">
         <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-2">
@@ -940,92 +1160,40 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                       className="h-full min-h-0 overflow-auto overscroll-contain"
                       onWheelCapture={stopScrollPropagation}
                     >
-                      <Table
-                        containerClassName="overflow-visible"
-                        className="min-w-[900px]"
-                      >
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date/time</TableHead>
-                          <TableHead>Customer</TableHead>
-                          <TableHead>Meeting type</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Mode</TableHead>
-                          <TableHead className="text-right">Price</TableHead>
-                          <TableHead className="text-center">Currency</TableHead>
-                          <TableHead>Payment status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {listItems.map((item) => (
-                          <TableRow
-                            key={item.id}
-                            role="button"
-                            tabIndex={0}
-                            className="cursor-pointer hover:bg-slate-50"
-                            onClick={() => openBookingDetail(item.id)}
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter" || event.key === " ") {
-                                event.preventDefault();
-                                openBookingDetail(item.id);
-                              }
-                            }}
-                          >
-                            <TableCell className="whitespace-nowrap">
-                              {formatListDate(item.startAtUtc)}
-                            </TableCell>
-                            <TableCell>
-                              <div className="font-semibold text-slate-900">
-                                {item.customerName ?? "Customer"}
-                              </div>
-                              {item.customerEmail && (
-                                <div className="text-xs text-slate-500">
-                                  {item.customerEmail}
-                                </div>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {titleCase(item.meetingTypeKey)}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant="secondary"
-                                className="bg-slate-100 text-slate-600"
-                              >
-                                {titleCase(item.status)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{titleCase(item.mode)}</TableCell>
-                            <TableCell className="text-right">
-                              {item.priceCents !== null
-                                ? formatCurrency(
-                                    item.priceCents,
-                                    item.currency
-                                  )
-                                : "—"}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {item.currency ?? "—"}
-                            </TableCell>
-                            <TableCell>
-                              {item.paymentStatus
-                                ? titleCase(item.paymentStatus)
-                                : "Unpaid"}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        {listItems.length === 0 && (
-                          <TableRow>
-                            <TableCell
-                              colSpan={8}
-                              className="py-6 text-center text-sm text-slate-500"
-                            >
-                              No appointments found for this selection.
-                            </TableCell>
-                          </TableRow>
+                      <MaterialReactTable
+                        columns={listColumns}
+                        data={listItems}
+                        enablePagination={false}
+                        enableSorting={false}
+                        enableColumnActions={false}
+                        enableColumnFilters={false}
+                        enableGlobalFilter={false}
+                        enableDensityToggle={false}
+                        enableFullScreenToggle={false}
+                        enableTopToolbar={false}
+                        enableBottomToolbar={false}
+                        muiTableBodyRowProps={({ row }) => ({
+                          role: "button",
+                          tabIndex: 0,
+                          onClick: () => openBookingDetail(row.original.id),
+                          onKeyDown: (event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              openBookingDetail(row.original.id);
+                            }
+                          },
+                          sx: (theme) => ({
+                            ...baseRowHoverSx(theme),
+                            cursor: "pointer",
+                          }),
+                        })}
+                        renderEmptyRowsFallback={() => (
+                          <div className="py-6 text-center text-sm text-slate-500">
+                            No appointments found for this selection.
+                          </div>
                         )}
-                      </TableBody>
-                      </Table>
+                        {...mrtSurfaceProps}
+                      />
                     </div>
                   </div>
                 )}
@@ -1436,100 +1604,55 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
             </CardHeader>
             <CardContent className="pt-0">
               <div className="overflow-auto">
-                <table className="min-w-[760px] w-full text-sm text-gray-700">
-                  <thead>
-                    <tr className="bg-slate-50 text-xs uppercase tracking-[0.2em] text-gray-400">
-                      <th className="py-3 pl-3 text-left font-medium">Staff</th>
-                      <th className="py-3 text-left font-medium">Utilization</th>
-                      <th className="py-3 text-right font-medium">Total</th>
-                      <th className="py-3 text-right font-medium">Pending</th>
-                      <th className="py-3 text-right font-medium">Confirmed</th>
-                      <th className="py-3 text-right font-medium">Completed</th>
-                      <th className="py-3 text-right font-medium">Declined</th>
-                      <th className="py-3 pr-3 text-right font-medium">Canceled</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.staff.map((row) => {
-                      const completion =
-                        row.total > 0
-                          ? Math.round((row.completed / row.total) * 100)
-                          : 0;
-                      const utilization = Math.round(
-                        (row.total / maxStaffTotal) * 100
-                      );
-
-                      return (
-                        <tr
-                          key={row.id}
-                          className="border-t border-gray-100 hover:bg-slate-50/60 cursor-pointer"
-                          role="button"
-                          tabIndex={0}
-                          onClick={() =>
-                            openStaffList({
-                              id: row.id,
-                              name: row.name ?? "Staff member",
-                              email: row.email,
-                            })
-                          }
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === " ") {
-                              event.preventDefault();
-                              openStaffList({
-                                id: row.id,
-                                name: row.name ?? "Staff member",
-                                email: row.email,
-                              });
-                            }
-                          }}
-                        >
-                          <td className="py-3 pl-3 pr-4">
-                            <p className="font-semibold text-gray-900">
-                              {row.name ?? "Staff member"}
-                            </p>
-                            {row.email && (
-                              <p className="text-xs text-gray-500">
-                                {row.email}
-                              </p>
-                            )}
-                          </td>
-                          <td className="py-3 pr-4 min-w-[180px]">
-                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                              <span>{utilization}%</span>
-                              <span className="text-gray-300">·</span>
-                              <span>{completion}% completed</span>
-                            </div>
-                            <Progress value={utilization} className="mt-2" />
-                          </td>
-                          <td className="py-3 text-right font-semibold">
-                            {row.total}
-                          </td>
-                          <td className="py-3 text-right">{row.pending}</td>
-                          <td className="py-3 text-right">{row.confirmed}</td>
-                          <td className="py-3 text-right">{row.completed}</td>
-                          <td className="py-3 text-right">{row.declined}</td>
-                          <td className="py-3 pr-3 text-right">{row.canceled}</td>
-                        </tr>
-                      );
-                    })}
-                    {data.staff.length === 0 && (
-                      <tr>
-                        <td
-                          className="py-4 text-sm text-gray-500"
-                          colSpan={8}
-                        >
-                          No staff members found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                <MaterialReactTable
+                  columns={staffColumns}
+                  data={data.staff}
+                  enablePagination={false}
+                  enableSorting={false}
+                  enableColumnActions={false}
+                  enableColumnFilters={false}
+                  enableGlobalFilter={false}
+                  enableDensityToggle={false}
+                  enableFullScreenToggle={false}
+                  enableTopToolbar={false}
+                  enableBottomToolbar={false}
+                  muiTableBodyRowProps={({ row }) => ({
+                    role: "button",
+                    tabIndex: 0,
+                    onClick: () =>
+                      openStaffList({
+                        id: row.original.id,
+                        name: row.original.name ?? "Staff member",
+                        email: row.original.email,
+                      }),
+                    onKeyDown: (event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openStaffList({
+                          id: row.original.id,
+                          name: row.original.name ?? "Staff member",
+                          email: row.original.email,
+                        });
+                      }
+                    },
+                    sx: (theme) => ({
+                      ...baseRowHoverSx(theme),
+                      cursor: "pointer",
+                    }),
+                  })}
+                  renderEmptyRowsFallback={() => (
+                    <div className="py-4 text-sm text-gray-500">
+                      No staff members found.
+                    </div>
+                  )}
+                  {...mrtSurfaceProps}
+                />
               </div>
             </CardContent>
           </Card>
         </div>
       )}
+      </div>
     </div>
-  </div>
   );
 }

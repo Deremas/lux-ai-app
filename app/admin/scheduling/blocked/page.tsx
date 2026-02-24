@@ -2,13 +2,11 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BlockedTimeClient from "./BlockedTimeClient";
 import { getServerSession } from "next-auth/next";
+import ProductShell from "@/components/scheduling/ProductShell";
+import SectionCard from "@/components/scheduling/SectionCard";
 
 import { authOptions } from "@/lib/auth";
-import {
-  getFirstOrgContext,
-  getOrgContextById,
-  getUserOrgContext,
-} from "@/lib/scheduling/org-context";
+import { getFirstOrgContext, getUserOrgContext } from "@/lib/scheduling/org-context";
 import { requireAdminOrStaffForOrg } from "@/lib/scheduling/admin-guard";
 
 function pickParam(value: string | string[] | undefined): string {
@@ -16,12 +14,7 @@ function pickParam(value: string | string[] | undefined): string {
   return Array.isArray(value) ? value[0] ?? "" : value;
 }
 
-async function resolveOrgId(requestedOrgId: string) {
-  if (requestedOrgId) {
-    const ctx = await getOrgContextById(requestedOrgId);
-    if (ctx) return ctx;
-  }
-
+async function resolveOrgId() {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
   if (userId) {
@@ -35,10 +28,9 @@ async function resolveOrgId(requestedOrgId: string) {
 export default async function SchedulingBlockedPage({
   searchParams,
 }: {
-  searchParams?: { orgId?: string | string[] };
+  searchParams?: {};
 }) {
-  const requestedOrgId = pickParam(searchParams?.orgId);
-  const orgContext = await resolveOrgId(requestedOrgId);
+  const orgContext = await resolveOrgId();
 
   if (orgContext?.orgId) {
     const returnTo = "/admin/scheduling/blocked";
@@ -49,10 +41,20 @@ export default async function SchedulingBlockedPage({
     <div className="min-h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors duration-300">
       <Header />
       <div className="flex-1">
-        <BlockedTimeClient
-          orgId={orgContext?.orgId ?? ""}
-          defaultTz={orgContext?.defaultTz || "Europe/Luxembourg"}
-        />
+        <ProductShell>
+          {orgContext?.orgId ? (
+            <BlockedTimeClient
+              orgId={orgContext?.orgId ?? ""}
+              defaultTz={orgContext?.defaultTz || "Europe/Luxembourg"}
+            />
+          ) : (
+            <SectionCard>
+              <div className="text-sm text-amber-900">
+                No org found for this account.
+              </div>
+            </SectionCard>
+          )}
+        </ProductShell>
       </div>
       <Footer />
     </div>

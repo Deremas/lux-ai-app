@@ -8,6 +8,7 @@ import {
 } from "@/lib/scheduling/authz";
 import { getAnalyticsAppointments, type AnalyticsListType } from "@/lib/analytics";
 import { isValidUuid } from "@/lib/validation";
+import { resolveOrgIdForRequest } from "@/lib/scheduling/org-resolver";
 
 const LIST_TYPES = new Set<AnalyticsListType>(["all", "paid", "expected"]);
 
@@ -49,12 +50,16 @@ export async function GET(req: Request) {
   if (!who.ok) return NextResponse.json({ error: who.error }, { status: 401 });
 
   const url = new URL(req.url);
-  const orgId = url.searchParams.get("orgId");
+  const orgId = await resolveOrgIdForRequest({
+    orgId: url.searchParams.get("orgId"),
+    userId: who.userId,
+    allowedRoles: ["admin", "staff"],
+  });
   if (!orgId) {
-    return NextResponse.json({ error: "Missing orgId" }, { status: 400 });
-  }
-  if (!isValidUuid(orgId)) {
-    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    return NextResponse.json(
+      { error: "No organization found" },
+      { status: 400 }
+    );
   }
 
   const authz = await requireOrgRole({

@@ -93,6 +93,7 @@ export async function POST(req: Request) {
 
   const passwordHash = await bcrypt.hash(password, 10);
   const token = crypto.randomBytes(32).toString("hex");
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
   const expiresAt = new Date(Date.now() + 1000 * 60 * 60);
 
   await prisma.emailVerification.upsert({
@@ -102,30 +103,38 @@ export async function POST(req: Request) {
       email,
       name,
       passwordHash,
-      token,
+      token: tokenHash,
       expiresAt,
     },
     update: {
       name,
       passwordHash,
-      token,
+      token: tokenHash,
       expiresAt,
       usedAt: null,
     },
   });
 
-  const verifyUrl = `${process.env.NEXTAUTH_URL ?? ""}/api/auth/verify?token=${token}`;
+  const baseUrl = (process.env.NEXTAUTH_URL ?? "https://luxaiautomation.com").replace(
+    /\/+$/,
+    ""
+  );
+  const verifyUrl = `${baseUrl}/api/auth/verify?token=${token}`;
   const resend = new Resend(process.env.RESEND_API_KEY);
+  const fromEmail = process.env.CONTACT_FROM_EMAIL;
+  const fromHeader = `"Lux AI Consultancy & Automation" <${fromEmail}>`;
+  const replyTo = "support@luxaiautomation.com";
+  const subject = "Verify your email — Lux AI";
+  const text = `Hi ${name ?? "there"},\n\nPlease confirm your email to finish creating your Lux AI account:\n\n${verifyUrl}\n\nThis link expires in 60 minutes.\n\nIf you did not request this account, you can ignore this email.\n\nLux AI Consultancy & Automation\nhttps://luxaiautomation.com`;
 
   await sendWithTimeout(
     resend.emails.send({
-      from: process.env.CONTACT_FROM_EMAIL,
+      from: fromHeader,
+      replyTo,
       to: email,
-      subject: "Verify your email",
-      text: `Verify your email (valid for 1 hour):\n${verifyUrl}`,
-      html: render(
-        VerifyEmail({ name, verifyUrl, expiresInHours: 1 })
-      ),
+      subject,
+      text,
+      html: render(VerifyEmail({ name, verifyUrl, expiresInHours: 1 })),
     }),
     3000
   );

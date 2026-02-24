@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import { getExchangeRates } from "@/lib/exchange-rates";
+import { resolveOrgIdForRequest } from "@/lib/scheduling/org-resolver";
 
 function cleanString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -17,9 +18,15 @@ export async function GET(req: Request) {
   }
 
   const url = new URL(req.url);
-  const orgId = cleanString(url.searchParams.get("orgId"));
+  const orgId = await resolveOrgIdForRequest({
+    orgId: url.searchParams.get("orgId"),
+    allowPublic: true,
+  });
   if (!orgId) {
-    return NextResponse.json({ error: "Missing orgId" }, { status: 400 });
+    return NextResponse.json(
+      { error: "No organization found" },
+      { status: 400 }
+    );
   }
 
   const base = cleanString(url.searchParams.get("base") ?? "EUR");

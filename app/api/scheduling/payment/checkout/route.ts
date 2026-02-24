@@ -10,7 +10,7 @@ type MeetingMode = "google_meet" | "zoom" | "phone" | "in_person";
 const BUSY_STATUSES = ["pending", "confirmed", "completed"] as const;
 
 type Body = {
-  orgId: string;
+  orgId?: string;
   meetingTypeId: string;
   mode: MeetingMode;
   startLocal: string;
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const orgId = cleanString(body.orgId);
+  let orgId = cleanString(body.orgId);
   const meetingTypeId = cleanString(body.meetingTypeId);
   const mode = cleanString(body.mode) as MeetingMode;
   const startLocal = cleanString(body.startLocal);
@@ -54,10 +54,13 @@ export async function POST(req: Request) {
   const tz = cleanString(body.tz);
   const staffUserId = cleanString(body.staffUserId);
 
-  if (!orgId || !meetingTypeId || !mode || !startLocal) {
+  if (!meetingTypeId || !mode || !startLocal) {
     return NextResponse.json({ error: "Missing input" }, { status: 400 });
   }
-  if (!isValidUuid(orgId) || !isValidUuid(meetingTypeId)) {
+  if (orgId && !isValidUuid(orgId)) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  }
+  if (!isValidUuid(meetingTypeId)) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
   if (tz && !isValidTimezone(tz)) {
@@ -76,6 +79,20 @@ export async function POST(req: Request) {
     );
   }
 
+  const mt = await prisma.meetingType.findFirst({
+    where: { id: meetingTypeId, ...(orgId ? { orgId } : {}), isActive: true },
+    include: { modes: { select: { mode: true } } },
+  });
+
+  if (!mt) {
+    return NextResponse.json(
+      { error: "Meeting type not found" },
+      { status: 404 }
+    );
+  }
+
+  orgId = orgId || mt.orgId;
+
   const settings = await prisma.orgSettings.findFirst({
     where: { orgId },
     select: {
@@ -89,18 +106,6 @@ export async function POST(req: Request) {
     process.env.DEFAULT_PAYMENT_CENTS ?? "15000"
   );
   const fallbackCurrency = (process.env.DEFAULT_PAYMENT_CURRENCY ?? "EUR").trim();
-
-  const mt = await prisma.meetingType.findFirst({
-    where: { id: meetingTypeId, orgId, isActive: true },
-    include: { modes: { select: { mode: true } } },
-  });
-
-  if (!mt) {
-    return NextResponse.json(
-      { error: "Meeting type not found" },
-      { status: 404 }
-    );
-  }
 
   const allowedModes = mt.modes.map((m) => m.mode);
   if (!allowedModes.includes(mode)) {

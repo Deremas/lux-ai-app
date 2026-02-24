@@ -133,12 +133,22 @@ export default function ContactPage() {
     }
   };
 
-  const contactInfo = ["email", "phone", "visit"].map((k) => ({
-    icon: t(lang, `contact.info.${k}.icon`),
-    title: t(lang, `contact.info.${k}.title`),
-    content: t(lang, `contact.info.${k}.content`),
-    description: t(lang, `contact.info.${k}.description`),
-  }));
+  const contactInfo = ["person", "location", "email", "phone", "authorization"].map(
+    (k) => {
+      const linkLabel = t(lang, `contact.info.${k}.linkLabel`);
+      return {
+        key: k,
+        icon: t(lang, `contact.info.${k}.icon`),
+        title: t(lang, `contact.info.${k}.title`),
+        content: t(lang, `contact.info.${k}.content`),
+        description: t(lang, `contact.info.${k}.description`),
+        linkLabel:
+          linkLabel === `contact.info.${k}.linkLabel` ? "" : linkLabel,
+        isEmail: k === "email",
+        isAuthorization: k === "authorization",
+      };
+    }
+  );
 
   const whyChooseUs = ["i1", "i2", "i3", "i4"].map((k) =>
     t(lang, `contact.why.${k}`)
@@ -394,7 +404,7 @@ export default function ContactPage() {
                             {info.title}
                           </h4>
 
-                          {info.title.toLowerCase().includes("email") ? (
+                          {info.isEmail ? (
                             <a
                               href={`mailto:${info.content}`}
                               className="text-primary-600 dark:text-accent-500 font-medium mb-1 hover:underline"
@@ -410,6 +420,15 @@ export default function ContactPage() {
                           <p className="text-sm text-gray-600 dark:text-gray-300">
                             {info.description}
                           </p>
+
+                          {info.isAuthorization && info.linkLabel && (
+                            <a
+                              href="/legal#business-identifiers"
+                              className="mt-2 inline-flex text-sm font-semibold text-primary-600 dark:text-accent-500 hover:underline"
+                            >
+                              {info.linkLabel}
+                            </a>
+                          )}
                         </div>
                       </motion.div>
                     </AnimatedSection>

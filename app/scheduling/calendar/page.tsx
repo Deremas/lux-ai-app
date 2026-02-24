@@ -1,12 +1,13 @@
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { SchedulingCalendar } from "@/components/scheduling/SchedulingCalendar";
+import ProductShell from "@/components/scheduling/ProductShell";
+import ProductHero from "@/components/scheduling/ProductHero";
+import SectionCard from "@/components/scheduling/SectionCard";
 import { getServerSession } from "next-auth/next";
 
 import { authOptions } from "@/lib/auth";
-import {
-  getFirstOrgContext,
-  getOrgContextById,
-  getUserOrgContext,
-} from "@/lib/scheduling/org-context";
+import { getFirstOrgContext, getUserOrgContext } from "@/lib/scheduling/org-context";
 
 const FALLBACK_TZ = "Europe/Luxembourg";
 
@@ -15,12 +16,7 @@ function pickParam(value: string | string[] | undefined): string {
   return Array.isArray(value) ? value[0] ?? "" : value;
 }
 
-async function resolveOrgId(requestedOrgId: string) {
-  if (requestedOrgId) {
-    const ctx = await getOrgContextById(requestedOrgId);
-    if (ctx) return ctx;
-  }
-
+async function resolveOrgId() {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
   if (userId) {
@@ -34,29 +30,49 @@ async function resolveOrgId(requestedOrgId: string) {
 export default async function SchedulingCalendarPage({
   searchParams,
 }: {
-  searchParams?: { orgId?: string | string[]; tz?: string | string[] };
+  searchParams?: { tz?: string | string[] };
 }) {
-  const requestedOrgId = pickParam(searchParams?.orgId);
-  const orgContext = await resolveOrgId(requestedOrgId);
+  const orgContext = await resolveOrgId();
   const tz = pickParam(searchParams?.tz) || orgContext?.defaultTz || FALLBACK_TZ;
   if (!orgContext?.orgId) {
     return (
-      <div className="max-w-6xl mx-auto p-6 space-y-4">
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
-          Missing orgId. Add `?orgId=...` to the URL.
+      <div className="min-h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors duration-300">
+        <Header />
+        <div className="flex-1">
+          <ProductShell>
+            <SectionCard>
+              <div className="text-sm text-amber-900">
+                No organization found. Please sign in or contact support.
+              </div>
+            </SectionCard>
+          </ProductShell>
         </div>
+        <Footer />
       </div>
     );
   }
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Scheduling Calendar</h1>
-
-      <SchedulingCalendar
-        orgId={orgContext.orgId}
-        tz={tz}
-        includeBuffer={true}
-      />
+    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors duration-300">
+      <Header />
+      <div className="flex-1">
+        <ProductShell>
+          <ProductHero
+            eyebrow="Scheduling"
+            title="Calendar"
+            subtitle="Review upcoming availability and booking windows."
+          />
+          <div className="mt-6">
+            <SectionCard className="p-4 md:p-6">
+              <SchedulingCalendar
+                orgId={orgContext.orgId}
+                tz={tz}
+                includeBuffer={true}
+              />
+            </SectionCard>
+          </div>
+        </ProductShell>
+      </div>
+      <Footer />
     </div>
   );
 }

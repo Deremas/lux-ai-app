@@ -12,6 +12,7 @@ import {
 } from "@/lib/scheduling/intervals";
 import { isValidTimezone, isValidUuid } from "@/lib/validation";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
+import { resolveOrgIdForRequest } from "@/lib/scheduling/org-resolver";
 
 const BUSY_STATUSES = ["pending", "confirmed", "completed"] as const;
 const MIN_LEAD_MIN = 180;
@@ -210,7 +211,10 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
 
-  const orgId = url.searchParams.get("orgId");
+  const orgId = await resolveOrgIdForRequest({
+    orgId: url.searchParams.get("orgId"),
+    allowPublic: true,
+  });
   const meetingTypeId = url.searchParams.get("meetingTypeId");
   const from = url.searchParams.get("from");
   const to = url.searchParams.get("to");
@@ -219,12 +223,12 @@ export async function GET(req: Request) {
 
   if (!orgId || !meetingTypeId || !from || !to) {
     return NextResponse.json(
-      { error: "Missing orgId, meetingTypeId, from, to" },
+      { error: "Missing meetingTypeId, from, to, or organization" },
       { status: 400 }
     );
   }
 
-  if (!isValidUuid(orgId) || !isValidUuid(meetingTypeId)) {
+  if (!isValidUuid(meetingTypeId)) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
 

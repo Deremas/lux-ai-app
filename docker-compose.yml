@@ -21,9 +21,10 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-      DATABASE_URL: ${DATABASE_URL}
-      RESEND_API_KEY: ${RESEND_API_KEY}
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+        DATABASE_URL: ${DATABASE_URL}
+        DATABASE_MIGRATE_URL: ${DATABASE_URL}
+        RESEND_API_KEY: ${RESEND_API_KEY}
+        STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
     container_name: luxapp-web
     restart: unless-stopped
     env_file:

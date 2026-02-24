@@ -4,10 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { DateTime } from "luxon";
 import { useSession, signIn } from "next-auth/react";
 import Link from "next/link";
-import { Bell, MailCheck, MailX, Clock } from "lucide-react";
+import { Bell, MailCheck, MailX } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import MrtCardTable from "@/components/scheduling/MrtCardTable";
+import FilterBar from "@/components/scheduling/FilterBar";
+import type { MRT_ColumnDef, MRT_PaginationState } from "material-react-table";
 
 type Props = {
   orgId: string;
@@ -41,6 +45,19 @@ function formatMoney(priceCents?: number | null, currency?: string | null) {
   } catch {
     return `${(priceCents / 100).toFixed(2)} ${currency}`;
   }
+}
+
+function titleCase(value: string) {
+  return value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function resolvePagination(
+  updaterOrValue: MRT_PaginationState | ((prev: MRT_PaginationState) => MRT_PaginationState),
+  prev: MRT_PaginationState
+) {
+  return typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue;
 }
 
 export default function NotificationsClient({ orgId, tz }: Props) {
@@ -163,6 +180,118 @@ export default function NotificationsClient({ orgId, tz }: Props) {
     };
   }, [selected, orgId]);
 
+  async function handleSelect(item: NotificationItem) {
+    setSelected(item);
+    setActionError(null);
+    setNote("");
+    setSelectedDetail(null);
+    if (!item.seen) {
+      try {
+        await fetch("/api/scheduling/admin/notifications", {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ orgId, ids: [item.id] }),
+        });
+        setItems((prev) =>
+          prev.map((n) => (n.id === item.id ? { ...n, seen: true } : n))
+        );
+        setUnseenCount((prev) => Math.max(0, prev - 1));
+      } catch {
+        // best-effort; UI still opens details
+      }
+    }
+  }
+
+  const columns = useMemo<MRT_ColumnDef<NotificationItem>[]>(
+    () => [
+      {
+        id: "status",
+        header: "Status",
+        Cell: ({ row }) => {
+          const failed = row.original.status === "failed";
+          const Icon = failed ? MailX : MailCheck;
+          return (
+            <div className="flex items-center gap-2">
+              <Icon
+                className={`h-4 w-4 ${failed ? "text-red-500" : "text-emerald-500"}`}
+              />
+              <Badge variant={failed ? "destructive" : "secondary"}>
+                {failed ? "Failed" : "Sent"}
+              </Badge>
+            </div>
+          );
+        },
+      },
+      {
+        id: "notification",
+        header: "Notification",
+        Cell: ({ row }) => (
+          <div className="min-w-0">
+            <div className="truncate font-semibold text-gray-900 dark:text-white">
+              {row.original.meetingTypeKey ?? "Meeting"} ·{" "}
+              {row.original.templateKey ?? "notification"}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              {titleCase(row.original.channel)}
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: "recipient",
+        header: "Recipient",
+        Cell: ({ row }) => (
+          <div className="text-xs text-gray-600 dark:text-gray-300">
+            {row.original.toAddress ? (
+              row.original.toAddress
+            ) : (
+              <span className="text-red-500">No recipient</span>
+            )}
+          </div>
+        ),
+      },
+      {
+        id: "appointment",
+        header: "Appointment",
+        Cell: ({ row }) => {
+          const start = DateTime.fromJSDate(
+            row.original.startAtUtc instanceof Date
+              ? row.original.startAtUtc
+              : new Date(row.original.startAtUtc)
+          ).setZone(timezone);
+          return (
+            <div className="text-xs text-gray-600 dark:text-gray-300">
+              <div>{start.toFormat("LLL dd · HH:mm")}</div>
+              <div>{titleCase(row.original.apptStatus)}</div>
+            </div>
+          );
+        },
+      },
+      {
+        id: "created",
+        header: "Sent",
+        Cell: ({ row }) => {
+          const when = DateTime.fromJSDate(
+            row.original.createdAt instanceof Date
+              ? row.original.createdAt
+              : new Date(row.original.createdAt)
+          ).setZone(timezone);
+          return (
+            <span className="text-xs text-gray-600 dark:text-gray-300">
+              {when.toFormat("LLL dd · HH:mm")}
+            </span>
+          );
+        },
+      },
+    ],
+    [timezone]
+  );
+
+  const pagination = useMemo(
+    () => ({ pageIndex: page - 1, pageSize }),
+    [page, pageSize]
+  );
+
   if (status !== "authenticated") {
     return (
       <div className="mx-auto w-full max-w-6xl px-4 py-12">
@@ -182,7 +311,7 @@ export default function NotificationsClient({ orgId, tz }: Props) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-10">
+    <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
@@ -202,172 +331,97 @@ export default function NotificationsClient({ orgId, tz }: Props) {
         </Button>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <Bell className="h-4 w-4 text-gray-500" />
-            <span className="text-gray-600 dark:text-gray-300">
-              Unseen notifications: {unseenCount} / {total}
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <Input
-              className="h-9 w-60"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search email or template..."
-            />
-            <select
-              className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              value={statusFilter}
-              onChange={(e) =>
-                setStatusFilter(e.target.value as typeof statusFilter)
-              }
-            >
-              {STATUS_OPTIONS.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-            <span className="text-gray-500">Rows:</span>
-            <select
-              className="h-9 rounded-md border border-input bg-transparent px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
-            >
-              {[10, 25, 50].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {loading && (
-          <div className="mt-4 text-sm text-gray-600 dark:text-gray-300">
-            Loading notifications...
-          </div>
-        )}
-        {error && (
-          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-        {!loading && !error && items.length === 0 && (
-          <div className="mt-4 text-sm text-gray-600 dark:text-gray-300">
-            No notifications found.
-          </div>
-        )}
-
-        <div className="mt-4 grid gap-3">
-          {items.map((item) => {
-            const when = DateTime.fromJSDate(
-              item.createdAt instanceof Date
-                ? item.createdAt
-                : new Date(item.createdAt),
-            ).setZone(timezone);
-            const start = DateTime.fromJSDate(
-              item.startAtUtc instanceof Date
-                ? item.startAtUtc
-                : new Date(item.startAtUtc),
-            ).setZone(timezone);
-            const Icon = item.status === "failed" ? MailX : MailCheck;
-
-            return (
-              <div
-                key={item.id}
-                className={`flex cursor-pointer flex-wrap items-start justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm transition hover:border-gray-400 dark:border-slate-700 dark:bg-slate-800/40 ${!item.seen ? "ring-2 ring-emerald-400/40" : ""}`}
-                onClick={async () => {
-                  setSelected(item);
-                  setActionError(null);
-                  setNote("");
-                  setSelectedDetail(null);
-                  if (!item.seen) {
-                    await fetch("/api/scheduling/admin/notifications", {
-                      method: "PATCH",
-                      headers: { "content-type": "application/json" },
-                      body: JSON.stringify({ orgId, ids: [item.id] }),
-                    });
-                    setItems((prev) =>
-                      prev.map((n) =>
-                        n.id === item.id ? { ...n, seen: true } : n,
-                      ),
-                    );
-                    setUnseenCount((prev) => Math.max(0, prev - 1));
-                  }
-                }}
-              >
-                <div className="flex gap-3">
-                  <div className="mt-0.5">
-                    <Icon
-                      className={`h-5 w-5 ${
-                        item.status === "failed"
-                          ? "text-red-500"
-                          : "text-emerald-500"
-                      }`}
-                    />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 dark:text-white">
-                      {item.meetingTypeKey ?? "Meeting"} ·{" "}
-                      {item.templateKey ?? "notification"}
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-300">
-                      To:{" "}
-                      {item.toAddress ? (
-                        item.toAddress
-                      ) : (
-                        <span className="text-red-500">
-                          No recipient (email not found)
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-300">
-                      {start.toFormat("ccc, LLL dd · HH:mm")} ·{" "}
-                      {item.apptStatus}
-                    </p>
-                    {item.error && (
-                      <p className="mt-1 text-xs text-red-600">{item.error}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <Clock className="h-4 w-4" />
-                  {when.toFormat("LLL dd · HH:mm")}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm">
-          <div className="text-gray-600 dark:text-gray-300">
-            Page {page} of {Math.max(1, Math.ceil(total / pageSize))}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              disabled={page >= Math.ceil(total / pageSize)}
-              onClick={() =>
-                setPage((prev) =>
-                  Math.min(Math.ceil(total / pageSize), prev + 1),
-                )
-              }
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+      <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+        <Bell className="h-4 w-4 text-gray-500" />
+        <span>Unseen notifications: {unseenCount} / {total}</span>
       </div>
+
+      <FilterBar>
+        <Input
+          className="h-9 w-60"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search email or template..."
+        />
+        <select
+          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+        >
+          {STATUS_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+        <select
+          className="h-9 rounded-md border border-input bg-transparent px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          value={pageSize}
+          onChange={(e) => setPageSize(Number(e.target.value))}
+        >
+          {[10, 25, 50].map((size) => (
+            <option key={size} value={size}>
+              {size} rows
+            </option>
+          ))}
+        </select>
+      </FilterBar>
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      <MrtCardTable
+        title="Notifications"
+        subtitle={total ? `Showing ${items.length} of ${total}` : "No notifications found."}
+        table={{
+          columns,
+          data: items,
+          manualPagination: true,
+          rowCount: total,
+          enableColumnActions: false,
+          enableColumnFilters: false,
+          enableGlobalFilter: false,
+          enableDensityToggle: false,
+          enableFullScreenToggle: false,
+          enableTopToolbar: false,
+          state: {
+            isLoading: loading,
+            pagination,
+          },
+          onPaginationChange: (updaterOrValue) => {
+            const next = resolvePagination(updaterOrValue, pagination);
+            if (next.pageSize !== pageSize) setPageSize(next.pageSize);
+            if (next.pageIndex !== pagination.pageIndex) setPage(next.pageIndex + 1);
+          },
+          muiTableBodyRowProps: ({ row }) => ({
+            role: "button",
+            tabIndex: 0,
+            onClick: () => handleSelect(row.original),
+            onKeyDown: (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleSelect(row.original);
+              }
+            },
+            sx: (theme) => ({
+              cursor: "pointer",
+              boxShadow: !row.original.seen
+                ? `inset 0 0 0 2px ${
+                    theme.palette.mode === "dark"
+                      ? "rgba(16,185,129,0.35)"
+                      : "rgba(16,185,129,0.25)"
+                  }`
+                : "none",
+            }),
+          }),
+          renderEmptyRowsFallback: () => (
+            <div className="p-4 text-sm text-gray-600">No notifications found.</div>
+          ),
+        }}
+      />
       {selected && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"

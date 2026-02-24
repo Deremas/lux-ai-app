@@ -7,6 +7,9 @@ import { signIn, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import Badge from "@/components/scheduling/Badge";
+import MrtCardTable from "@/components/scheduling/MrtCardTable";
+import type { MRT_ColumnDef } from "material-react-table";
 
 type Props = {
   orgId: string;
@@ -72,6 +75,18 @@ function emptyForm(): FormState {
     modeDetails: {},
     isActive: true,
   };
+}
+
+function formatMoney(priceCents?: number | null, currency?: string | null) {
+  if (!priceCents || !currency) return "—";
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+    }).format(priceCents / 100);
+  } catch {
+    return `${(priceCents / 100).toFixed(2)} ${currency}`;
+  }
 }
 
 export default function MeetingTypesClient({ orgId }: Props) {
@@ -277,6 +292,103 @@ export default function MeetingTypesClient({ orgId }: Props) {
     }
   }
 
+  const columns = useMemo<MRT_ColumnDef<MeetingType>[]>(
+    () => [
+      {
+        accessorKey: "key",
+        header: "Key",
+        Cell: ({ row }) => (
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+            {row.original.key}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "title",
+        header: "Details",
+        Cell: ({ row }) => (
+          <div className="min-w-0">
+            <div className="truncate font-semibold text-gray-900 dark:text-white">
+              {row.original.title}
+            </div>
+            {row.original.subtitle && (
+              <div className="truncate text-xs text-gray-600 dark:text-gray-300">
+                {row.original.subtitle}
+              </div>
+            )}
+            {row.original.description && (
+              <div className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
+                {row.original.description}
+              </div>
+            )}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "durationMin",
+        header: "Duration",
+        Cell: ({ row }) => (
+          <span className="text-sm text-gray-700 dark:text-gray-200">
+            {row.original.durationMin} min
+          </span>
+        ),
+      },
+      {
+        id: "modes",
+        header: "Modes",
+        Cell: ({ row }) => (
+          <span className="text-xs text-gray-600 dark:text-gray-300">
+            {row.original.modes?.length ? row.original.modes.join(" · ") : "—"}
+          </span>
+        ),
+      },
+      {
+        id: "payment",
+        header: "Payment",
+        Cell: ({ row }) => {
+          const policy = row.original.paymentPolicy ?? "FREE";
+          const price = formatMoney(row.original.priceCents, row.original.currency);
+          return (
+            <div className="text-xs text-gray-600 dark:text-gray-300">
+              <div className="font-semibold text-gray-800 dark:text-gray-200">
+                {policy === "FREE"
+                  ? "Free"
+                  : policy === "PAY_BEFORE_CONFIRM"
+                  ? "Pay before confirm"
+                  : "Pay after confirm"}
+              </div>
+              <div>{price}</div>
+            </div>
+          );
+        },
+      },
+      {
+        id: "status",
+        header: "Status",
+        Cell: ({ row }) => (
+          <Badge variant={row.original.isActive ? "default" : "secondary"}>
+            {row.original.isActive ? "Active" : "Inactive"}
+          </Badge>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        Cell: ({ row }) => (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => loadForEdit(row.original)}>
+              Edit
+            </Button>
+            <Button size="sm" variant="destructive" onClick={() => handleDelete(row.original)} disabled={saving}>
+              Delete
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [saving, items]
+  );
+
   if (status !== "authenticated") {
     return (
       <div className="mx-auto w-full max-w-4xl px-4 py-12">
@@ -316,8 +428,8 @@ export default function MeetingTypesClient({ orgId }: Props) {
       (!form.priceAmount.trim() || !form.currency.trim()));
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-12">
-      <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div className="space-y-8">
+      <div className="space-y-8">
         <div className="flex justify-end">
           <Link
             href={dashboardHref}
@@ -378,68 +490,27 @@ export default function MeetingTypesClient({ orgId }: Props) {
         )}
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]">
-          <div className="space-y-4">
-            {items.length === 0 && !loading ? (
-              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-gray-300">
-                No meeting types yet.
-              </div>
-            ) : (
-              items.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
-                        {item.key}
-                      </p>
-                      <h3 className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
-                        {item.title}
-                      </h3>
-                      {item.subtitle && (
-                        <p className="mt-1 text-sm font-medium text-gray-700 dark:text-gray-200">
-                          {item.subtitle}
-                        </p>
-                      )}
-                      {item.description && (
-                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                          {item.description}
-                        </p>
-                      )}
-                      <p className="mt-2 text-xs text-gray-500">
-                        {item.durationMin} min · {item.modes.join(" · ")}
-                      </p>
-                      <p className="mt-1 text-xs text-gray-500">
-                        Payment: {item.paymentPolicy ?? "FREE"}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-700 dark:border-slate-600 dark:bg-slate-900 dark:text-gray-200">
-                        {item.isActive ? "active" : "inactive"}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => loadForEdit(item)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDelete(item)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <MrtCardTable
+            title="Meeting types"
+            subtitle={items.length ? `${items.length} types` : "No meeting types yet."}
+            table={{
+              columns,
+              data: items,
+              enablePagination: false,
+              enableSorting: true,
+              enableColumnActions: false,
+              enableColumnFilters: false,
+              enableGlobalFilter: false,
+              enableDensityToggle: false,
+              enableFullScreenToggle: false,
+              enableColumnResizing: false,
+              enableHiding: false,
+              state: { isLoading: loading },
+              renderEmptyRowsFallback: () => (
+                <div className="p-4 text-sm text-gray-600">No meeting types yet.</div>
+              ),
+            }}
+          />
 
           <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">

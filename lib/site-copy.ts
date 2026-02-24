@@ -47,22 +47,25 @@ export const copy: Record<Lang, DeepRecord> = {
         brandShort: "Lux",
         brandName: "Lux AI Consultancy & Automation",
         description:
-          "Transforming businesses through intelligent automation. We help companies implement AI solutions to boost efficiency, reduce costs, and scale smarter.",
+          "A Luxembourg-based digital consulting company providing workflow automation and customer communication systems for SMEs across Europe. We implement AI solutions to boost efficiency, reduce costs, and scale smarter.",
         quickLinks: "Quick Links",
         aboutUs: "About Us",
         services: "Services",
         howItWorks: "How It Works",
         contactInfo: "Contact Info",
-        email: "contact@luxaiautomation.com",
-        emailRaw: "contact@luxaiautomation.com",
+        contactName: "Molla Sisay Jemere",
+        email: "molla@luxaiautomation.com",
+        emailRaw: "molla@luxaiautomation.com",
         phone: "+352 691 833 894",
         phoneRaw: "+352691833894",
-        location: "Belvaux, Luxembourg",
+        location: "Luxembourg",
+        authorization: "Autorisation d’établissement N° 10042992 / 8",
         socialTitle: "Connect with us",
         rights: "All rights reserved.",
         cookies: "Cookie Policy",
         privacy: "Privacy Policy",
         terms: "Terms & Conditions",
+        legal: "Legal Information",
       },
     },
 
@@ -72,7 +75,7 @@ export const copy: Record<Lang, DeepRecord> = {
         line2: "Business with",
         line3: "AI-Powered Solutions",
         subtitle:
-          "Boost efficiency, reduce costs, and scale smarter through AI. Transform your workflows with intelligent automation that works 24/7.",
+          "A Luxembourg-based digital consulting company providing workflow automation and customer communication systems for SMEs. Serving clients across Europe, including France, Germany, and beyond. We implement AI solutions to boost efficiency, reduce costs, and scale smarter.",
         ctaAudit: "Get a Free Automation Audit",
         ctaHow: "Learn How It Works",
         imageAlt: "AI Automation Illustration",
@@ -253,7 +256,7 @@ export const copy: Record<Lang, DeepRecord> = {
         close: "Close",
         errorTitle: "Could not send",
         errorBody:
-          "Sorry — something went wrong while sending your message. Please email us at contact@luxaiautomation.com.",
+          "Sorry — something went wrong while sending your message. Please email us at molla@luxaiautomation.com.",
       },
       hero: {
         title: "Let's Automate Something Together",
@@ -297,24 +300,38 @@ export const copy: Record<Lang, DeepRecord> = {
         i4: "Proven track record",
       },
       info: {
+        person: {
+          icon: "ri-user-line",
+          title: "Contact person",
+          content: "Molla Sisay Jemere",
+          description: "Responsible person / legal representative",
+        },
+        location: {
+          icon: "ri-map-pin-line",
+          title: "Location",
+          content: "Belvaux, Luxembourg",
+          description: "Luxembourg-based, serving EU clients",
+        },
         email: {
           icon: "ri-mail-line",
-          title: "Email Us",
-          content: "contact@luxaiautomation.com",
+          title: "Email",
+          content: "molla@luxaiautomation.com",
           // content: "derejemasresha27@gmail.com",
           description: "Project inquiries & consultations",
         },
         phone: {
           icon: "ri-phone-line",
-          title: "Call Us",
+          title: "Phone",
           content: "+352 691 833 894",
           description: "Mon–Fri · 8:00–18:00 (Luxembourg time)",
         },
-        visit: {
-          icon: "ri-map-pin-line",
-          title: "Based In",
-          content: "Luxembourg (EU)",
-          description: "Remote-first · meetings by appointment",
+        authorization: {
+          icon: "ri-file-list-3-line",
+          title: "Authorization",
+          content: "Autorisation d’établissement N° 10042992 / 8",
+          description:
+            "Establishment authorisation (Luxembourg Ministry of the Economy).",
+          linkLabel: "Learn more",
         },
       },
     },
@@ -718,6 +735,74 @@ export const copy: Record<Lang, DeepRecord> = {
     },
 
     legal: {
+      imprint: {
+        title: "Mentions légales",
+        subtitle: "Contact & Legal Information",
+        lastUpdatedLabel: "Last updated",
+        lastUpdatedDate: "2026-02-24",
+        legalNoticeTitle: "Legal Notice (Mentions légales)",
+        businessIdentifiersTitle: "Business identifiers (Luxembourg)",
+        contactSupportTitle: "Contact & customer support",
+        hostingTitle: "Hosting / technical provider",
+        scopeTitle: "Scope of services",
+        disclaimersTitle: "Liability & warranties",
+        ipTitle: "Intellectual property",
+        privacyTitle: "Privacy & cookies",
+        labels: {
+          company: "Legal/Trading name",
+          representative: "Responsible person / legal representative",
+          address: "Registered business address",
+          email: "Email",
+          phone: "Phone",
+          authorization: "Authorization",
+          rcs: "RCS Luxembourg",
+          vat: "TVA",
+          supportEmail: "Support email",
+          officeHours: "Office hours",
+          hostingProvider: "Hosting provider",
+          hostingCountry: "Country",
+          hostingRegion: "Data hosting region",
+        },
+        values: {
+          company: "Lux AI Consultancy & Automation",
+          representative: "Molla Sisay Jemere",
+          address: "Belvaux, Luxembourg",
+          email: "molla@luxaiautomation.com",
+          phone: "+352 691 833 894",
+          authorization: "Autorisation d’établissement N° 10042992 / 8",
+          authorizationNote:
+            "Establishment authorisation (Luxembourg Ministry of the Economy).",
+          rcs: "",
+          vat: "",
+          supportEmail: "",
+          officeHours: "Mon–Fri · 8:00–18:00 (Luxembourg time)",
+          hostingProvider: "",
+          hostingCountry: "",
+          hostingRegion: "",
+        },
+        contactPrimaryNote: "Project enquiries & consultations",
+        scopeBody:
+          "Lux AI Consultancy & Automation provides B2B automation and professional call-handling systems for service firms.",
+        scopeDisclaimer:
+          "We do not provide mass marketing services, robocalling campaigns, bulk SMS services, or high-volume outbound telemarketing.",
+        disclaimers: [
+          "Information on this website is provided for general purposes and may not always be complete or up to date.",
+          "We are not responsible for the content of external websites linked from this site.",
+          "Service availability may be affected by maintenance or outages.",
+          "Information provided does not constitute legal, tax, or financial advice.",
+        ],
+        ip: [
+          "All content, branding, and design are the intellectual property of Lux AI Consultancy & Automation unless stated otherwise.",
+          "You may not reuse, copy, or redistribute any content without prior written permission.",
+        ],
+        privacyNote:
+          "We use strictly necessary cookies and limited functionality cookies (e.g., language/theme). No marketing profiling.",
+        links: {
+          privacy: "Privacy Policy",
+          cookies: "Cookie Policy",
+          terms: "Terms & Conditions",
+        },
+      },
       cookies: {
         title: "Cookie Policy",
         meta: {
@@ -764,7 +849,7 @@ export const copy: Record<Lang, DeepRecord> = {
           },
           {
             title: "9. Contact",
-            body: "If you have any questions about this Cookie Policy, please contact us at contact@luxaiautomation.com.",
+            body: "If you have any questions about this Cookie Policy, please contact us at molla@luxaiautomation.com.",
           },
         ],
         footer:
@@ -804,7 +889,7 @@ export const copy: Record<Lang, DeepRecord> = {
           s7b: "We may update this Privacy Policy from time to time. Any changes will be posted on this page with a revised effective date. Continued use of the website indicates acceptance of the updated policy.",
 
           s8t: "8. Your Rights & Contact Information",
-          s8b: "Under GDPR, you have the right to access, rectify, or request the deletion of your personal data. For privacy-related questions or requests, please contact us at contact@luxaiautomation.com.",
+          s8b: "Under GDPR, you have the right to access, rectify, or request the deletion of your personal data. For privacy-related questions or requests, please contact us at molla@luxaiautomation.com.",
           end: "By using this website, you acknowledge and agree to this Privacy Policy.",
         },
       },
@@ -884,18 +969,18 @@ export const copy: Record<Lang, DeepRecord> = {
         brandShort: "Lux",
         brandName: "Lux AI Consultancy & Automation",
         description:
-          "Transformer les entreprises grâce à l’automatisation intelligente. Nous aidons les sociétés à déployer des solutions IA pour gagner en efficacité, réduire les coûts et évoluer plus intelligemment.",
+          "Une société de conseil digital basée au Luxembourg, fournissant l’automatisation des workflows et des systèmes de communication client pour les PME en Europe. Nous déployons des solutions IA pour gagner en efficacité, réduire les coûts et évoluer plus intelligemment.",
         quickLinks: "Liens rapides",
         aboutUs: "À propos",
         services: "Services",
         useCases: "Cas d’usage",
         howItWorks: "Comment ça marche",
         contactInfo: "Contact",
-        email: "contact@luxaiautomation.com",
-        emailRaw: "contact@luxaiautomation.com",
+        email: "molla@luxaiautomation.com",
+        emailRaw: "molla@luxaiautomation.com",
         phone: "+352 691 833 894",
         phoneRaw: "+352691833894",
-        location: "Belvaux, Luxembourg",
+        location: "Luxembourg",
         socialTitle: "Connectez-vous avec nous",
         rights: "Tous droits réservés.",
         cookies: "Politique de cookies",
@@ -910,7 +995,7 @@ export const copy: Record<Lang, DeepRecord> = {
         line2: "entreprise avec",
         line3: "des solutions alimentées par l’IA",
         subtitle:
-          "Améliorez l’efficacité, réduisez les coûts et évoluez plus intelligemment grâce à l’IA. Transformez vos flux de travail avec une automatisation intelligente disponible 24h/24 et 7j/7.",
+          "Une société de conseil digital basée au Luxembourg, proposant l’automatisation des workflows et des systèmes de communication client pour les PME. Nous accompagnons des clients à travers l’Europe, notamment en France, en Allemagne et au-delà. Nous déployons des solutions IA pour gagner en efficacité, réduire les coûts et évoluer plus intelligemment.",
         ctaAudit: "Obtenir un audit d’automatisation gratuit",
         ctaHow: "Voir comment ça fonctionne",
         imageAlt: "Illustration d’automatisation par IA",
@@ -1105,7 +1190,7 @@ export const copy: Record<Lang, DeepRecord> = {
         close: "Fermer",
         errorTitle: "Envoi impossible",
         errorBody:
-          "Désolé — une erreur est survenue lors de l’envoi de votre message. Veuillez nous écrire à contact@luxaiautomation.com.",
+          "Désolé — une erreur est survenue lors de l’envoi de votre message. Veuillez nous écrire à molla@luxaiautomation.com.",
       },
       hero: {
         title: "Automatisons quelque chose ensemble",
@@ -1151,7 +1236,7 @@ export const copy: Record<Lang, DeepRecord> = {
       info: {
         email: {
           title: "Envoyez-nous un e-mail",
-          content: "contact@luxaiautomation.com",
+          content: "molla@luxaiautomation.com",
           description: "Demandes de projets et consultations",
         },
         phone: {
@@ -1559,7 +1644,7 @@ export const copy: Record<Lang, DeepRecord> = {
           },
           {
             title: "9. Contact",
-            body: "Pour toute question concernant cette politique relative aux cookies, veuillez nous contacter à l’adresse contact@luxaiautomation.com.",
+            body: "Pour toute question concernant cette politique relative aux cookies, veuillez nous contacter à l’adresse molla@luxaiautomation.com.",
           },
         ],
         footer:
@@ -1599,7 +1684,7 @@ export const copy: Record<Lang, DeepRecord> = {
           s7b: "Nous pouvons mettre à jour cette Politique de confidentialité de temps à autre. Toute modification sera publiée sur cette page avec une date d’entrée en vigueur révisée. La poursuite de l’utilisation du site vaut acceptation de la politique mise à jour.",
 
           s8t: "8. Vos droits et informations de contact",
-          s8b: "Conformément au RGPD, vous disposez du droit d’accès, de rectification ou de suppression de vos données personnelles. Pour toute question ou demande relative à la confidentialité, veuillez nous contacter à l’adresse contact@luxaiautomation.com.",
+          s8b: "Conformément au RGPD, vous disposez du droit d’accès, de rectification ou de suppression de vos données personnelles. Pour toute question ou demande relative à la confidentialité, veuillez nous contacter à l’adresse molla@luxaiautomation.com.",
           end: "En utilisant ce site web, vous reconnaissez et acceptez cette Politique de confidentialité.",
         },
       },
@@ -1678,18 +1763,18 @@ export const copy: Record<Lang, DeepRecord> = {
         brandShort: "Lux",
         brandName: "Lux AI Consultancy & Automation",
         description:
-          "Wir transformieren Unternehmen durch intelligente Automatisierung. Wir helfen Firmen, KI-Lösungen einzuführen, um Effizienz zu steigern, Kosten zu senken und smarter zu skalieren.",
+          "Ein in Luxemburg ansässiges Digitalberatungsunternehmen für Workflow-Automatisierung und Kundenkommunikationssysteme für KMU in Europa. Wir implementieren KI-Lösungen, um Effizienz zu steigern, Kosten zu senken und smarter zu skalieren.",
         quickLinks: "Schnellzugriff",
         aboutUs: "Über uns",
         services: "Services",
         useCases: "Anwendungsfälle",
         howItWorks: "So funktioniert’s",
         contactInfo: "Kontakt",
-        email: "contact@luxaiautomation.com",
-        emailRaw: "contact@luxaiautomation.com",
+        email: "molla@luxaiautomation.com",
+        emailRaw: "molla@luxaiautomation.com",
         phone: "+352 691 833 894",
         phoneRaw: "+352691833894",
-        location: "Belvaux, Luxemburg",
+        location: "Luxembourg",
         socialTitle: "Verbinden Sie sich mit uns",
         rights: "Alle Rechte vorbehalten.",
         cookies: "Cookie-Richtlinie",
@@ -1704,7 +1789,7 @@ export const copy: Record<Lang, DeepRecord> = {
         line2: "Business mit",
         line3: "KI-gestützten Lösungen",
         subtitle:
-          "Steigern Sie Effizienz, senken Sie Kosten und skalieren Sie smarter mit KI. Transformieren Sie Ihre Workflows mit intelligenter Automatisierung – rund um die Uhr.",
+          "Ein in Luxemburg ansässiges Digitalberatungsunternehmen für Workflow-Automatisierung und Kundenkommunikationssysteme für KMU. Wir betreuen Kunden in ganz Europa, darunter Frankreich, Deutschland und weitere Länder. Wir implementieren KI-Lösungen, um Effizienz zu steigern, Kosten zu senken und smarter zu skalieren.",
         ctaAudit: "Kostenlosen Automatisierungs-Audit erhalten",
         ctaHow: "So funktioniert’s",
         imageAlt: "Illustration zur KI-Automatisierung",
@@ -1896,7 +1981,7 @@ export const copy: Record<Lang, DeepRecord> = {
         close: "Schließen",
         errorTitle: "Senden fehlgeschlagen",
         errorBody:
-          "Leider ist beim Senden Ihrer Nachricht ein Fehler aufgetreten. Bitte schreiben Sie uns an contact@luxaiautomation.com.",
+          "Leider ist beim Senden Ihrer Nachricht ein Fehler aufgetreten. Bitte schreiben Sie uns an molla@luxaiautomation.com.",
       },
       hero: {
         title: "Lassen Sie uns gemeinsam automatisieren",
@@ -1942,7 +2027,7 @@ export const copy: Record<Lang, DeepRecord> = {
       info: {
         email: {
           title: "E-Mail",
-          content: "contact@luxaiautomation.com",
+          content: "molla@luxaiautomation.com",
           description: "Projektanfragen & Beratung",
         },
         phone: {
@@ -2345,7 +2430,7 @@ export const copy: Record<Lang, DeepRecord> = {
           },
           {
             title: "9. Kontakt",
-            body: "Wenn Sie Fragen zu dieser Cookie-Richtlinie haben, kontaktieren Sie uns bitte unter contact@luxaiautomation.com.",
+            body: "Wenn Sie Fragen zu dieser Cookie-Richtlinie haben, kontaktieren Sie uns bitte unter molla@luxaiautomation.com.",
           },
         ],
         footer:
@@ -2384,7 +2469,7 @@ export const copy: Record<Lang, DeepRecord> = {
           s7b: "Wir behalten uns vor, diese Datenschutzerklärung gelegentlich zu aktualisieren. Änderungen werden auf dieser Seite mit einem aktualisierten Gültigkeitsdatum veröffentlicht. Die weitere Nutzung der Website gilt als Zustimmung zur aktualisierten Erklärung.",
 
           s8t: "8. Ihre Rechte & Kontaktinformationen",
-          s8b: "Gemäß DSGVO haben Sie das Recht auf Auskunft, Berichtigung oder Löschung Ihrer personenbezogenen Daten. Bei Fragen oder Anliegen zum Datenschutz kontaktieren Sie uns bitte unter contact@luxaiautomation.com.",
+          s8b: "Gemäß DSGVO haben Sie das Recht auf Auskunft, Berichtigung oder Löschung Ihrer personenbezogenen Daten. Bei Fragen oder Anliegen zum Datenschutz kontaktieren Sie uns bitte unter molla@luxaiautomation.com.",
           end: "Durch die Nutzung dieser Website bestätigen Sie, dass Sie diese Datenschutzerklärung gelesen und akzeptiert haben.",
         },
       },
@@ -2463,17 +2548,17 @@ export const copy: Record<Lang, DeepRecord> = {
         brandShort: "Lux",
         brandName: "Lux AI Consultancy & Automation",
         description:
-          "Mir transforméiere Betriber duerch intelligent Automatiséierung. Mir hëllefen Entreprisen, KI-Léisungen anzeféieren, fir d’Effizienz ze steigeren, Käschten ze reduzéieren an méi intelligent ze skaliéieren.",
+          "Eng digital Consultance, baséiert zu Lëtzebuerg, fir Workflow-Automatiséierung a Clienten-Kommunikatiounssystemer fir PMEën an Europa. Mir implementéieren KI-Léisungen, fir d’Effizienz ze steigeren, Käschten ze reduzéieren an intelligent ze skaléieren.",
         quickLinks: "Schnell Links",
         aboutUs: "Iwwer eis",
         services: "Servicer",
         howItWorks: "Wéi et funktionéiert",
         contactInfo: "Kontakt",
-        email: "contact@luxaiautomation.com",
-        emailRaw: "contact@luxaiautomation.com",
+        email: "molla@luxaiautomation.com",
+        emailRaw: "molla@luxaiautomation.com",
         phone: "+352 691 833 894",
         phoneRaw: "+352691833894",
-        location: "Belvaux, Lëtzebuerg",
+        location: "Luxembourg",
         socialTitle: "Verbannt Iech mat eis",
         rights: "All Rechter virbehalen.",
         cookies: "Cookie-Richtlinnen",
@@ -2488,7 +2573,7 @@ export const copy: Record<Lang, DeepRecord> = {
         line2: "Entreprise mat",
         line3: "KI-ugedriwwene Léisungen",
         subtitle:
-          "Steigert d’Effizienz, reduzéiert d’Käschten a skaliéiert méi intelligent mat KI. Transforméiert Är Workflows mat intelligenter Automatiséierung – 24/7.",
+          "Eng digital Consultance, baséiert zu Lëtzebuerg, fir Workflow-Automatiséierung a Clienten-Kommunikatiounssystemer fir PMEën. Mir schaffen a ganz Europa, z. B. a Frankräich, Däitschland an nach anere Länner. Mir implementéieren KI-Léisungen, fir d’Effizienz ze steigeren, Käschten ze reduzéieren an intelligent ze skaléieren.",
         ctaAudit: "Gratis Automatiséierungs-Audit kréien",
         ctaHow: "Kuckt wéi et funktionéiert",
         imageAlt: "Illustratioun: KI Automatiséierung",
@@ -2680,7 +2765,7 @@ export const copy: Record<Lang, DeepRecord> = {
         close: "Zoumaachen",
         errorTitle: "Senden net gelongen",
         errorBody:
-          "Leider ass e Feeler beim Verschécken opgetrueden. Schreift eis w.e.g. op contact@luxaiautomation.com.",
+          "Leider ass e Feeler beim Verschécken opgetrueden. Schreift eis w.e.g. op molla@luxaiautomation.com.",
       },
       hero: {
         title: "Loosst eis zesumme automatiséieren",
@@ -2725,7 +2810,7 @@ export const copy: Record<Lang, DeepRecord> = {
       info: {
         email: {
           title: "E-Mail",
-          content: "contact@luxaiautomation.com",
+          content: "molla@luxaiautomation.com",
           description: "Projetufroen & Berodung",
         },
         phone: {
@@ -3123,7 +3208,7 @@ export const copy: Record<Lang, DeepRecord> = {
           },
           {
             title: "9. Kontakt",
-            body: "Wann Dir Froen zu dëser Cookie-Politik hutt, kontaktéiert eis w.e.g. ënner contact@luxaiautomation.com.",
+            body: "Wann Dir Froen zu dëser Cookie-Politik hutt, kontaktéiert eis w.e.g. ënner molla@luxaiautomation.com.",
           },
         ],
         footer:
@@ -3162,7 +3247,7 @@ export const copy: Record<Lang, DeepRecord> = {
           s7b: "Mir kënnen dës Dateschutzpolitik vun Zäit zu Zäit aktualiséieren. All Ännerunge ginn op dëser Säit mat engem neien A-Kraaft-Datum publizéiert. D’Weiderbenotzung vun der Websäit gëllt als Akzeptanz vun der aktualiséierter Politik.",
 
           s8t: "8. Är Rechter & Kontaktinformatiounen",
-          s8b: "No der GDPR hutt Dir d’Recht op Zougang, Korrektur oder Läschung vun Äre perséinlechen Donnéeën. Fir Froen oder Ufroen am Zesummenhang mam Dateschutz, kontaktéiert eis w.e.g. ënner contact@luxaiautomation.com.",
+          s8b: "No der GDPR hutt Dir d’Recht op Zougang, Korrektur oder Läschung vun Äre perséinlechen Donnéeën. Fir Froen oder Ufroen am Zesummenhang mam Dateschutz, kontaktéiert eis w.e.g. ënner molla@luxaiautomation.com.",
 
           end: "Mat der Benotzung vun dëser Websäit bestätegt Dir, datt Dir dës Dateschutzpolitik gelies hutt an akzeptéiert.",
         },

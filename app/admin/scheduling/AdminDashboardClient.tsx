@@ -13,6 +13,10 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  Calendar,
+  BarChart3,
+  Users,
+  XCircle,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -24,6 +28,11 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import MrtCardTable from "@/components/scheduling/MrtCardTable";
+import KpiCard from "@/components/scheduling/KpiCard";
+import ManagementGrid from "@/components/scheduling/ManagementGrid";
+import Badge, { BookingStatus } from "@/components/scheduling/Badge";
+import type { MRT_ColumnDef } from "material-react-table";
 
 type Props = {
   orgId: string;
@@ -409,10 +418,13 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
     );
   }
 
-  const pendingCount = items.filter((item) => item.status === "pending").length;
-  const confirmedCount = items.filter(
-    (item) => item.status === "confirmed",
-  ).length;
+  const pendingCount = items.filter((i) => i.status === "pending").length;
+  const confirmedCount = items.filter((i) => i.status === "confirmed").length;
+  const todayCount = items.filter((i) => {
+    const itemDate = new Date(i.startAtUtc);
+    const today = new Date();
+    return itemDate.toDateString() === today.toDateString();
+  }).length;
 
   const upcoming = items
     .filter((item) => {
@@ -424,6 +436,51 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
       return start > DateTime.utc().minus({ minutes: 1 });
     })
     .slice(0, 5);
+
+  const upcomingColumns = useMemo<MRT_ColumnDef<Booking>[]>(
+    () => [
+      {
+        header: "Meeting",
+        accessorKey: "meetingTypeKey",
+        Cell: ({ row }) => (
+          <div className="text-sm font-semibold text-gray-900">
+            {(row.original.meetingTypeKey ?? "Meeting") + " · " + row.original.mode}
+          </div>
+        ),
+      },
+      {
+        header: "Time",
+        accessorKey: "startAtUtc",
+        Cell: ({ row }) => {
+          const start = DateTime.fromJSDate(
+            row.original.startAtUtc instanceof Date
+              ? row.original.startAtUtc
+              : new Date(row.original.startAtUtc),
+          ).setZone(timezone);
+          const end = DateTime.fromJSDate(
+            row.original.endAtUtc instanceof Date
+              ? row.original.endAtUtc
+              : new Date(row.original.endAtUtc),
+          ).setZone(timezone);
+          return (
+            <div className="text-xs text-gray-600">
+              {start.toFormat("ccc, LLL dd · HH:mm")}–{end.toFormat("HH:mm")}
+            </div>
+          );
+        },
+      },
+      {
+        header: "Status",
+        accessorKey: "status",
+        Cell: ({ cell }) => (
+          <span className="inline-flex rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-700">
+            {cell.getValue<string>()}
+          </span>
+        ),
+      },
+    ],
+    [timezone],
+  );
 
   const handleProfileSave = async () => {
     setProfileSaving(true);
@@ -448,8 +505,8 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
   };
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-12">
-      <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div className="space-y-8">
+      <div className="space-y-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
@@ -484,11 +541,11 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
                   </span>
                 )}
               </Button>
-                {notifOpen && (
-                  <div
-                    ref={notifPanelRef}
-                    className="fixed left-4 right-4 z-50 mt-2 w-auto rounded-xl border border-gray-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-900 sm:absolute sm:left-auto sm:right-0 sm:w-96"
-                  >
+              {notifOpen && (
+                <div
+                  ref={notifPanelRef}
+                  className="fixed left-4 right-4 z-50 mt-2 w-auto rounded-xl border border-gray-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-900 sm:absolute sm:left-auto sm:right-0 sm:w-96"
+                >
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-semibold text-gray-900 dark:text-white">
                       Notifications
@@ -555,11 +612,10 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
                             }}
                           >
                             <Icon
-                              className={`mt-0.5 h-4 w-4 ${
-                                item.status === "failed"
-                                  ? "text-red-500"
-                                  : "text-emerald-500"
-                              }`}
+                              className={`mt-0.5 h-4 w-4 ${item.status === "failed"
+                                ? "text-red-500"
+                                : "text-emerald-500"
+                                }`}
                             />
                             <div className="flex-1">
                               <div className="font-semibold">
@@ -653,33 +709,24 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
           </div>
         )}
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
-            <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
-              Pending
-            </p>
-            <p className="mt-3 text-3xl font-semibold text-gray-900 dark:text-white">
-              {pendingCount}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
-            <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
-              Confirmed
-            </p>
-            <p className="mt-3 text-3xl font-semibold text-gray-900 dark:text-white">
-              {confirmedCount}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
-            <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
-              Calendar
-            </p>
-            <Button asChild className="mt-3 w-full">
-              <Link href={buildLink("/admin/scheduling/calendar")}>
-                View calendar
-              </Link>
-            </Button>
-          </div>
+        <div className="mt-6 grid gap-4 sm:grid-cols-1 md:grid-cols-3">
+          <KpiCard
+            label="Pending"
+            value={pendingCount}
+            trend={{ value: 12, isPositive: false }}
+          />
+          <KpiCard
+            label="Confirmed"
+            value={confirmedCount}
+            trend={{ value: 8, isPositive: true }}
+          />
+          <KpiCard
+            label="Today's Bookings"
+            value={todayCount}
+            icon={
+              <Calendar className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+            }
+          />
         </div>
 
         <div className="mt-8">
@@ -689,107 +736,121 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
             Jump into specific areas.
           </p>
-          <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3">
-            {[
-              { label: "Bookings", href: "/admin/scheduling/bookings" },
-              { label: "Analytics", href: "/admin/scheduling/analytics" },
-              { label: "Settings", href: "/admin/scheduling/settings" },
-              { label: "Calendar", href: "/admin/scheduling/calendar" },
+          <ManagementGrid
+            tiles={[
               {
-                label: "Meeting types",
-                href: "/admin/scheduling/meeting-types",
-              },
-              { label: "Staff calendars", href: "/admin/scheduling/staff" },
-              {
-                label: "Staff users",
-                href: "/admin/scheduling/staff#staff-users",
-              },
-              { label: "Customers", href: "/admin/scheduling/customers" },
-              { label: "Blocked time", href: "/admin/scheduling/blocked" },
-              {
-                label: "Notifications",
-                href: "/admin/scheduling/notifications",
+                id: "bookings",
+                title: "Bookings",
+                description: "Manage appointment approvals and scheduling",
+                href: buildLink("/admin/scheduling/bookings"),
+                badge: {
+                  text: pendingCount > 0 ? String(pendingCount) : "0",
+                  variant: pendingCount > 0 ? "destructive" : "default"
+                },
+                icon: <Calendar className="h-5 w-5 text-primary-600" />
               },
               {
-                label: "Audit log",
-                href: "/admin/scheduling/audit",
+                id: "analytics",
+                title: "Analytics",
+                description: "View booking trends and performance metrics",
+                href: buildLink("/admin/scheduling/analytics"),
+                icon: <BarChart3 className="h-5 w-5 text-primary-600" />
               },
-            ].map((item) => (
-              <Link
-                key={item.href}
-                href={buildLink(item.href)}
-                className="rounded-2xl border border-gray-200 bg-white px-4 py-4 text-sm font-semibold text-gray-900 shadow-sm transition hover:border-gray-400 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Upcoming bookings
-          </h2>
-          <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            {upcoming.length === 0 ? (
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                No upcoming bookings yet.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {upcoming.map((item) => {
-                  const start = DateTime.fromJSDate(
-                    item.startAtUtc instanceof Date
-                      ? item.startAtUtc
-                      : new Date(item.startAtUtc),
-                  ).setZone(timezone);
-                  const end = DateTime.fromJSDate(
-                    item.endAtUtc instanceof Date
-                      ? item.endAtUtc
-                      : new Date(item.endAtUtc),
-                  ).setZone(timezone);
-                  const label = `${start.toFormat("ccc, LLL dd")} · ${start.toFormat(
-                    "HH:mm",
-                  )}–${end.toFormat("HH:mm")}`;
-
-                  return (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-800/40"
-                    >
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">
-                          {item.meetingTypeKey ?? "Meeting"} · {item.mode}
-                        </p>
-                        <p className="text-xs text-gray-600 dark:text-gray-300">
-                          {label}
-                          {item.durationMin ? ` · ${item.durationMin} min` : ""}
-                        </p>
-                      </div>
-                      <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-700 dark:border-slate-600 dark:bg-slate-900 dark:text-gray-200">
-                        {item.status}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-        {selectedNotif && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-            onClick={(event) => {
-              if (event.target === event.currentTarget) {
-                setSelectedNotif(null);
+              {
+                id: "settings",
+                title: "Settings",
+                description: "Configure policies and system preferences",
+                href: buildLink("/admin/scheduling/settings"),
+                icon: <Settings className="h-5 w-5 text-primary-600" />
+              },
+              {
+                id: "calendar",
+                title: "Calendar",
+                description: "View and manage schedule calendar",
+                href: buildLink("/admin/scheduling/calendar"),
+                icon: <Calendar className="h-5 w-5 text-primary-600" />
+              },
+              {
+                id: "meeting-types",
+                title: "Meeting Types",
+                description: "Configure available meeting types and pricing",
+                href: buildLink("/admin/scheduling/meeting-types"),
+                icon: <Clock className="h-5 w-5 text-primary-600" />
+              },
+              {
+                id: "staff",
+                title: "Staff Management",
+                description: "Manage staff users and calendars",
+                href: buildLink("/admin/scheduling/staff"),
+                icon: <Users className="h-5 w-5 text-primary-600" />
+              },
+              {
+                id: "customers",
+                title: "Customers",
+                description: "View and manage customer database",
+                href: buildLink("/admin/scheduling/customers"),
+                icon: <User className="h-5 w-5 text-primary-600" />
+              },
+              {
+                id: "blocked-time",
+                title: "Blocked Time",
+                description: "Set unavailable time periods",
+                href: buildLink("/admin/scheduling/blocked"),
+                icon: <XCircle className="h-5 w-5 text-primary-600" />
+              },
+              {
+                id: "notifications",
+                title: "Notifications",
+                description: "Configure email and system notifications",
+                href: buildLink("/admin/scheduling/notifications"),
+                badge: {
+                  text: failedNotifs > 0 ? String(failedNotifs) : "0",
+                  variant: failedNotifs > 0 ? "destructive" : "default"
+                },
+                icon: <Bell className="h-5 w-5 text-primary-600" />
               }
-            }}
+            ]}
+          />
+        </div>
+
+        <MrtCardTable
+          title="Upcoming bookings"
+          subtitle="Next confirmed or pending appointments."
+          table={{
+            columns: upcomingColumns,
+            data: upcoming,
+            enablePagination: false,
+            enableSorting: false,
+            enableColumnActions: false,
+            enableColumnFilters: false,
+            enableGlobalFilter: false,
+            enableDensityToggle: false,
+            enableFullScreenToggle: false,
+            enableColumnResizing: false,
+            enableHiding: false,
+            enableTopToolbar: false,
+            enableBottomToolbar: false,
+            renderEmptyRowsFallback: () => (
+              <div className="p-4 text-sm text-gray-600">
+                No upcoming bookings yet.
+              </div>
+            ),
+          }}
+        />
+      </div>
+      {selectedNotif && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setSelectedNotif(null);
+            }
+          }}
+        >
+          <div
+            ref={notifModalRef}
+            className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl dark:bg-slate-900"
           >
-            <div
-              ref={notifModalRef}
-              className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl dark:bg-slate-900"
-            >
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Notification detail
@@ -847,9 +908,9 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
                         selectedDetail.currency
                       )
                         ? ` · ${formatMoney(
-                            selectedDetail.priceCents,
-                            selectedDetail.currency
-                          )}`
+                          selectedDetail.priceCents,
+                          selectedDetail.currency
+                        )}`
                         : ""}
                     </p>
                     <p>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { isValidResetToken, isBodyTooLarge } from "@/lib/validation";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
@@ -25,9 +26,10 @@ export async function GET(req: Request) {
     return NextResponse.redirect(new URL("/auth/signin", req.url));
   }
 
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
   const pending = await prisma.emailVerification.findFirst({
     where: {
-      token,
+      token: tokenHash,
       expiresAt: { gt: new Date() },
       usedAt: null,
     },
@@ -63,5 +65,5 @@ export async function GET(req: Request) {
     data: { usedAt: new Date() },
   });
 
-  return NextResponse.redirect(new URL("/auth/signin", req.url));
+  return NextResponse.redirect(new URL("/auth/verified", req.url));
 }

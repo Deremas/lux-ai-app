@@ -8,6 +8,7 @@ import {
 import { updateAppointmentStatus } from "@/lib/scheduling/appointments";
 import { isBodyTooLarge, isValidMessage, isValidUuid } from "@/lib/validation";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
+import { resolveOrgIdForRequest } from "@/lib/scheduling/org-resolver";
 
 export async function POST(
   req: Request,
@@ -16,15 +17,24 @@ export async function POST(
   const { id } = await ctx.params;
 
   const url = new URL(req.url);
-  const orgId = url.searchParams.get("orgId");
-  if (!orgId)
-    return NextResponse.json({ error: "Missing orgId" }, { status: 400 });
-  if (!isValidUuid(orgId) || !isValidUuid(id)) {
+  if (!isValidUuid(id)) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
 
   const who = await requireUserIdFromSession();
   if (!who.ok) return NextResponse.json({ error: who.error }, { status: 401 });
+
+  const orgId = await resolveOrgIdForRequest({
+    orgId: url.searchParams.get("orgId"),
+    userId: who.userId,
+    allowPublic: true,
+  });
+  if (!orgId) {
+    return NextResponse.json(
+      { error: "No organization found" },
+      { status: 400 }
+    );
+  }
 
   // must be at least a member (customer/staff/admin)
   const authz = await requireOrgRole({

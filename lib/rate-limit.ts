@@ -19,7 +19,7 @@ const RATE_LIMIT_RULES = {
   lead: { id: "lead", max: 5, windowMs: 60_000 },
   upload: { id: "upload", max: 10, windowMs: 60_000 },
   chat: { id: "chat", max: 30, windowMs: 60_000 },
-  auth: { id: "auth", max: 10, windowMs: 60_000 },
+  auth: { id: "auth", max: 11, windowMs: 60_000 },
   scheduling: { id: "scheduling", max: 60, windowMs: 60_000 },
 };
 

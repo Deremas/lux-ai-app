@@ -8,6 +8,8 @@ import { signIn, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import MrtCardTable from "@/components/scheduling/MrtCardTable";
+import type { MRT_ColumnDef } from "material-react-table";
 
 type Props = {
   orgId: string;
@@ -305,9 +307,82 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
     }
   }
 
+  const columns = useMemo<MRT_ColumnDef<Blocked>[]>(
+    () => [
+      {
+        id: "scope",
+        header: "Scope",
+        Cell: ({ row }) => (
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+            {row.original.staffUserId ? "Staff" : "Org-wide"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "staffUserId",
+        header: "Staff",
+        Cell: ({ row }) => (
+          <span className="text-sm text-gray-700 dark:text-gray-200">
+            {row.original.staffUserId || "—"}
+          </span>
+        ),
+      },
+      {
+        id: "window",
+        header: "Window",
+        Cell: ({ row }) => {
+          const start = DateTime.fromJSDate(
+            row.original.startAtUtc instanceof Date
+              ? row.original.startAtUtc
+              : new Date(row.original.startAtUtc)
+          ).setZone(inputTz);
+          const end = DateTime.fromJSDate(
+            row.original.endAtUtc instanceof Date
+              ? row.original.endAtUtc
+              : new Date(row.original.endAtUtc)
+          ).setZone(inputTz);
+          return (
+            <span className="text-xs text-gray-600 dark:text-gray-300">
+              {start.toFormat("LLL dd, HH:mm")} → {end.toFormat("LLL dd, HH:mm")} {inputTz}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "reason",
+        header: "Reason",
+        Cell: ({ row }) => (
+          <span className="text-xs text-gray-600 dark:text-gray-300">
+            {row.original.reason || "—"}
+          </span>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        Cell: ({ row }) => (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => loadForEdit(row.original)}>
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleDelete(row.original.id)}
+              disabled={saving}
+            >
+              Delete
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [inputTz, saving]
+  );
+
   if (status !== "authenticated") {
     return (
-      <div className="mx-auto w-full max-w-4xl px-4 py-12">
+      <div className="space-y-8">
         <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             Sign in to manage blocked time
@@ -325,7 +400,7 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
 
   if (!orgId) {
     return (
-      <div className="mx-auto w-full max-w-4xl px-4 py-12">
+      <div className="space-y-8">
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
           No org found for this account.
         </div>
@@ -334,8 +409,8 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-12">
-      <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div className="space-y-8">
+      <div className="space-y-8">
         <div className="flex justify-end">
           <Link
             href={dashboardHref}
@@ -375,65 +450,27 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
         )}
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]">
-          <div className="space-y-4">
-            {items.length === 0 && !loading ? (
-              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-gray-300">
-                No blocked time entries yet.
-              </div>
-            ) : (
-              items.map((item) => {
-                const start = DateTime.fromJSDate(
-                  item.startAtUtc instanceof Date
-                    ? item.startAtUtc
-                    : new Date(item.startAtUtc)
-                ).setZone(inputTz);
-                const end = DateTime.fromJSDate(
-                  item.endAtUtc instanceof Date ? item.endAtUtc : new Date(item.endAtUtc)
-                ).setZone(inputTz);
-                return (
-                  <div
-                    key={item.id}
-                    className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
-                          {item.staffUserId ? "Staff" : "Org-wide"}
-                        </p>
-                        {item.staffUserId && (
-                          <p className="mt-1 text-xs text-gray-500">
-                            {item.staffUserId}
-                          </p>
-                        )}
-                        <p className="mt-2 text-sm text-gray-700 dark:text-gray-200">
-                          {start.toFormat("LLL dd, HH:mm")} → {end.toFormat("LLL dd, HH:mm")}{" "}
-                          {inputTz}
-                        </p>
-                        {item.reason && (
-                          <p className="mt-1 text-xs text-gray-500">
-                            {item.reason}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Button size="sm" variant="outline" onClick={() => loadForEdit(item)}>
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDelete(item.id)}
-                          disabled={saving}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+          <MrtCardTable
+            title="Blocked time"
+            subtitle={items.length ? `${items.length} entries` : "No blocked time entries yet."}
+            table={{
+              columns,
+              data: items,
+              enablePagination: false,
+              enableSorting: false,
+              enableColumnActions: false,
+              enableColumnFilters: false,
+              enableGlobalFilter: false,
+              enableDensityToggle: false,
+              enableFullScreenToggle: false,
+              enableColumnResizing: false,
+              enableHiding: false,
+              state: { isLoading: loading },
+              renderEmptyRowsFallback: () => (
+                <div className="p-4 text-sm text-gray-600">No blocked time entries yet.</div>
+              ),
+            }}
+          />
 
           <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">

@@ -604,7 +604,7 @@ export const BUSINESS_KB: BusinessKB = {
   },
 
   contact: {
-    email: "contact@luxaiautomation.com",
+    email: "molla@luxaiautomation.com",
     formUrl: "/contact",
     note: {
       en: "Preferred: share details via our contact form or email so we can reply with specifics.",
@@ -613,10 +613,10 @@ export const BUSINESS_KB: BusinessKB = {
       lb: "Am léifsten: schéckt d’Detailer iwwer eise Contact-Formulaire oder per E-Mail, fir datt mir konkret kënne äntweren.",
     },
     cta: {
-      en: "Share your goal, tools, and your name/email/company so we can propose a simple plan. Use /contact or email contact@luxaiautomation.com.",
-      fr: "Partagez votre objectif, vos outils et votre nom/email/entreprise afin que nous proposions un plan simple. Utilisez /contact ou écrivez à contact@luxaiautomation.com.",
-      de: "Teilen Sie Ihr Ziel, Ihre Tools sowie Ihren Namen/E-Mail/Firma, damit wir einen einfachen Plan vorschlagen können. Nutzen Sie /contact oder schreiben Sie an contact@luxaiautomation.com.",
-      lb: "Deelt äert Zil, är Tools an ären Numm/E-Mail/Firma, da proposéiere mir e simple Plang. Benotzt /contact oder schreift un contact@luxaiautomation.com.",
+      en: "Share your goal, tools, and your name/email/company so we can propose a simple plan. Use /contact or email molla@luxaiautomation.com.",
+      fr: "Partagez votre objectif, vos outils et votre nom/email/entreprise afin que nous proposions un plan simple. Utilisez /contact ou écrivez à molla@luxaiautomation.com.",
+      de: "Teilen Sie Ihr Ziel, Ihre Tools sowie Ihren Namen/E-Mail/Firma, damit wir einen einfachen Plan vorschlagen können. Nutzen Sie /contact oder schreiben Sie an molla@luxaiautomation.com.",
+      lb: "Deelt äert Zil, är Tools an ären Numm/E-Mail/Firma, da proposéiere mir e simple Plang. Benotzt /contact oder schreift un molla@luxaiautomation.com.",
     },
   },
 
@@ -737,10 +737,10 @@ export const BUSINESS_KB: BusinessKB = {
         lb: "Wéi séier äntwert dir?",
       },
       answer: {
-        en: "We typically reply within 1–2 business days. Use /contact or email contact@luxaiautomation.com.",
-        fr: "Nous répondons généralement sous 1 à 2 jours ouvrables. Utilisez /contact ou écrivez à contact@luxaiautomation.com.",
-        de: "In der Regel antworten wir innerhalb von 1–2 Werktagen. Nutzen Sie /contact oder schreiben Sie an contact@luxaiautomation.com.",
-        lb: "Normalerweis äntwere mir bannent 1–2 Aarbechtsdeeg. Benotzt /contact oder schreift un contact@luxaiautomation.com.",
+        en: "We typically reply within 1–2 business days. Use /contact or email molla@luxaiautomation.com.",
+        fr: "Nous répondons généralement sous 1 à 2 jours ouvrables. Utilisez /contact ou écrivez à molla@luxaiautomation.com.",
+        de: "In der Regel antworten wir innerhalb von 1–2 Werktagen. Nutzen Sie /contact oder schreiben Sie an molla@luxaiautomation.com.",
+        lb: "Normalerweis äntwere mir bannent 1–2 Aarbechtsdeeg. Benotzt /contact oder schreift un molla@luxaiautomation.com.",
       },
     },
 
@@ -791,10 +791,10 @@ export const BUSINESS_KB: BusinessKB = {
         lb: "Ëm wat geet et an den Notzungsbedingungen?",
       },
       answer: {
-        en: "The terms cover ownership and acceptable use of the website, intellectual property, prohibited scraping/abuse, and general disclaimers. For questions, email contact@luxaiautomation.com.",
-        fr: "Les conditions couvrent la propriété et l’usage du site, la propriété intellectuelle, l’interdiction du scraping/abus et des clauses de non-responsabilité. Questions : contact@luxaiautomation.com.",
-        de: "Die Bedingungen regeln Eigentum und zulässige Nutzung der Website, geistiges Eigentum, Verbot von Scraping/Missbrauch sowie allgemeine Haftungsausschlüsse. Fragen: contact@luxaiautomation.com.",
-        lb: "D’Bedéngunge betreffen Besëtz an zulässeg Notzung vun der Websäit, intellektuell Propriétéit, Verbuet vu Scraping/Mëssbrauch an allgemeng Disclaimer. Froen: contact@luxaiautomation.com.",
+        en: "The terms cover ownership and acceptable use of the website, intellectual property, prohibited scraping/abuse, and general disclaimers. For questions, email molla@luxaiautomation.com.",
+        fr: "Les conditions couvrent la propriété et l’usage du site, la propriété intellectuelle, l’interdiction du scraping/abus et des clauses de non-responsabilité. Questions : molla@luxaiautomation.com.",
+        de: "Die Bedingungen regeln Eigentum und zulässige Nutzung der Website, geistiges Eigentum, Verbot von Scraping/Missbrauch sowie allgemeine Haftungsausschlüsse. Fragen: molla@luxaiautomation.com.",
+        lb: "D’Bedéngunge betreffen Besëtz an zulässeg Notzung vun der Websäit, intellektuell Propriétéit, Verbuet vu Scraping/Mëssbrauch an allgemeng Disclaimer. Froen: molla@luxaiautomation.com.",
       },
     },
 
@@ -831,10 +831,10 @@ export const BUSINESS_KB: BusinessKB = {
       },
       // IMPORTANT: firm refusal + redirect to services (no code help)
       answer: {
-        en: "I am the LuxAI Assistant for Lux AI Consultancy & Automation. I am here to provide information and explain anything about our company and services. I cannot provide general programming help or write code here. However, I can help with our services: AI chatbots, system integrations, workflow automation, and custom business web apps. If you share your business goal and tools (CRM/ERP/helpdesk/email/WhatsApp), I'll suggest the best service and the next step. For implementation requests, please use /contact or email contact@luxaiautomation.com.",
-        fr: "Je suis l'assistant LuxAI pour Lux AI Consultancy & Automation. Je suis ici pour fournir des informations et expliquer tout ce qui concerne notre entreprise et nos services. Je ne peux pas fournir d'aide générale en programmation ni du code ici. Cependant, je peux aider avec nos services : chatbots IA, intégrations systèmes, automatisation de workflows et applications web métier sur mesure. Partagez votre objectif métier et vos outils (CRM/ERP/helpdesk/email/WhatsApp) et je proposerai le service le plus adapté et la prochaine étape. Pour une demande d'implémentation : /contact ou contact@luxaiautomation.com.",
-        de: "Ich bin der LuxAI-Assistent für Lux AI Consultancy & Automation. Ich bin hier, um Informationen bereitzustellen und alles über unser Unternehmen und unsere Services zu erklären. Ich kann hier keine allgemeine Programmierhilfe oder Code liefern. Ich kann jedoch bei unseren Services helfen: KI-Chatbots, Systemintegrationen, Workflow-Automatisierung und individuelle Business-Web-Apps. Nennen Sie bitte Ihr Geschäftsziel und Ihre Tools (CRM/ERP/Helpdesk/E-Mail/WhatsApp) — dann schlage ich den passenden Service und den nächsten Schritt vor. Für Implementierungsanfragen: /contact oder contact@luxaiautomation.com.",
-        lb: "Ech sinn de LuxAI-Assistent fir Lux AI Consultancy & Automation. Ech sinn hei fir Informatiounen ze ginn an alles iwwer eis Entreprise an eis Servicer ze erklären. Ech kann hei keng allgemeng Programmatiounshëllef oder Code liwweren. Ech kann awer bei eise Servicer hëllefen: AI-Chatbots, System-Integratiounen, Workflow-Automatisatioun a moossgeschneidert Business-Web-Apps. Sot mir w.e.g. Äert Business-Zil an Är Tools (CRM/ERP/Helpdesk/E-Mail/WhatsApp) — da proposéiere ech de passende Service an de nächste Schrëtt. Fir Implementatiounsufroen: /contact oder contact@luxaiautomation.com.",
+        en: "I am the LuxAI Assistant for Lux AI Consultancy & Automation. I am here to provide information and explain anything about our company and services. I cannot provide general programming help or write code here. However, I can help with our services: AI chatbots, system integrations, workflow automation, and custom business web apps. If you share your business goal and tools (CRM/ERP/helpdesk/email/WhatsApp), I'll suggest the best service and the next step. For implementation requests, please use /contact or email molla@luxaiautomation.com.",
+        fr: "Je suis l'assistant LuxAI pour Lux AI Consultancy & Automation. Je suis ici pour fournir des informations et expliquer tout ce qui concerne notre entreprise et nos services. Je ne peux pas fournir d'aide générale en programmation ni du code ici. Cependant, je peux aider avec nos services : chatbots IA, intégrations systèmes, automatisation de workflows et applications web métier sur mesure. Partagez votre objectif métier et vos outils (CRM/ERP/helpdesk/email/WhatsApp) et je proposerai le service le plus adapté et la prochaine étape. Pour une demande d'implémentation : /contact ou molla@luxaiautomation.com.",
+        de: "Ich bin der LuxAI-Assistent für Lux AI Consultancy & Automation. Ich bin hier, um Informationen bereitzustellen und alles über unser Unternehmen und unsere Services zu erklären. Ich kann hier keine allgemeine Programmierhilfe oder Code liefern. Ich kann jedoch bei unseren Services helfen: KI-Chatbots, Systemintegrationen, Workflow-Automatisierung und individuelle Business-Web-Apps. Nennen Sie bitte Ihr Geschäftsziel und Ihre Tools (CRM/ERP/Helpdesk/E-Mail/WhatsApp) — dann schlage ich den passenden Service und den nächsten Schritt vor. Für Implementierungsanfragen: /contact oder molla@luxaiautomation.com.",
+        lb: "Ech sinn de LuxAI-Assistent fir Lux AI Consultancy & Automation. Ech sinn hei fir Informatiounen ze ginn an alles iwwer eis Entreprise an eis Servicer ze erklären. Ech kann hei keng allgemeng Programmatiounshëllef oder Code liwweren. Ech kann awer bei eise Servicer hëllefen: AI-Chatbots, System-Integratiounen, Workflow-Automatisatioun a moossgeschneidert Business-Web-Apps. Sot mir w.e.g. Äert Business-Zil an Är Tools (CRM/ERP/Helpdesk/E-Mail/WhatsApp) — da proposéiere ech de passende Service an de nächste Schrëtt. Fir Implementatiounsufroen: /contact oder molla@luxaiautomation.com.",
       },
     },
 
@@ -961,10 +961,10 @@ export const BUSINESS_KB: BusinessKB = {
         lb: "Woubäi kënnt dir hëllefen?",
       },
       answer: {
-        en: "I am the LuxAI Assistant for Lux AI Consultancy & Automation. I am here to provide information and explain anything about our company and services. I help with Lux AI Consultancy & Automation services only: AI chatbots (website/portal/WhatsApp), AI + system integrations (CRM/ERP/APIs/webhooks), workflow automation (sales/support/documents/approvals), and custom business web apps (ERP, e-commerce, admin platforms). Tell me your industry + tools + what you want to automate, and I'll suggest the best next step. Or use /contact / contact@luxaiautomation.com.",
-        fr: "Je suis l'assistant LuxAI pour Lux AI Consultancy & Automation. Je suis ici pour fournir des informations et expliquer tout ce qui concerne notre entreprise et nos services. Je vous aide uniquement sur les services de Lux AI Consultancy & Automation : chatbots IA (site/portail/WhatsApp), IA + intégrations systèmes (CRM/ERP/APIs/webhooks), automatisation de workflows (ventes/support/documents/validations), et applications web métier sur mesure (ERP, e-commerce, plateformes admin). Dites-moi votre secteur + vos outils + ce que vous voulez automatiser et je proposerai la prochaine étape. Ou utilisez /contact / contact@luxaiautomation.com.",
-        de: "Ich bin der LuxAI-Assistent für Lux AI Consultancy & Automation. Ich bin hier, um Informationen bereitzustellen und alles über unser Unternehmen und unsere Services zu erklären. Ich helfe ausschließlich zu den Services von Lux AI Consultancy & Automation: KI-Chatbots (Website/Portal/WhatsApp), KI + Systemintegrationen (CRM/ERP/APIs/Webhooks), Workflow-Automatisierung (Vertrieb/Support/Dokumente/Freigaben), und individuelle Business-Web-Apps (ERP, E-Commerce, Admin-Plattformen). Nennen Sie Branche + Tools + den Prozess, den Sie automatisieren möchten — dann schlage ich den nächsten Schritt vor. Oder /contact / contact@luxaiautomation.com.",
-        lb: "Ech sinn de LuxAI-Assistent fir Lux AI Consultancy & Automation. Ech sinn hei fir Informatiounen ze ginn an alles iwwer eis Entreprise an eis Servicer ze erklären. Ech hëllefen nëmme bei de Servicer vu Lux AI Consultancy & Automation: AI-Chatbots (Websäit/Portal/WhatsApp), AI + System-Integratiounen (CRM/ERP/APIs/Webhooks), Workflow-Automatisatioun (Verkaf/Support/Dokumenter/Approvals), a moossgeschneidert Business-Web-Apps (ERP, E-Commerce, Admin-Plattformen). Sot mir Är Branche + Är Tools + wat Dir wëllt automatiséieren, da proposéiere ech de nächste Schrëtt. Oder /contact / contact@luxaiautomation.com.",
+        en: "I am the LuxAI Assistant for Lux AI Consultancy & Automation. I am here to provide information and explain anything about our company and services. I help with Lux AI Consultancy & Automation services only: AI chatbots (website/portal/WhatsApp), AI + system integrations (CRM/ERP/APIs/webhooks), workflow automation (sales/support/documents/approvals), and custom business web apps (ERP, e-commerce, admin platforms). Tell me your industry + tools + what you want to automate, and I'll suggest the best next step. Or use /contact / molla@luxaiautomation.com.",
+        fr: "Je suis l'assistant LuxAI pour Lux AI Consultancy & Automation. Je suis ici pour fournir des informations et expliquer tout ce qui concerne notre entreprise et nos services. Je vous aide uniquement sur les services de Lux AI Consultancy & Automation : chatbots IA (site/portail/WhatsApp), IA + intégrations systèmes (CRM/ERP/APIs/webhooks), automatisation de workflows (ventes/support/documents/validations), et applications web métier sur mesure (ERP, e-commerce, plateformes admin). Dites-moi votre secteur + vos outils + ce que vous voulez automatiser et je proposerai la prochaine étape. Ou utilisez /contact / molla@luxaiautomation.com.",
+        de: "Ich bin der LuxAI-Assistent für Lux AI Consultancy & Automation. Ich bin hier, um Informationen bereitzustellen und alles über unser Unternehmen und unsere Services zu erklären. Ich helfe ausschließlich zu den Services von Lux AI Consultancy & Automation: KI-Chatbots (Website/Portal/WhatsApp), KI + Systemintegrationen (CRM/ERP/APIs/Webhooks), Workflow-Automatisierung (Vertrieb/Support/Dokumente/Freigaben), und individuelle Business-Web-Apps (ERP, E-Commerce, Admin-Plattformen). Nennen Sie Branche + Tools + den Prozess, den Sie automatisieren möchten — dann schlage ich den nächsten Schritt vor. Oder /contact / molla@luxaiautomation.com.",
+        lb: "Ech sinn de LuxAI-Assistent fir Lux AI Consultancy & Automation. Ech sinn hei fir Informatiounen ze ginn an alles iwwer eis Entreprise an eis Servicer ze erklären. Ech hëllefen nëmme bei de Servicer vu Lux AI Consultancy & Automation: AI-Chatbots (Websäit/Portal/WhatsApp), AI + System-Integratiounen (CRM/ERP/APIs/Webhooks), Workflow-Automatisatioun (Verkaf/Support/Dokumenter/Approvals), a moossgeschneidert Business-Web-Apps (ERP, E-Commerce, Admin-Plattformen). Sot mir Är Branche + Är Tools + wat Dir wëllt automatiséieren, da proposéiere ech de nächste Schrëtt. Oder /contact / molla@luxaiautomation.com.",
       },
     },
 
@@ -981,10 +981,10 @@ export const BUSINESS_KB: BusinessKB = {
         lb: "Wat wann de Benotzer eppes freet wat net ofgedeckt ass?",
       },
       answer: {
-        en: "I am the LuxAI Assistant for Lux AI Consultancy & Automation. I am here to provide information and explain anything about our company and services. I can help with: AI chatbots, integrations, workflow automation, and custom business web apps (ERP, e-commerce, admin portals). If you tell me your industry, tools, and the process you want to automate, I can suggest a simple next step. Next step: use /contact or email contact@luxaiautomation.com so we can follow up with specifics.",
-        fr: "Je suis l'assistant LuxAI pour Lux AI Consultancy & Automation. Je suis ici pour fournir des informations et expliquer tout ce qui concerne notre entreprise et nos services. Je peux aider avec : chatbots IA, intégrations, automatisation de workflows et apps web métier (ERP, e-commerce, portails/admin). Dites-moi votre secteur, vos outils et le processus à automatiser — je proposerai une prochaine étape simple. Prochaine étape : utilisez /contact ou envoyez un email à contact@luxaiautomation.com.",
-        de: "Ich bin der LuxAI-Assistent für Lux AI Consultancy & Automation. Ich bin hier, um Informationen bereitzustellen und alles über unser Unternehmen und unsere Services zu erklären. Ich kann helfen mit: KI-Chatbots, Integrationen, Workflow-Automatisierung und Business-Web-Apps (ERP, E-Commerce, Admin-Portale). Nennen Sie Branche, Tools und den Prozess, den Sie automatisieren möchten — dann schlage ich einen einfachen nächsten Schritt vor. Nächster Schritt: /contact nutzen oder an contact@luxaiautomation.com schreiben, damit wir gezielt nachfassen können.",
-        lb: "Ech sinn de LuxAI-Assistent fir Lux AI Consultancy & Automation. Ech sinn hei fir Informatiounen ze ginn an alles iwwer eis Entreprise an eis Servicer ze erklären. Ech kann hëllefen mat: AI-Chatbots, Integratiounen, Workflow-Automatisatioun an Business-Web-Apps (ERP, E-Commerce, Admin-Portalen). Sot mir Är Branche, Är Tools an de Prozess fir ze automatiséieren — da proposéiere ech e simple nächste Schrëtt. Nächste Schrëtt: /contact benotzen oder un contact@luxaiautomation.com schreiwen, fir datt mir konkret kënne follow-up maachen.",
+        en: "I am the LuxAI Assistant for Lux AI Consultancy & Automation. I am here to provide information and explain anything about our company and services. I can help with: AI chatbots, integrations, workflow automation, and custom business web apps (ERP, e-commerce, admin portals). If you tell me your industry, tools, and the process you want to automate, I can suggest a simple next step. Next step: use /contact or email molla@luxaiautomation.com so we can follow up with specifics.",
+        fr: "Je suis l'assistant LuxAI pour Lux AI Consultancy & Automation. Je suis ici pour fournir des informations et expliquer tout ce qui concerne notre entreprise et nos services. Je peux aider avec : chatbots IA, intégrations, automatisation de workflows et apps web métier (ERP, e-commerce, portails/admin). Dites-moi votre secteur, vos outils et le processus à automatiser — je proposerai une prochaine étape simple. Prochaine étape : utilisez /contact ou envoyez un email à molla@luxaiautomation.com.",
+        de: "Ich bin der LuxAI-Assistent für Lux AI Consultancy & Automation. Ich bin hier, um Informationen bereitzustellen und alles über unser Unternehmen und unsere Services zu erklären. Ich kann helfen mit: KI-Chatbots, Integrationen, Workflow-Automatisierung und Business-Web-Apps (ERP, E-Commerce, Admin-Portale). Nennen Sie Branche, Tools und den Prozess, den Sie automatisieren möchten — dann schlage ich einen einfachen nächsten Schritt vor. Nächster Schritt: /contact nutzen oder an molla@luxaiautomation.com schreiben, damit wir gezielt nachfassen können.",
+        lb: "Ech sinn de LuxAI-Assistent fir Lux AI Consultancy & Automation. Ech sinn hei fir Informatiounen ze ginn an alles iwwer eis Entreprise an eis Servicer ze erklären. Ech kann hëllefen mat: AI-Chatbots, Integratiounen, Workflow-Automatisatioun an Business-Web-Apps (ERP, E-Commerce, Admin-Portalen). Sot mir Är Branche, Är Tools an de Prozess fir ze automatiséieren — da proposéiere ech e simple nächste Schrëtt. Nächste Schrëtt: /contact benotzen oder un molla@luxaiautomation.com schreiwen, fir datt mir konkret kënne follow-up maachen.",
       },
     },
   ] as const satisfies readonly KBAnswer[],
@@ -1596,7 +1596,7 @@ export const BUSINESS_KB: BusinessKB = {
 //   },
 
 //   contact: {
-//     email: "contact@luxaiautomation.com",
+//     email: "molla@luxaiautomation.com",
 //     formUrl: "/contact",
 //     note: {
 //       en: "Preferred: share details via our contact form or email so we can reply with specifics.",
@@ -1605,10 +1605,10 @@ export const BUSINESS_KB: BusinessKB = {
 //       lb: "Am léifsten: schéckt d’Detailer iwwer eise Contact-Formulaire oder per E-Mail, fir datt mir konkret kënne äntweren.",
 //     },
 //     cta: {
-//       en: "Share your goal, tools, and your name/email/company so we can propose a simple plan. Use /contact or email contact@luxaiautomation.com.",
-//       fr: "Partagez votre objectif, vos outils et votre nom/email/entreprise afin que nous proposions un plan simple. Utilisez /contact ou écrivez à contact@luxaiautomation.com.",
-//       de: "Teilen Sie Ihr Ziel, Ihre Tools sowie Ihren Namen/E-Mail/Firma, damit wir einen einfachen Plan vorschlagen können. Nutzen Sie /contact oder schreiben Sie an contact@luxaiautomation.com.",
-//       lb: "Deelt äert Zil, är Tools an ären Numm/E-Mail/Firma, da proposéiere mir e simple Plang. Benotzt /contact oder schreift un contact@luxaiautomation.com.",
+//       en: "Share your goal, tools, and your name/email/company so we can propose a simple plan. Use /contact or email molla@luxaiautomation.com.",
+//       fr: "Partagez votre objectif, vos outils et votre nom/email/entreprise afin que nous proposions un plan simple. Utilisez /contact ou écrivez à molla@luxaiautomation.com.",
+//       de: "Teilen Sie Ihr Ziel, Ihre Tools sowie Ihren Namen/E-Mail/Firma, damit wir einen einfachen Plan vorschlagen können. Nutzen Sie /contact oder schreiben Sie an molla@luxaiautomation.com.",
+//       lb: "Deelt äert Zil, är Tools an ären Numm/E-Mail/Firma, da proposéiere mir e simple Plang. Benotzt /contact oder schreift un molla@luxaiautomation.com.",
 //     },
 //   },
 
@@ -1721,10 +1721,10 @@ export const BUSINESS_KB: BusinessKB = {
 //         lb: "Wéi séier äntwert dir?",
 //       },
 //       answer: {
-//         en: "We typically reply within 1–2 business days. Use /contact or email contact@luxaiautomation.com.",
-//         fr: "Nous répondons généralement sous 1 à 2 jours ouvrables. Utilisez /contact ou écrivez à contact@luxaiautomation.com.",
-//         de: "In der Regel antworten wir innerhalb von 1–2 Werktagen. Nutzen Sie /contact oder schreiben Sie an contact@luxaiautomation.com.",
-//         lb: "Normalerweis äntwere mir bannent 1–2 Aarbechtsdeeg. Benotzt /contact oder schreift un contact@luxaiautomation.com.",
+//         en: "We typically reply within 1–2 business days. Use /contact or email molla@luxaiautomation.com.",
+//         fr: "Nous répondons généralement sous 1 à 2 jours ouvrables. Utilisez /contact ou écrivez à molla@luxaiautomation.com.",
+//         de: "In der Regel antworten wir innerhalb von 1–2 Werktagen. Nutzen Sie /contact oder schreiben Sie an molla@luxaiautomation.com.",
+//         lb: "Normalerweis äntwere mir bannent 1–2 Aarbechtsdeeg. Benotzt /contact oder schreift un molla@luxaiautomation.com.",
 //       },
 //     },
 
@@ -1773,10 +1773,10 @@ export const BUSINESS_KB: BusinessKB = {
 //         lb: "Ëm wat geet et an den Notzungsbedingungen?",
 //       },
 //       answer: {
-//         en: "From my information: the terms cover ownership and acceptable use of the website, intellectual property, prohibited scraping/abuse, and general disclaimers. For questions, email contact@luxaiautomation.com.",
-//         fr: "D’après mes informations : les conditions couvrent la propriété et l’usage du site, la propriété intellectuelle, l’interdiction du scraping/abus et des clauses de non-responsabilité. Questions : contact@luxaiautomation.com.",
-//         de: "Nach meinen Informationen: Die Bedingungen regeln Eigentum und zulässige Nutzung der Website, geistiges Eigentum, Verbot von Scraping/Missbrauch sowie allgemeine Haftungsausschlüsse. Fragen: contact@luxaiautomation.com.",
-//         lb: "No mengen Informatiounen: D’Bedéngunge betreffen Besëtz an zulässeg Notzung vun der Websäit, intellektuell Propriétéit, Verbuet vu Scraping/Mëssbrauch an allgemeng Disclaimer. Froen: contact@luxaiautomation.com.",
+//         en: "From my information: the terms cover ownership and acceptable use of the website, intellectual property, prohibited scraping/abuse, and general disclaimers. For questions, email molla@luxaiautomation.com.",
+//         fr: "D’après mes informations : les conditions couvrent la propriété et l’usage du site, la propriété intellectuelle, l’interdiction du scraping/abus et des clauses de non-responsabilité. Questions : molla@luxaiautomation.com.",
+//         de: "Nach meinen Informationen: Die Bedingungen regeln Eigentum und zulässige Nutzung der Website, geistiges Eigentum, Verbot von Scraping/Missbrauch sowie allgemeine Haftungsausschlüsse. Fragen: molla@luxaiautomation.com.",
+//         lb: "No mengen Informatiounen: D’Bedéngunge betreffen Besëtz an zulässeg Notzung vun der Websäit, intellektuell Propriétéit, Verbuet vu Scraping/Mëssbrauch an allgemeng Disclaimer. Froen: molla@luxaiautomation.com.",
 //       },
 //     },
 
@@ -1793,10 +1793,10 @@ export const BUSINESS_KB: BusinessKB = {
 //         lb: "Kënnt dir mir Code ginn oder e Script fir mäi Projet bauen?",
 //       },
 //       answer: {
-//         en: "I can share information about our services and how we approach automation projects. For implementation details, please use /contact or email contact@luxaiautomation.com with your goal and tools, and we’ll follow up.",
-//         fr: "Je peux partager des informations sur nos services et notre approche. Pour des détails d’implémentation, utilisez /contact ou écrivez à contact@luxaiautomation.com avec votre objectif et vos outils, et nous reviendrons vers vous.",
-//         de: "Ich kann Informationen zu unseren Services und unserer Vorgehensweise teilen. Für Implementierungsdetails nutzen Sie bitte /contact oder schreiben Sie an contact@luxaiautomation.com mit Ziel und Tools — wir melden uns.",
-//         lb: "Ech kann Informatiounen iwwer eis Servicer an eis Approche deelen. Fir Implementatiounsdetailer benotzt w.e.g. /contact oder schreift un contact@luxaiautomation.com mat ärem Zil an ären Tools, da komme mir op Iech zréck.",
+//         en: "I can share information about our services and how we approach automation projects. For implementation details, please use /contact or email molla@luxaiautomation.com with your goal and tools, and we’ll follow up.",
+//         fr: "Je peux partager des informations sur nos services et notre approche. Pour des détails d’implémentation, utilisez /contact ou écrivez à molla@luxaiautomation.com avec votre objectif et vos outils, et nous reviendrons vers vous.",
+//         de: "Ich kann Informationen zu unseren Services und unserer Vorgehensweise teilen. Für Implementierungsdetails nutzen Sie bitte /contact oder schreiben Sie an molla@luxaiautomation.com mit Ziel und Tools — wir melden uns.",
+//         lb: "Ech kann Informatiounen iwwer eis Servicer an eis Approche deelen. Fir Implementatiounsdetailer benotzt w.e.g. /contact oder schreift un molla@luxaiautomation.com mat ärem Zil an ären Tools, da komme mir op Iech zréck.",
 //       },
 //     },
 //     {
@@ -1809,10 +1809,10 @@ export const BUSINESS_KB: BusinessKB = {
 //         lb: "Kënnt dir en Image oder e Logo generéieren?",
 //       },
 //       answer: {
-//         en: "I can explain what we offer and how we deliver projects, but I can’t create images directly here. If you share what you need (style, purpose, where it will be used), please use /contact or email contact@luxaiautomation.com and we’ll follow up.",
-//         fr: "Je peux expliquer ce que nous proposons et notre méthode, mais je ne peux pas créer d’images directement ici. Décrivez votre besoin (style, objectif, usage) via /contact ou par email à contact@luxaiautomation.com et nous reviendrons vers vous.",
-//         de: "Ich kann erklären, was wir anbieten und wie wir Projekte umsetzen, aber ich kann hier keine Bilder direkt erstellen. Beschreiben Sie bitte Ihren Bedarf (Stil, Zweck, Einsatz) über /contact oder per E-Mail an contact@luxaiautomation.com — wir melden uns.",
-//         lb: "Ech kann erklären wat mir ubidden a wéi mir Projeten ëmsetzen, mee ech kann hei keng Biller direkt erstellen. Beschreift w.e.g. äre Besoin (Stil, Zweck, Asaz) iwwer /contact oder per E-Mail un contact@luxaiautomation.com, da komme mir op Iech zréck.",
+//         en: "I can explain what we offer and how we deliver projects, but I can’t create images directly here. If you share what you need (style, purpose, where it will be used), please use /contact or email molla@luxaiautomation.com and we’ll follow up.",
+//         fr: "Je peux expliquer ce que nous proposons et notre méthode, mais je ne peux pas créer d’images directement ici. Décrivez votre besoin (style, objectif, usage) via /contact ou par email à molla@luxaiautomation.com et nous reviendrons vers vous.",
+//         de: "Ich kann erklären, was wir anbieten und wie wir Projekte umsetzen, aber ich kann hier keine Bilder direkt erstellen. Beschreiben Sie bitte Ihren Bedarf (Stil, Zweck, Einsatz) über /contact oder per E-Mail an molla@luxaiautomation.com — wir melden uns.",
+//         lb: "Ech kann erklären wat mir ubidden a wéi mir Projeten ëmsetzen, mee ech kann hei keng Biller direkt erstellen. Beschreift w.e.g. äre Besoin (Stil, Zweck, Asaz) iwwer /contact oder per E-Mail un molla@luxaiautomation.com, da komme mir op Iech zréck.",
 //       },
 //     },
 //     {
@@ -1843,10 +1843,10 @@ export const BUSINESS_KB: BusinessKB = {
 //         lb: "Woubäi kënnt dir hëllefen?",
 //       },
 //       answer: {
-//         en: "I can help with Lux AI Consultancy & Automation services: AI integration, automation, workflows, system integrations, and project scoping. If you share your goal and tools, I’ll suggest the best next step. For implementation requests, please use /contact or email contact@luxaiautomation.com.",
-//         fr: "Je peux aider avec les services de Lux AI Consultancy & Automation : intégration IA, automatisation, workflows, intégrations systèmes et cadrage de projet. Partagez votre objectif et vos outils, et je proposerai la prochaine étape. Pour les demandes d’implémentation, utilisez /contact ou écrivez à contact@luxaiautomation.com.",
-//         de: "Ich helfe bei den Services von Lux AI Consultancy & Automation: KI-Integration, Automatisierung, Workflows, Systemintegrationen und Projekt-Scoping. Nennen Sie Ziel und Tools, dann schlage ich den nächsten Schritt vor. Für Implementierung nutzen Sie bitte /contact oder schreiben Sie an contact@luxaiautomation.com.",
-//         lb: "Ech hëllefen bei de Servicer vu Lux AI Consultancy & Automation: AI-Integratioun, Automatisatioun, Workflows, System-Integratiounen an Projet-Scoping. Sot mir äert Zil an är Tools, da proposéiere ech de nächste Schrëtt. Fir Implementatiounsufroen: /contact oder contact@luxaiautomation.com.",
+//         en: "I can help with Lux AI Consultancy & Automation services: AI integration, automation, workflows, system integrations, and project scoping. If you share your goal and tools, I’ll suggest the best next step. For implementation requests, please use /contact or email molla@luxaiautomation.com.",
+//         fr: "Je peux aider avec les services de Lux AI Consultancy & Automation : intégration IA, automatisation, workflows, intégrations systèmes et cadrage de projet. Partagez votre objectif et vos outils, et je proposerai la prochaine étape. Pour les demandes d’implémentation, utilisez /contact ou écrivez à molla@luxaiautomation.com.",
+//         de: "Ich helfe bei den Services von Lux AI Consultancy & Automation: KI-Integration, Automatisierung, Workflows, Systemintegrationen und Projekt-Scoping. Nennen Sie Ziel und Tools, dann schlage ich den nächsten Schritt vor. Für Implementierung nutzen Sie bitte /contact oder schreiben Sie an molla@luxaiautomation.com.",
+//         lb: "Ech hëllefen bei de Servicer vu Lux AI Consultancy & Automation: AI-Integratioun, Automatisatioun, Workflows, System-Integratiounen an Projet-Scoping. Sot mir äert Zil an är Tools, da proposéiere ech de nächste Schrëtt. Fir Implementatiounsufroen: /contact oder molla@luxaiautomation.com.",
 //       },
 //     },
 
@@ -1867,25 +1867,25 @@ export const BUSINESS_KB: BusinessKB = {
 //           "From my information, here’s what I can share:",
 //           "• We build AI chatbots, integrations, workflow automation, and custom business web apps (ERP, e-commerce, admin portals).",
 //           "• If you tell us your industry, tools, and the process you want to automate, we can propose a simple plan.",
-//           "Next step: use /contact or email contact@luxaiautomation.com so we can follow up with specifics.",
+//           "Next step: use /contact or email molla@luxaiautomation.com so we can follow up with specifics.",
 //         ].join("\n"),
 //         fr: [
 //           "D’après mes informations, voici ce que je peux partager :",
 //           "• Chatbots IA, intégrations, automatisation de workflows et apps web métier (ERP, e-commerce, portails/admin).",
 //           "• Dites-nous votre secteur, vos outils et le processus à automatiser — nous proposerons un plan simple.",
-//           "Prochaine étape : utilisez /contact ou envoyez un email à contact@luxaiautomation.com.",
+//           "Prochaine étape : utilisez /contact ou envoyez un email à molla@luxaiautomation.com.",
 //         ].join("\n"),
 //         de: [
 //           "Nach meinen Informationen kann ich Folgendes sagen:",
 //           "• KI-Chatbots, Integrationen, Workflow-Automatisierung und Business-Web-Apps (ERP, E-Commerce, Admin-Portale).",
 //           "• Nennen Sie Branche, Tools und den Prozess, den Sie automatisieren möchten — dann schlagen wir einen einfachen Plan vor.",
-//           "Nächster Schritt: /contact nutzen oder an contact@luxaiautomation.com schreiben, damit wir gezielt nachfassen können.",
+//           "Nächster Schritt: /contact nutzen oder an molla@luxaiautomation.com schreiben, damit wir gezielt nachfassen können.",
 //         ].join("\n"),
 //         lb: [
 //           "No mengen Informatiounen kann ech Folgendes soen:",
 //           "• AI-Chatbots, Integratiounen, Workflow-Automatisatioun an Business-Web-Apps (ERP, E-Commerce, Admin-Portalen).",
 //           "• Sot eis Är Branche, Är Tools an de Prozess fir ze automatiséieren — mir proposéiere e simple Plang.",
-//           "Nächste Schrëtt: /contact benotzen oder un contact@luxaiautomation.com schreiwen, fir datt mir konkret kënne follow-up maachen.",
+//           "Nächste Schrëtt: /contact benotzen oder un molla@luxaiautomation.com schreiwen, fir datt mir konkret kënne follow-up maachen.",
 //         ].join("\n"),
 //       },
 //     },

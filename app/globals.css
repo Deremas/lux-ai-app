@@ -63,6 +63,90 @@ body[style*="pointer-events: none"] {
   background-color: rgba(148, 163, 184, 0.4);
 }
 
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 214 71% 29%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 41 93% 54%;
+  --accent-foreground: 20 14% 10%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 213 94% 68%;
+
+  --surface: 0 0% 100%;
+  --surface-2: 210 40% 98%;
+  --text: 222 47% 11%;
+  --subtle: 215 28% 64%;
+  --link: 214 71% 29%;
+
+  --status-success-bg: 142 76% 94%;
+  --status-success-text: 142 76% 25%;
+  --status-success-border: 142 60% 80%;
+  --status-warning-bg: 48 96% 94%;
+  --status-warning-text: 35 92% 30%;
+  --status-warning-border: 48 96% 80%;
+  --status-danger-bg: 0 93% 94%;
+  --status-danger-text: 0 72% 40%;
+  --status-danger-border: 0 85% 80%;
+  --status-info-bg: 204 94% 94%;
+  --status-info-text: 212 82% 35%;
+  --status-info-border: 204 94% 80%;
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 8px 20px rgba(15, 23, 42, 0.12);
+}
+
+.dark {
+  --background: 222 47% 7%;
+  --foreground: 210 40% 98%;
+  --card: 222 47% 11%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 47% 11%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 214 70% 45%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 41 93% 54%;
+  --accent-foreground: 20 14% 10%;
+  --secondary: 222 47% 15%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 222 47% 15%;
+  --muted-foreground: 215 16% 70%;
+  --border: 217 16% 28%;
+  --input: 217 16% 28%;
+  --ring: 213 94% 68%;
+
+  --surface: 222 47% 11%;
+  --surface-2: 223 47% 15%;
+  --text: 210 40% 98%;
+  --subtle: 215 16% 65%;
+  --link: 213 94% 70%;
+
+  --status-success-bg: 142 76% 20%;
+  --status-success-text: 142 76% 80%;
+  --status-success-border: 142 60% 30%;
+  --status-warning-bg: 40 92% 20%;
+  --status-warning-text: 45 96% 80%;
+  --status-warning-border: 45 92% 35%;
+  --status-danger-bg: 0 62% 20%;
+  --status-danger-text: 0 85% 80%;
+  --status-danger-border: 0 62% 35%;
+  --status-info-bg: 214 50% 20%;
+  --status-info-text: 214 90% 80%;
+  --status-info-border: 214 50% 35%;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
 @layer base {
   * {
     @apply border-border;

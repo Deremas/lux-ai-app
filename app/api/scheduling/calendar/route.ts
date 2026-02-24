@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { isValidTimezone, isValidUuid } from "@/lib/validation";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import { getMeetingLink } from "@/lib/scheduling/meeting-link";
+import { resolveOrgIdForRequest } from "@/lib/scheduling/org-resolver";
 
 const BUSY_STATUSES = ["pending", "confirmed", "completed"] as const;
 
@@ -87,7 +88,10 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
 
-  const orgId = url.searchParams.get("orgId");
+  const orgId = await resolveOrgIdForRequest({
+    orgId: url.searchParams.get("orgId"),
+    allowPublic: true,
+  });
   const from = url.searchParams.get("from");
   const to = url.searchParams.get("to");
   const tz = url.searchParams.get("tz") || "Europe/Luxembourg";
@@ -96,13 +100,9 @@ export async function GET(req: Request) {
 
   if (!orgId || !from || !to) {
     return NextResponse.json(
-      { error: "Missing orgId, from, to" },
+      { error: "Missing from/to or organization" },
       { status: 400 }
     );
-  }
-
-  if (!isValidUuid(orgId)) {
-    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
 
   if (staffUserId && !isValidUuid(staffUserId)) {

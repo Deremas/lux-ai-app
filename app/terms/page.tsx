@@ -139,7 +139,7 @@ export default function TermsPage() {
                 </p>
 
                 <a
-                  href="mailto:contact@luxaiautomation.com"
+                  href="mailto:molla@luxaiautomation.com"
                   className="mt-2 inline-flex items-center gap-2 rounded-lg px-3 py-2 font-semibold
                              text-slate-900 dark:text-white
                              bg-white/80 dark:bg-slate-900/40
@@ -147,7 +147,7 @@ export default function TermsPage() {
                              hover:bg-white dark:hover:bg-slate-900/60
                              hover:underline transition"
                 >
-                  contact@luxaiautomation.com
+                  molla@luxaiautomation.com
                   <span className="text-xs text-gray-500 dark:text-gray-400">
                     ({s("emailCta")})
                   </span>

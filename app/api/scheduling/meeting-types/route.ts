@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
+import { resolveOrgIdForRequest } from "@/lib/scheduling/org-resolver";
 
 // If you don't have "@/db" alias, use:
 // import { db } from "../../../db"; (path depends on your folder structure)
@@ -24,9 +25,15 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
 
-  const orgId = url.searchParams.get("orgId");
+  const orgId = await resolveOrgIdForRequest({
+    orgId: url.searchParams.get("orgId"),
+    allowPublic: true,
+  });
   if (!orgId) {
-    return NextResponse.json({ error: "Missing orgId" }, { status: 400 });
+    return NextResponse.json(
+      { error: "No organization found" },
+      { status: 400 }
+    );
   }
 
   const requestedLocale = normalizeLocale(url.searchParams.get("locale"));

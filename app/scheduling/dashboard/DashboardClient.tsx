@@ -7,6 +7,9 @@ import { DateTime } from "luxon";
 import { Button } from "@/components/ui/button";
 import AvailabilityCalendar from "@/components/scheduling/AvailabilityCalendar";
 import Link from "next/link";
+import Badge, { type BookingStatus, getStatusDisplay } from "@/components/scheduling/Badge";
+import MrtCardTable from "@/components/scheduling/MrtCardTable";
+import type { MRT_ColumnDef, MRT_PaginationState } from "material-react-table";
 
 type Props = {
   orgId: string;
@@ -74,6 +77,13 @@ function formatPrice(priceCents: number | null, currency: string | null) {
   }
 }
 
+function resolvePagination(
+  updaterOrValue: MRT_PaginationState | ((prev: MRT_PaginationState) => MRT_PaginationState),
+  prev: MRT_PaginationState
+) {
+  return typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue;
+}
+
 export default function DashboardClient({ orgId, tz }: Props) {
   const { data: session, status } = useSession();
   const [items, setItems] = useState<Booking[]>([]);
@@ -112,6 +122,178 @@ export default function DashboardClient({ orgId, tz }: Props) {
     }
     return "UTC";
   }, [tz]);
+
+  const bookingColumns = useMemo<MRT_ColumnDef<Booking>[]>(
+    () => [
+      {
+        accessorKey: "meetingTypeKey",
+        header: "Meeting",
+        Cell: ({ row }) => (
+          <div className="min-w-0">
+            <div className="truncate font-semibold text-gray-900 dark:text-white">
+              {row.original.meetingTypeKey ?? "Meeting"} · {row.original.mode}
+            </div>
+            {row.original.durationMin && (
+              <div className="text-xs text-gray-500">
+                {row.original.durationMin} min
+              </div>
+            )}
+          </div>
+        ),
+      },
+      {
+        id: "time",
+        header: "Time",
+        Cell: ({ row }) => {
+          const start = DateTime.fromJSDate(
+            row.original.startAtUtc instanceof Date
+              ? row.original.startAtUtc
+              : new Date(row.original.startAtUtc)
+          ).setZone(timezone);
+          const end = DateTime.fromJSDate(
+            row.original.endAtUtc instanceof Date
+              ? row.original.endAtUtc
+              : new Date(row.original.endAtUtc)
+          ).setZone(timezone);
+          return (
+            <div className="text-xs text-gray-600 dark:text-gray-300">
+              {start.toFormat("ccc, LLL dd")} · {start.toFormat("HH:mm")}–
+              {end.toFormat("HH:mm")}
+            </div>
+          );
+        },
+      },
+      {
+        id: "links",
+        header: "Links",
+        Cell: ({ row }) => {
+          const item = row.original;
+          const calendarLink = buildGoogleCalendarUrl({
+            title: `${item.meetingTypeKey ?? "Meeting"} · ${item.mode}`,
+            details: [
+              `Mode: ${item.mode}`,
+              item.meetingLink && item.status === "confirmed"
+                ? `Meeting link: ${item.meetingLink}`
+                : "",
+              item.phone ? `Phone: ${item.phone}` : "",
+              "Lux AI meeting",
+            ]
+              .filter(Boolean)
+              .join("\n"),
+            startUtc:
+              item.startAtUtc instanceof Date
+                ? item.startAtUtc.toISOString()
+                : new Date(item.startAtUtc).toISOString(),
+            endUtc:
+              item.endAtUtc instanceof Date
+                ? item.endAtUtc.toISOString()
+                : new Date(item.endAtUtc).toISOString(),
+          });
+
+          return (
+            <div className="space-y-1 text-xs">
+              {item.mode === "phone" && item.phone && (
+                <a className="text-blue-600 hover:underline" href={`tel:${item.phone}`}>
+                  Call {item.phone}
+                </a>
+              )}
+              {item.mode !== "phone" &&
+                item.mode !== "in_person" &&
+                item.meetingLink &&
+                item.status === "confirmed" && (
+                  <a
+                    className="block text-blue-600 hover:underline"
+                    href={item.meetingLink}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Join meeting link
+                  </a>
+                )}
+              <a
+                className="block text-blue-600 hover:underline"
+                href={calendarLink}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Add to calendar
+              </a>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        Cell: ({ row }) => {
+          const status = row.original.status as BookingStatus;
+          return (
+            <Badge variant={status}>
+              {getStatusDisplay(status)}
+            </Badge>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        Cell: ({ row }) => {
+          const item = row.original;
+          const createdAt = DateTime.fromJSDate(
+            item.createdAt instanceof Date
+              ? item.createdAt
+              : new Date(item.createdAt)
+          ).toUTC();
+          const canReschedule =
+            ["pending", "confirmed"].includes(item.status) &&
+            DateTime.utc() <= createdAt.plus({ hours: 1 });
+
+          return (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setDetailTarget(item)}>
+                View details
+              </Button>
+              {["pending", "confirmed"].includes(item.status) && (
+                <>
+                  {canReschedule ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setRescheduleTarget(item);
+                        setRescheduleSlot(null);
+                        setRescheduleError(null);
+                      }}
+                    >
+                      Reschedule
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setRequestTarget(item);
+                        setRequestNote("");
+                        setRequestError(null);
+                      }}
+                    >
+                      Request reschedule
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        },
+      },
+    ],
+    [timezone]
+  );
+
+  const pagination = useMemo(
+    () => ({ pageIndex: page - 1, pageSize }),
+    [page, pageSize]
+  );
 
   const detailCalendarLink = useMemo(() => {
     if (!detailTarget) return null;
@@ -351,7 +533,7 @@ export default function DashboardClient({ orgId, tz }: Props) {
 
   if (status !== "authenticated") {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-12">
+      <div className="space-y-8">
         <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             Sign in to view your bookings
@@ -371,7 +553,7 @@ export default function DashboardClient({ orgId, tz }: Props) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-10">
+    <div className="space-y-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
@@ -396,7 +578,7 @@ export default function DashboardClient({ orgId, tz }: Props) {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" asChild>
-            <Link href={`/scheduling?orgId=${encodeURIComponent(orgId)}`}>
+            <Link href="/scheduling">
               Book another session
             </Link>
           </Button>
@@ -486,200 +668,49 @@ export default function DashboardClient({ orgId, tz }: Props) {
         </div>
       </section>
 
-      <section className="mt-6">
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Booking history
-              </h2>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                Review upcoming and past sessions.
-              </p>
-            </div>
-          </div>
-        {loading && (
-          <div className="text-sm text-gray-600 dark:text-gray-300">
-            Loading bookings...
-          </div>
-        )}
+      <section className="mt-6 space-y-4">
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
           </div>
         )}
-        {!loading && !error && items.length === 0 && (
-          <div className="text-sm text-gray-600 dark:text-gray-300">
-            No bookings yet. Ready to schedule one?
-          </div>
-        )}
 
-        <div className="mt-4 grid gap-4">
-          {items.map((item) => {
-            const start = DateTime.fromJSDate(
-              item.startAtUtc instanceof Date
-                ? item.startAtUtc
-                : new Date(item.startAtUtc)
-            ).setZone(timezone);
-            const end = DateTime.fromJSDate(
-              item.endAtUtc instanceof Date ? item.endAtUtc : new Date(item.endAtUtc)
-            ).setZone(timezone);
-            const createdAt = DateTime.fromJSDate(
-              item.createdAt instanceof Date
-                ? item.createdAt
-                : new Date(item.createdAt)
-            ).toUTC();
-            const canReschedule =
-              ["pending", "confirmed"].includes(item.status) &&
-              DateTime.utc() <= createdAt.plus({ hours: 1 });
-            const label = `${start.toFormat("ccc, LLL dd")} · ${start.toFormat(
-              "HH:mm"
-            )}–${end.toFormat("HH:mm")}`;
-            const calendarLink = buildGoogleCalendarUrl({
-              title: `${item.meetingTypeKey ?? "Meeting"} · ${item.mode}`,
-              details: [
-                `Mode: ${item.mode}`,
-                item.meetingLink && item.status === "confirmed"
-                  ? `Meeting link: ${item.meetingLink}`
-                  : "",
-                item.phone ? `Phone: ${item.phone}` : "",
-                "Lux AI meeting",
-              ]
-                .filter(Boolean)
-                .join("\n"),
-              startUtc:
-                item.startAtUtc instanceof Date
-                  ? item.startAtUtc.toISOString()
-                  : new Date(item.startAtUtc).toISOString(),
-              endUtc:
-                item.endAtUtc instanceof Date
-                  ? item.endAtUtc.toISOString()
-                  : new Date(item.endAtUtc).toISOString(),
-            });
-
-            return (
-              <div
-                key={item.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-4 dark:border-slate-700 dark:bg-slate-800/40"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {item.meetingTypeKey ?? "Meeting"} · {item.mode}
-                  </p>
-                  <p className="text-xs text-gray-600 dark:text-gray-300">
-                    {label}
-                    {item.durationMin ? ` · ${item.durationMin} min` : ""}
-                  </p>
-                  {item.mode === "phone" && item.phone && (
-                    <a
-                      className="mt-1 block text-xs text-blue-600 hover:underline"
-                      href={`tel:${item.phone}`}
-                    >
-                      Call {item.phone}
-                    </a>
-                  )}
-                  {item.mode !== "phone" &&
-                    item.mode !== "in_person" &&
-                    item.meetingLink && item.status === "confirmed" && (
-                      <a
-                        className="mt-1 block text-xs text-blue-600 hover:underline"
-                        href={item.meetingLink}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Join meeting link
-                      </a>
-                    )}
-                  <a
-                    className="mt-1 block text-xs text-blue-600 hover:underline"
-                    href={calendarLink}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Add to calendar
-                  </a>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-700 dark:border-slate-600 dark:bg-slate-900 dark:text-gray-200">
-                    {item.status}
-                  </span>
-                  <Button
-                    variant="outline"
-                    onClick={() => setDetailTarget(item)}
-                  >
-                    View details
-                  </Button>
-                  {["pending", "confirmed"].includes(item.status) && (
-                    <>
-                      {canReschedule ? (
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setRescheduleTarget(item);
-                            setRescheduleSlot(null);
-                            setRescheduleError(null);
-                          }}
-                        >
-                          Reschedule
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setRequestTarget(item);
-                            setRequestNote("");
-                            setRequestError(null);
-                          }}
-                        >
-                          Request reschedule
-                        </Button>
-                      )}
-                    </>
-                  )}
-                </div>
+        <MrtCardTable
+          title="Booking history"
+          subtitle="Review upcoming and past sessions."
+          table={{
+            columns: bookingColumns,
+            data: items,
+            manualPagination: true,
+            rowCount: total,
+            enableColumnActions: false,
+            enableColumnFilters: false,
+            enableGlobalFilter: false,
+            enableDensityToggle: false,
+            enableFullScreenToggle: false,
+            enableTopToolbar: false,
+            state: {
+              isLoading: loading,
+              pagination,
+            },
+            onPaginationChange: (updaterOrValue) => {
+              const next = resolvePagination(updaterOrValue, pagination);
+              if (next.pageSize !== pageSize) {
+                setPageSize(next.pageSize);
+                setPage(1);
+                return;
+              }
+              if (next.pageIndex !== pagination.pageIndex) {
+                setPage(next.pageIndex + 1);
+              }
+            },
+            renderEmptyRowsFallback: () => (
+              <div className="p-4 text-sm text-gray-600">
+                No bookings yet. Ready to schedule one?
               </div>
-            );
-          })}
-        </div>
-        {!loading && !error && total > 0 && (
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
-            <div className="text-xs text-gray-500">
-              Total: {total} · Page {page} of {totalPages}
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-xs text-gray-500">Rows</label>
-              <select
-                className="h-8 rounded-md border border-gray-200 bg-white px-2 text-xs"
-                value={pageSize}
-                onChange={(e) => {
-                  setPageSize(Number(e.target.value));
-                  setPage(1);
-                }}
-              >
-                {[10, 25, 50].map((size) => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
-                ))}
-              </select>
-              <Button
-                variant="outline"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                Prev
-              </Button>
-              <Button
-                variant="outline"
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        )}
-        </div>
+            ),
+          }}
+        />
       </section>
       {rescheduleTarget && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 sm:p-6">
@@ -888,7 +919,7 @@ export default function DashboardClient({ orgId, tz }: Props) {
 
               <div className="mt-6 flex flex-wrap items-center gap-2">
                 <Button variant="outline" asChild>
-                  <Link href={`/scheduling?orgId=${encodeURIComponent(orgId)}`}>
+                  <Link href="/scheduling">
                     Book another session
                   </Link>
                 </Button>

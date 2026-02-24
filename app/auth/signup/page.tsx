@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -14,9 +14,18 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [canResend, setCanResend] = useState(false);
+  const [canResend, setCanResend] = useState(true);
+  const [resendCountdown, setResendCountdown] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (resendCountdown > 0) {
+      const timer = setTimeout(() => setResendCountdown(resendCountdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCountdown]);
 
   async function submitSignup() {
     if (submitting) return;
@@ -92,8 +101,32 @@ export default function SignUpPage() {
   }
 
   async function onResend() {
-    if (!canResend) return;
-    await submitSignup();
+    if (!canResend || !email || resendCountdown > 0) return;
+    setSubmitting(true);
+    setErrorMessage("");
+
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const message = data?.error || "Failed to resend verification email";
+        setErrorMessage(message);
+        setSubmitting(false);
+        return;
+      }
+
+      // Start 30-second countdown for user feedback
+      setResendCountdown(30);
+      setSubmitting(false);
+    } catch {
+      setErrorMessage("Unable to resend verification email. Try again.");
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -156,16 +189,22 @@ export default function SignUpPage() {
             {submitted ? (
               <div className="mt-6 space-y-5">
                 <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                  We sent a verification link to your email. Please verify to
-                  sign in.
+                  <div className="font-semibold mb-1">Check your inbox</div>
+                  We sent a verification email with the subject <strong>"Verify your email — Lux AI"</strong>.
+                  Please check your email and click the verification link to sign in.
                 </div>
                 <Button
                   type="button"
                   className="w-full bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-600 text-white hover:from-indigo-500 hover:via-blue-500 hover:to-cyan-500"
                   onClick={onResend}
-                  disabled={submitting}
+                  disabled={submitting || resendCountdown > 0}
                 >
-                  {submitting ? "Resending..." : "Resend verification email"}
+                  {submitting
+                    ? "Resending..."
+                    : resendCountdown > 0
+                      ? `Resend in ${resendCountdown}s`
+                      : "Resend verification email"
+                  }
                 </Button>
                 <Button
                   type="button"
@@ -178,84 +217,84 @@ export default function SignUpPage() {
               </div>
             ) : (
               <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Name</label>
-                <Input
-                  type="text"
-                  placeholder="Your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  autoComplete="name"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Email
-                </label>
-                <Input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Password
-                </label>
-                <div className="relative">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Name</label>
                   <Input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    autoComplete="new-password"
-                    className="pr-10"
+                    type="text"
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    autoComplete="name"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
                 </div>
-                <p className="text-xs text-gray-500">
-                  Minimum 8 characters.
-                </p>
-              </div>
 
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-600 text-white hover:from-indigo-500 hover:via-blue-500 hover:to-cyan-500"
-                disabled={submitting || submitted}
-              >
-                {submitting
-                  ? "Creating account..."
-                  : submitted
-                  ? "Check your email"
-                  : "Create account"}
-              </Button>
-              {errorMessage && (
-                <div
-                  role="alert"
-                  className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-                >
-                  {errorMessage}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Email
+                  </label>
+                  <Input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                  />
                 </div>
-              )}
-            </form>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      autoComplete="new-password"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Minimum 8 characters.
+                  </p>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-600 text-white hover:from-indigo-500 hover:via-blue-500 hover:to-cyan-500"
+                  disabled={submitting || submitted}
+                >
+                  {submitting
+                    ? "Creating account..."
+                    : submitted
+                      ? "Check your email"
+                      : "Create account"}
+                </Button>
+                {errorMessage && (
+                  <div
+                    role="alert"
+                    className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                  >
+                    {errorMessage}
+                  </div>
+                )}
+              </form>
             )}
 
             <div className="mt-5 text-center text-sm text-gray-600">

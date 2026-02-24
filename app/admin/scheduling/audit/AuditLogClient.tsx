@@ -1,11 +1,16 @@
+// app/admin/scheduling/audit/AuditLogClient.tsx
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { DateTime } from "luxon";
+import type { MRT_ColumnDef, MRT_PaginationState } from "material-react-table";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import MrtCardTable from "@/components/scheduling/MrtCardTable";
+import FilterBar from "@/components/scheduling/FilterBar";
+import ProductHero from "@/components/scheduling/ProductHero";
 
 type Props = {
   orgId: string;
@@ -28,9 +33,7 @@ type AuditRow = {
 };
 
 function formatWhen(value: string | Date, tz: string) {
-  const dt = DateTime.fromJSDate(
-    value instanceof Date ? value : new Date(value),
-  ).setZone(tz);
+  const dt = DateTime.fromJSDate(value instanceof Date ? value : new Date(value)).setZone(tz);
   return dt.toFormat("LLL dd, yyyy · HH:mm");
 }
 
@@ -42,52 +45,70 @@ function jsonString(value: unknown) {
   }
 }
 
+function resolvePagination(
+  updaterOrValue: MRT_PaginationState | ((prev: MRT_PaginationState) => MRT_PaginationState),
+  prev: MRT_PaginationState
+) {
+  return typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue;
+}
+
 export default function AuditLogClient({ orgId, orgName, tz, returnTo }: Props) {
   const [items, setItems] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+
+  // MRT uses 0-based pageIndex; API uses 1-based page
+  const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(25);
   const [total, setTotal] = useState(0);
 
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+
   const [entityType, setEntityType] = useState("");
   const [action, setAction] = useState("");
   const [actorUserId, setActorUserId] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  useEffect(() => {
+    const h = setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    return () => clearTimeout(h);
+  }, [query]);
+
+  // reset page on filter changes
+  useEffect(() => {
+    setPageIndex(0);
+  }, [debouncedQuery, entityType, action, actorUserId, from, to, pageSize]);
+
   const summary = useMemo(() => {
     if (!total) return "No audit entries yet.";
     return `${total} entries`;
   }, [total]);
 
   const entityTypeOptions = useMemo(() => {
-    const set = new Set(items.map((row) => row.entityType).filter(Boolean));
+    const set = new Set(items.map((r) => r.entityType).filter(Boolean));
     return Array.from(set).sort();
   }, [items]);
 
   const actionOptions = useMemo(() => {
-    const set = new Set(items.map((row) => row.action).filter(Boolean));
+    const set = new Set(items.map((r) => r.action).filter(Boolean));
     return Array.from(set).sort();
   }, [items]);
 
   useEffect(() => {
     if (!orgId) return;
+
     let cancelled = false;
     setLoading(true);
     setError(null);
 
-    const url = new URL(
-      "/api/scheduling/admin/audit",
-      window.location.origin,
-    );
+    const url = new URL("/api/scheduling/admin/audit", window.location.origin);
     url.searchParams.set("orgId", orgId);
-    url.searchParams.set("page", String(page));
+    url.searchParams.set("page", String(pageIndex + 1));
     url.searchParams.set("pageSize", String(pageSize));
-    if (query) url.searchParams.set("q", query);
+
+    if (debouncedQuery) url.searchParams.set("q", debouncedQuery);
     if (entityType) url.searchParams.set("entityType", entityType);
     if (action) url.searchParams.set("action", action);
     if (actorUserId) url.searchParams.set("actorUserId", actorUserId);
@@ -115,11 +136,57 @@ export default function AuditLogClient({ orgId, orgName, tz, returnTo }: Props) 
     return () => {
       cancelled = true;
     };
-  }, [orgId, page, pageSize, query, entityType, action, actorUserId, from, to]);
+  }, [orgId, pageIndex, pageSize, debouncedQuery, entityType, action, actorUserId, from, to]);
+
+  const columns = useMemo<MRT_ColumnDef<AuditRow>[]>(
+    () => [
+      {
+        accessorKey: "createdAt",
+        header: "When",
+        size: 180,
+        Cell: ({ row }) => (
+          <span className="text-sm text-gray-700 dark:text-gray-200">
+            {formatWhen(row.original.createdAt, tz)}
+          </span>
+        ),
+      },
+      {
+        id: "actor",
+        header: "Actor",
+        size: 220,
+        Cell: ({ row }) => {
+          const a = row.original.actor;
+          return (
+            <div className="min-w-0">
+              <div className="truncate font-medium text-gray-900 dark:text-white">
+                {a?.name ?? "System"}
+              </div>
+              <div className="truncate text-xs text-gray-500 dark:text-gray-400">
+                {a?.email ?? row.original.actorUserId ?? "n/a"}
+              </div>
+            </div>
+          );
+        },
+      },
+      { accessorKey: "action", header: "Action", size: 220 },
+      { accessorKey: "entityType", header: "Entity", size: 160 },
+      {
+        accessorKey: "entityId",
+        header: "Entity ID",
+        size: 260,
+        Cell: ({ row }) => (
+          <span className="font-mono text-xs text-gray-700 dark:text-gray-200">
+            {row.original.entityId}
+          </span>
+        ),
+      },
+    ],
+    [tz]
+  );
 
   if (!orgId) {
     return (
-      <div className="mx-auto w-full max-w-6xl px-4 py-12">
+      <div className="space-y-8">
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
           No org found for this account.
         </div>
@@ -128,233 +195,129 @@ export default function AuditLogClient({ orgId, orgName, tz, returnTo }: Props) 
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-12">
-      <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
-              Scheduling Admin
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">
-              Audit log
-            </h1>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-              {orgName ? `${orgName} · ` : ""}
-              Times shown in {tz}.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="outline">
-              <Link href={returnTo}>Back to dashboard</Link>
-            </Button>
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-3 md:grid-cols-3">
-          <Input
-            placeholder="Search entity, action, or actor"
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setPage(1);
-            }}
-          />
-          <select
-            className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={entityType}
-            onChange={(e) => {
-              setEntityType(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">All entity types</option>
-            {entityTypeOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-          <select
-            className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={action}
-            onChange={(e) => {
-              setAction(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">All actions</option>
-            {actionOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-          <Input
-            placeholder="Actor user id"
-            value={actorUserId}
-            onChange={(e) => {
-              setActorUserId(e.target.value);
-              setPage(1);
-            }}
-          />
-          <Input
-            type="date"
-            value={from}
-            onChange={(e) => {
-              setFrom(e.target.value);
-              setPage(1);
-            }}
-          />
-          <Input
-            type="date"
-            value={to}
-            onChange={(e) => {
-              setTo(e.target.value);
-              setPage(1);
-            }}
-          />
-        </div>
-
-        {loading && (
-          <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">
-            Loading audit log...
-          </p>
-        )}
-        {error && (
-          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        {!loading && !error && items.length === 0 && (
-          <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">
-            No audit entries found.
-          </p>
-        )}
-
-        {!loading && !error && items.length > 0 && (
-          <div className="mt-4 overflow-hidden rounded-2xl border border-gray-200">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-                <tr>
-                  <th className="px-4 py-3">When</th>
-                  <th className="px-4 py-3">Actor</th>
-                  <th className="px-4 py-3">Action</th>
-                  <th className="px-4 py-3">Entity</th>
-                  <th className="px-4 py-3">Id</th>
-                  <th className="px-4 py-3">Details</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((row) => {
-                  const expanded = expandedId === row.id;
-                  return (
-                    <Fragment key={row.id}>
-                      <tr className="border-t border-gray-100 bg-white">
-                        <td className="px-4 py-3 text-gray-700">
-                          {formatWhen(row.createdAt, tz)}
-                        </td>
-                        <td className="px-4 py-3 text-gray-700">
-                          <div className="font-medium">
-                            {row.actor?.name ?? "System"}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {row.actor?.email ?? row.actorUserId ?? "n/a"}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-gray-700">{row.action}</td>
-                        <td className="px-4 py-3 text-gray-700">
-                          {row.entityType}
-                        </td>
-                        <td className="px-4 py-3 text-gray-700">
-                          {row.entityId}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              setExpandedId(expanded ? null : row.id)
-                            }
-                          >
-                            {expanded ? "Hide" : "View"}
-                          </Button>
-                        </td>
-                      </tr>
-                      {expanded && (
-                        <tr className="border-t border-gray-100 bg-gray-50/60">
-                          <td colSpan={6} className="px-4 py-4">
-                            <div className="grid gap-4 md:grid-cols-2">
-                              <div>
-                                <p className="text-xs font-semibold uppercase text-gray-500">
-                                  Before
-                                </p>
-                                <pre className="mt-2 max-h-64 overflow-auto rounded-lg border border-gray-200 bg-white p-3 text-xs text-gray-700">
-                                  {jsonString(row.before)}
-                                </pre>
-                              </div>
-                              <div>
-                                <p className="text-xs font-semibold uppercase text-gray-500">
-                                  After
-                                </p>
-                                <pre className="mt-2 max-h-64 overflow-auto rounded-lg border border-gray-200 bg-white p-3 text-xs text-gray-700">
-                                  {jsonString(row.after)}
-                                </pre>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-600 dark:text-gray-300">
-          <span>{summary}</span>
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Rows
-            </label>
-            <select
-              className="h-9 rounded-md border border-gray-300 bg-white px-2 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setPage(1);
-              }}
-            >
-              {[10, 25, 50].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Prev
-            </Button>
-            <span>
-              Page {page} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+    <div className="space-y-8">
+      <div className="flex justify-end">
+        <Button asChild variant="outline" size="sm">
+          <Link href={returnTo}>Back to dashboard</Link>
+        </Button>
       </div>
+
+      <ProductHero
+        eyebrow="Scheduling Admin"
+        title="Audit log"
+        subtitle={`${orgName ? `${orgName} · ` : ""}Times shown in ${tz}.`}
+        chips={<span className="text-xs text-gray-500">{summary}</span>}
+      />
+
+      <FilterBar>
+        <Input
+          className="h-9"
+          placeholder="Search entity, action, actor..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+
+        <select
+          className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+          value={entityType}
+          onChange={(e) => setEntityType(e.target.value)}
+        >
+          <option value="">All entity types</option>
+          {entityTypeOptions.map((v) => (
+            <option key={v} value={v}>
+              {v}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+          value={action}
+          onChange={(e) => setAction(e.target.value)}
+        >
+          <option value="">All actions</option>
+          {actionOptions.map((v) => (
+            <option key={v} value={v}>
+              {v}
+            </option>
+          ))}
+        </select>
+
+        <Input
+          className="h-9"
+          placeholder="Actor user id"
+          value={actorUserId}
+          onChange={(e) => setActorUserId(e.target.value)}
+        />
+
+        <Input type="date" className="h-9" value={from} onChange={(e) => setFrom(e.target.value)} />
+        <Input type="date" className="h-9" value={to} onChange={(e) => setTo(e.target.value)} />
+
+        <select
+          className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+          value={pageSize}
+          onChange={(e) => setPageSize(Number(e.target.value))}
+        >
+          {[10, 25, 50].map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </FilterBar>
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      <MrtCardTable
+        title="Audit entries"
+        subtitle={total ? `Showing ${items.length} of ${total}` : "No audit entries found."}
+        table={{
+          columns,
+          data: items,
+          enableSorting: false,
+          enableColumnFilters: false,
+          enableGlobalFilter: false,
+
+          manualPagination: true,
+          rowCount: total,
+
+          state: {
+            isLoading: loading,
+            pagination: { pageIndex, pageSize },
+          },
+
+          onPaginationChange: (updaterOrValue) => {
+            const next = resolvePagination(updaterOrValue, { pageIndex, pageSize });
+            if (next.pageSize !== pageSize) setPageSize(next.pageSize);
+            if (next.pageIndex !== pageIndex) setPageIndex(next.pageIndex);
+          },
+
+          renderDetailPanel: ({ row }) => (
+            <div className="grid gap-4 p-4 md:grid-cols-2">
+              <div>
+                <p className="text-xs font-semibold uppercase text-gray-500">Before</p>
+                <pre className="mt-2 max-h-64 overflow-auto rounded-lg border border-gray-200 bg-white p-3 text-xs text-gray-700">
+                  {jsonString(row.original.before)}
+                </pre>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase text-gray-500">After</p>
+                <pre className="mt-2 max-h-64 overflow-auto rounded-lg border border-gray-200 bg-white p-3 text-xs text-gray-700">
+                  {jsonString(row.original.after)}
+                </pre>
+              </div>
+            </div>
+          ),
+
+          renderEmptyRowsFallback: () => (
+            <div className="p-4 text-sm text-gray-600">No audit entries found.</div>
+          ),
+        }}
+      />
     </div>
   );
 }

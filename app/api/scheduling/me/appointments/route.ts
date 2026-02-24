@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUserIdFromSession } from "@/lib/scheduling/authz";
-import { isValidUuid } from "@/lib/validation";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import { getMeetingLink } from "@/lib/scheduling/meeting-link";
+import { resolveOrgIdForRequest } from "@/lib/scheduling/org-resolver";
 
 export async function GET(req: Request) {
   const who = await requireUserIdFromSession();
@@ -18,7 +18,11 @@ export async function GET(req: Request) {
   }
 
   const url = new URL(req.url);
-  const orgId = url.searchParams.get("orgId");
+  const orgId = await resolveOrgIdForRequest({
+    orgId: url.searchParams.get("orgId"),
+    userId: who.userId,
+    allowPublic: true,
+  });
   const status = url.searchParams.get("status");
   const pageParam = Number(url.searchParams.get("page"));
   const pageSizeParam = Number(url.searchParams.get("pageSize"));
@@ -30,10 +34,10 @@ export async function GET(req: Request) {
   const offset = (page - 1) * pageSize;
 
   if (!orgId) {
-    return NextResponse.json({ error: "Missing orgId" }, { status: 400 });
-  }
-  if (!isValidUuid(orgId)) {
-    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    return NextResponse.json(
+      { error: "No organization found" },
+      { status: 400 }
+    );
   }
 
   const allowedStatuses = [

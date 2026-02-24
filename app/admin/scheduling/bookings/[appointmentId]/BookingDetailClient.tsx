@@ -8,6 +8,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table";
 
 type Booking = {
   id: string;
@@ -49,6 +50,8 @@ type BookingDetail = {
   }>;
 };
 
+type HistoryEntry = BookingDetail["history"][number];
+
 type Props = {
   orgId: string;
   appointmentId: string;
@@ -77,6 +80,53 @@ function extractNoteValue(notes: string | null | undefined, key: string) {
   const value = line.slice(key.length + 1).trim();
   return value || null;
 }
+
+const baseRowHoverSx = (theme: any) => ({
+  "&:hover > td": {
+    backgroundColor:
+      theme.palette.mode === "dark"
+        ? "rgba(148,163,184,0.08)"
+        : "rgba(2,132,199,0.06)",
+  },
+});
+
+const mrtSurfaceProps = {
+  muiTablePaperProps: {
+    elevation: 0,
+    sx: (theme: any) => ({
+      backgroundColor: "transparent",
+      boxShadow: "none",
+      color: theme.palette.text.primary,
+    }),
+  },
+  muiTableContainerProps: {
+    sx: (theme: any) => ({
+      borderRadius: 12,
+      border: `1px solid ${theme.palette.divider}`,
+      overflow: "auto",
+    }),
+  },
+  muiTableHeadCellProps: {
+    sx: (theme: any) => ({
+      backgroundColor:
+        theme.palette.mode === "dark"
+          ? "rgba(15,23,42,0.6)"
+          : "rgba(248,250,252,1)",
+      color: theme.palette.text.secondary,
+      fontSize: "0.7rem",
+      fontWeight: 700,
+      textTransform: "uppercase",
+      letterSpacing: "0.08em",
+      borderBottom: `1px solid ${theme.palette.divider}`,
+    }),
+  },
+  muiTableBodyCellProps: {
+    sx: (theme: any) => ({
+      fontSize: "0.75rem",
+      borderBottom: `1px solid ${theme.palette.divider}`,
+    }),
+  },
+};
 
 export default function BookingDetailClient({ orgId, appointmentId, tz }: Props) {
   const { status } = useSession();
@@ -276,7 +326,7 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
 
   if (status !== "authenticated") {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-12">
+      <div className="space-y-8">
         <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             Sign in to view booking details
@@ -321,8 +371,48 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
     ? extractNoteValue(appointment.notes, "payment_intent_id")
     : null;
 
+  const historyColumns = useMemo<MRT_ColumnDef<HistoryEntry>[]>(
+    () => [
+      {
+        accessorKey: "createdAt",
+        header: "Time",
+        Cell: ({ row }) => {
+          const created = DateTime.fromJSDate(
+            row.original.createdAt instanceof Date
+              ? row.original.createdAt
+              : new Date(row.original.createdAt)
+          ).setZone(timezone);
+          return (
+            <span className="text-xs text-gray-700 dark:text-gray-200">
+              {created.toFormat("LLL dd, HH:mm")}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "action",
+        header: "Action",
+        Cell: ({ row }) => (
+          <span className="font-semibold text-gray-800 dark:text-gray-100">
+            {row.original.action}
+          </span>
+        ),
+      },
+      {
+        id: "actor",
+        header: "Actor",
+        Cell: ({ row }) => (
+          <span className="text-xs text-gray-600 dark:text-gray-300">
+            {row.original.actorName || row.original.actorEmail || "System"}
+          </span>
+        ),
+      },
+    ],
+    [timezone]
+  );
+
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-10">
+    <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
@@ -475,36 +565,24 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
             {detail.history.length === 0 ? (
               <p className="mt-3 text-sm text-gray-500">No status history yet.</p>
             ) : (
-              <div className="mt-3 overflow-x-auto rounded-lg border border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-                <table className="w-full border-collapse text-left text-xs">
-                  <thead className="bg-gray-50 text-[10px] uppercase tracking-[0.2em] text-gray-500 dark:bg-slate-800/60 dark:text-gray-400">
-                    <tr>
-                      <th className="px-3 py-2 font-semibold">Time</th>
-                      <th className="px-3 py-2 font-semibold">Action</th>
-                      <th className="px-3 py-2 font-semibold">Actor</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-slate-800">
-                    {detail.history.map((entry) => {
-                      const created = DateTime.fromJSDate(
-                        entry.createdAt instanceof Date
-                          ? entry.createdAt
-                          : new Date(entry.createdAt)
-                      ).setZone(timezone);
-                      return (
-                        <tr key={entry.id} className="text-gray-700 dark:text-gray-200">
-                          <td className="px-3 py-2">
-                            {created.toFormat("LLL dd, HH:mm")}
-                          </td>
-                          <td className="px-3 py-2 font-semibold">{entry.action}</td>
-                          <td className="px-3 py-2 text-gray-500 dark:text-gray-300">
-                            {entry.actorName || entry.actorEmail || "System"}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div className="mt-3">
+                <MaterialReactTable
+                  columns={historyColumns}
+                  data={detail.history}
+                  enablePagination={false}
+                  enableSorting={false}
+                  enableColumnActions={false}
+                  enableColumnFilters={false}
+                  enableGlobalFilter={false}
+                  enableDensityToggle={false}
+                  enableFullScreenToggle={false}
+                  enableTopToolbar={false}
+                  enableBottomToolbar={false}
+                  muiTableBodyRowProps={{
+                    sx: (theme) => baseRowHoverSx(theme),
+                  }}
+                  {...mrtSurfaceProps}
+                />
               </div>
             )}
           </div>

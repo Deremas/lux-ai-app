@@ -1,48 +1,100 @@
 // app/api/scheduling/admin/appointments/route.ts
 import { NextResponse } from "next/server";
+import { Prisma, AppointmentStatus, MeetingMode } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
-import {
-  requireUserIdFromSession,
-  requireOrgRole,
-} from "@/lib/scheduling/authz";
-import { isValidUuid } from "@/lib/validation";
+import { requireUserIdFromSession, requireOrgRole } from "@/lib/scheduling/authz";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
+import { resolveOrgIdForRequest } from "@/lib/scheduling/org-resolver";
+
+const PAGE_SIZES = [10, 25, 50] as const;
+
+const ALLOWED_STATUSES: AppointmentStatus[] = [
+  "pending",
+  "confirmed",
+  "declined",
+  "canceled",
+  "completed",
+];
+
+const ALLOWED_MODES: MeetingMode[] = [
+  "google_meet",
+  "zoom",
+  "phone",
+  "in_person",
+];
+
+const SORTABLE_FIELDS = new Set<keyof Prisma.AppointmentOrderByWithRelationInput>([
+  "createdAt",
+  "startAtUtc",
+  "endAtUtc",
+  "status",
+  "mode",
+]);
+
+function parsePage(v: string | null): number {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 1;
+}
+
+function parsePageSize(v: string | null): (typeof PAGE_SIZES)[number] {
+  const n = Number(v);
+  return (PAGE_SIZES as readonly number[]).includes(n) ? (n as any) : 10;
+}
+
+function safeSort(sortByRaw: string, sortDirRaw: string): Prisma.AppointmentOrderByWithRelationInput {
+  const sortBy = SORTABLE_FIELDS.has(sortByRaw as any)
+    ? (sortByRaw as keyof Prisma.AppointmentOrderByWithRelationInput)
+    : "createdAt";
+
+  const sortDir: Prisma.SortOrder = sortDirRaw === "asc" ? "asc" : "desc";
+
+  return { [sortBy]: sortDir };
+}
+
+function parseUtcDayStart(dateStr: string): Date | null {
+  const d = new Date(`${dateStr}T00:00:00.000Z`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const orgId = url.searchParams.get("orgId");
-  const status = url.searchParams.get("status");
+
+  const statusRaw = (url.searchParams.get("status") ?? "").trim();
   const q = (url.searchParams.get("q") ?? "").trim();
-  const mode = (url.searchParams.get("mode") ?? "").trim();
+
+  const modeRaw = (url.searchParams.get("mode") ?? "").trim();
   const meetingTypeId = (url.searchParams.get("meetingTypeId") ?? "").trim();
   const staffUserId = (url.searchParams.get("staffUserId") ?? "").trim();
+
   const startDate = (url.searchParams.get("startDate") ?? "").trim();
   const endDate = (url.searchParams.get("endDate") ?? "").trim();
-  const pageParam = Number(url.searchParams.get("page"));
-  const pageSizeParam = Number(url.searchParams.get("pageSize"));
-  const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
-  const pageSize =
-    Number.isFinite(pageSizeParam) && [10, 25, 50].includes(pageSizeParam)
-      ? pageSizeParam
-      : 10;
-  const offset = (page - 1) * pageSize;
 
-  if (!orgId)
-    return NextResponse.json({ error: "Missing orgId" }, { status: 400 });
-  if (!isValidUuid(orgId)) {
-    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
-  }
+  const sortByRaw = (url.searchParams.get("sortBy") ?? "").trim();
+  const sortDirRaw = (url.searchParams.get("sortDir") ?? "").trim().toLowerCase();
+
+  const page = parsePage(url.searchParams.get("page"));
+  const pageSize = parsePageSize(url.searchParams.get("pageSize"));
+  const offset = (page - 1) * pageSize;
 
   const who = await requireUserIdFromSession();
   if (!who.ok) return NextResponse.json({ error: who.error }, { status: 401 });
+
+  const orgId = await resolveOrgIdForRequest({
+    orgId: url.searchParams.get("orgId"),
+    userId: who.userId,
+    allowedRoles: ["admin", "staff"],
+  });
+  if (!orgId) {
+    return NextResponse.json({ error: "No organization found" }, { status: 400 });
+  }
 
   const authz = await requireOrgRole({
     orgId,
     userId: who.userId,
     allowed: ["admin", "staff"],
   });
-  if (!authz.ok)
-    return NextResponse.json({ error: authz.error }, { status: 403 });
+  if (!authz.ok) return NextResponse.json({ error: authz.error }, { status: 403 });
 
   const limit = await applyRateLimit(req, RATE_LIMIT_RULES.scheduling);
   if (!limit.ok) {
@@ -52,42 +104,41 @@ export async function GET(req: Request) {
     );
   }
 
-  const allowedStatuses = [
-    "pending",
-    "confirmed",
-    "declined",
-    "canceled",
-    "completed",
-  ] as const;
+  const statusFilter: AppointmentStatus[] =
+    statusRaw && ALLOWED_STATUSES.includes(statusRaw as AppointmentStatus)
+      ? [statusRaw as AppointmentStatus]
+      : (["pending", "confirmed"] as AppointmentStatus[]);
 
-  const statusFilter =
-    status && allowedStatuses.includes(status as any)
-      ? [status as any]
-      : (["pending", "confirmed"] as const);
-
-  const where: any = {
+  const where: Prisma.AppointmentWhereInput = {
     orgId,
-    status: { in: [...statusFilter] },
+    status: { in: statusFilter },
   };
 
-  if (mode) where.mode = mode;
+  // mode must be enum-safe
+  if (modeRaw && ALLOWED_MODES.includes(modeRaw as MeetingMode)) {
+    where.mode = modeRaw as MeetingMode;
+  }
+
   if (meetingTypeId) where.meetingTypeId = meetingTypeId;
   if (staffUserId) where.staffUserId = staffUserId;
 
+  // Build startAtUtc filter without spreading union types
+  let startAtUtcFilter: Prisma.DateTimeFilter<"Appointment"> | undefined;
+
   if (startDate) {
-    const start = new Date(`${startDate}T00:00:00.000Z`);
-    if (!Number.isNaN(start.getTime())) {
-      where.startAtUtc = { ...(where.startAtUtc ?? {}), gte: start };
-    }
+    const start = parseUtcDayStart(startDate);
+    if (start) startAtUtcFilter = { ...(startAtUtcFilter ?? {}), gte: start };
   }
 
   if (endDate) {
-    const end = new Date(`${endDate}T00:00:00.000Z`);
-    if (!Number.isNaN(end.getTime())) {
+    const end = parseUtcDayStart(endDate);
+    if (end) {
       const endExclusive = new Date(end.getTime() + 24 * 60 * 60 * 1000);
-      where.startAtUtc = { ...(where.startAtUtc ?? {}), lt: endExclusive };
+      startAtUtcFilter = { ...(startAtUtcFilter ?? {}), lt: endExclusive };
     }
   }
+
+  if (startAtUtcFilter) where.startAtUtc = startAtUtcFilter;
 
   if (q) {
     const [users, profiles, meetingTypes] = await Promise.all([
@@ -116,14 +167,11 @@ export async function GET(req: Request) {
     ]);
 
     const userIds = Array.from(
-      new Set([
-        ...users.map((u) => u.id),
-        ...profiles.map((p) => p.userId),
-      ])
+      new Set<string>([...users.map((u) => u.id), ...profiles.map((p) => p.userId)])
     );
     const meetingTypeIds = meetingTypes.map((t) => t.id);
 
-    const or: any[] = [];
+    const or: Prisma.AppointmentWhereInput[] = [];
     if (userIds.length) or.push({ userId: { in: userIds } });
     if (meetingTypeIds.length) or.push({ meetingTypeId: { in: meetingTypeIds } });
 
@@ -137,45 +185,46 @@ export async function GET(req: Request) {
         totalPages: 1,
       });
     }
+
     where.OR = or;
   }
+
+  const orderBy = safeSort(sortByRaw, sortDirRaw);
 
   const total = await prisma.appointment.count({ where });
 
   const rows = await prisma.appointment.findMany({
     where,
-    orderBy: { createdAt: "desc" },
+    orderBy,
     take: pageSize,
     skip: offset,
   });
 
-  const meetingTypeIds = Array.from(
-    new Set(rows.map((row) => row.meetingTypeId))
-  );
-  const userIds = Array.from(new Set(rows.map((row) => row.userId)));
+  const meetingTypeIds = Array.from(new Set(rows.map((r) => r.meetingTypeId)));
+  const userIds = Array.from(new Set(rows.map((r) => r.userId)));
 
-  const [meetingTypes, users, profiles] = await Promise.all([
+  const [mts, users, profiles] = await Promise.all([
     meetingTypeIds.length
       ? prisma.meetingType.findMany({
-          where: { id: { in: meetingTypeIds } },
-          select: { id: true, key: true, durationMin: true },
-        })
-      : [],
+        where: { id: { in: meetingTypeIds } },
+        select: { id: true, key: true, durationMin: true },
+      })
+      : Promise.resolve([]),
     userIds.length
       ? prisma.appUser.findMany({
-          where: { id: { in: userIds } },
-          select: { id: true, name: true, email: true, phone: true },
-        })
-      : [],
+        where: { id: { in: userIds } },
+        select: { id: true, name: true, email: true, phone: true },
+      })
+      : Promise.resolve([]),
     userIds.length
       ? prisma.bookingProfile.findMany({
-          where: { userId: { in: userIds } },
-          select: { userId: true, fullName: true, phone: true },
-        })
-      : [],
+        where: { userId: { in: userIds } },
+        select: { userId: true, fullName: true, phone: true },
+      })
+      : Promise.resolve([]),
   ]);
 
-  const mtMap = new Map(meetingTypes.map((m) => [m.id, m]));
+  const mtMap = new Map(mts.map((m) => [m.id, m]));
   const userMap = new Map(users.map((u) => [u.id, u]));
   const profileMap = new Map(profiles.map((p) => [p.userId, p]));
 
@@ -183,26 +232,33 @@ export async function GET(req: Request) {
     const mt = mtMap.get(row.meetingTypeId);
     const user = userMap.get(row.userId);
     const profile = profileMap.get(row.userId);
+
     return {
       id: row.id,
       orgId: row.orgId,
       userId: row.userId,
       staffUserId: row.staffUserId,
+
       meetingTypeId: row.meetingTypeId,
       meetingTypeKey: mt?.key ?? null,
       durationMin: mt?.durationMin ?? 60,
+
       status: row.status,
       mode: row.mode,
+
       paymentPolicy: row.paymentPolicy ?? null,
       paymentStatus: row.paymentStatus ?? null,
       requiresPayment: row.requiresPayment ?? null,
       priceCents: row.priceCents ?? null,
       currency: row.currency ?? null,
+
       startAtUtc: row.startAtUtc,
       endAtUtc: row.endAtUtc,
       notes: row.notes,
+
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
+
       userName: user?.name ?? null,
       userEmail: user?.email ?? null,
       userPhone: profile?.phone ?? user?.phone ?? null,
@@ -216,6 +272,6 @@ export async function GET(req: Request) {
     page,
     pageSize,
     total,
-    totalPages: pageSize ? Math.ceil(total / pageSize) : 1,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
   });
 }

@@ -401,7 +401,7 @@ export default function SettingsClient({ orgId }: Props) {
 
   if (status !== "authenticated") {
     return (
-      <div className="mx-auto w-full max-w-4xl px-4 py-12">
+      <div className="space-y-8">
         <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             Sign in to manage scheduling settings
@@ -418,8 +418,8 @@ export default function SettingsClient({ orgId }: Props) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-12">
-      <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div className="space-y-8">
+      <div className="space-y-8">
         <div className="flex justify-end">
           <Link
             href="/admin/scheduling"

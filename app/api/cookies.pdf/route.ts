@@ -149,7 +149,7 @@ export async function GET(req: NextRequest) {
   }
 
   y -= 10;
-  page.drawText("Contact: contact@luxaiautomation.com", {
+  page.drawText("Contact: molla@luxaiautomation.com", {
     x: margin,
     y: y - bodySize,
     size: bodySize,

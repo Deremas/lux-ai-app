@@ -8,7 +8,6 @@ import { isBodyTooLarge, isValidUuid } from "@/lib/validation";
 import { sendRescheduleRequestEmails } from "@/lib/scheduling/notify";
 
 type Body = {
-  orgId?: string;
   reason?: string;
 };
 
@@ -43,18 +42,13 @@ export async function POST(
   }
 
   const appointmentId = cleanString(params.id);
-  const orgId = cleanString(body.orgId);
   const reason = cleanString(body.reason);
 
   if (!appointmentId || !isValidUuid(appointmentId)) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
-  if (!orgId || !isValidUuid(orgId)) {
-    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
-  }
-
   const current = await prisma.appointment.findFirst({
-    where: { id: appointmentId, orgId },
+    where: { id: appointmentId },
     select: {
       id: true,
       userId: true,

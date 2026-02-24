@@ -9,6 +9,7 @@ import { getOrgPolicies } from "@/lib/scheduling/policy";
 import { requireUserIdFromSession } from "@/lib/scheduling/authz";
 import { getMeetingLink } from "@/lib/scheduling/meeting-link";
 import { pickStaffForSlot } from "@/lib/scheduling/auto-assignment";
+import { resolveOrgIdForRequest } from "@/lib/scheduling/org-resolver";
 import {
   isBodyTooLarge,
   isValidNotes,
@@ -189,9 +190,24 @@ export async function POST(req: Request) {
         : null;
   }
 
-  if (!orgId || !meetingTypeId || !mode || !startLocalRaw) {
+  if (!orgId) {
+    orgId = await resolveOrgIdForRequest({
+      orgId,
+      userId,
+      allowPublic: true,
+    });
+  }
+
+  if (!orgId) {
     return NextResponse.json(
-      { error: "Missing orgId, meetingTypeId, mode, startLocal" },
+      { error: "No organization found" },
+      { status: 400 },
+    );
+  }
+
+  if (!meetingTypeId || !mode || !startLocalRaw) {
+    return NextResponse.json(
+      { error: "Missing meetingTypeId, mode, startLocal" },
       { status: 400 },
     );
   }

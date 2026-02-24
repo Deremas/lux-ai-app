@@ -126,38 +126,48 @@ export default function Footer() {
             </h3>
 
             <ul className="space-y-3 text-blue-200">
+              {/* Contact person */}
+              <li className="flex items-start gap-2 min-w-0">
+                <div className="w-4 h-4 mt-0.5 flex items-center justify-center">
+                  <i className="ri-user-line" />
+                </div>
+                <span className="break-words min-w-0">
+                  {t(lang, "legal.imprint.values.representative")}
+                </span>
+              </li>
+
               {/* Email */}
               <li className="flex items-start gap-2 min-w-0">
                 <div className="w-4 h-4 mt-0.5 flex items-center justify-center">
                   <i className="ri-mail-line" />
                 </div>
                 <a
-                  href={`mailto:${t(lang, "common.footer.email")}`}
+                  href={`mailto:${t(lang, "legal.imprint.values.email")}`}
                   className="hover:text-accent-500 transition-colors duration-200 break-all min-w-0"
                 >
-                  {t(lang, "common.footer.email")}
+                  {t(lang, "legal.imprint.values.email")}
                 </a>
               </li>
 
-              {/* Phone */}
-              <li className="flex items-start space-x-2">
-                <div className="w-4 h-4 mt-0.5 flex items-center justify-center">
-                  <i className="ri-phone-line" />
-                </div>
-                <a
-                  href={`tel:${t(lang, "common.footer.phoneRaw")}`}
-                  className="hover:text-accent-500 transition-colors duration-200"
-                >
-                  {t(lang, "common.footer.phone")}
-                </a>
-              </li>
-
-              {/* Location (not clickable) */}
+              {/* Location */}
               <li className="flex items-start space-x-2">
                 <div className="w-4 h-4 mt-0.5 flex items-center justify-center">
                   <i className="ri-map-pin-line" />
                 </div>
-                <span>{t(lang, "common.footer.location")}</span>
+                <span>{t(lang, "legal.imprint.values.address")}</span>
+              </li>
+
+              {/* Authorization */}
+              <li className="flex items-start gap-2 min-w-0">
+                <div className="w-4 h-4 mt-0.5 flex items-center justify-center">
+                  <i className="ri-file-list-3-line" />
+                </div>
+                <Link
+                  href="/legal#business-identifiers"
+                  className="break-words min-w-0 hover:text-accent-500 transition-colors duration-200"
+                >
+                  {t(lang, "legal.imprint.values.authorization")}
+                </Link>
               </li>
             </ul>
           </div>
@@ -178,6 +188,13 @@ export default function Footer() {
             </p>
 
             <div className="flex flex-wrap justify-center sm:justify-end gap-x-2 gap-y-2">
+              <Link
+                href="/legal"
+                className="text-blue-200 hover:text-accent-500 transition-colors duration-200 text-sm"
+              >
+                {t(lang, "common.footer.legal")}
+              </Link>
+              <span>|</span>
               <Link
                 href="/privacy-policy"
                 className="text-blue-200 hover:text-accent-500 transition-colors duration-200 text-sm"

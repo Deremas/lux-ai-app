@@ -353,9 +353,7 @@ export default function SchedulingClient(props: Props) {
   const initialMeetingTypeId = cleanString(props.meetingTypeId);
   const staffUserId = cleanString(props.staffUserId);
   const initialTz = cleanString(props.tz) || "Africa/Addis_Ababa";
-  const myBookingsHref = orgId
-    ? `/scheduling/my?orgId=${encodeURIComponent(orgId)}`
-    : "/scheduling/my";
+  const myBookingsHref = "/scheduling/my";
 
   const { status } = useSession();
   const isAuthed = status === "authenticated";
@@ -935,7 +933,7 @@ export default function SchedulingClient(props: Props) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8">
+    <div className="space-y-8">
       <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
