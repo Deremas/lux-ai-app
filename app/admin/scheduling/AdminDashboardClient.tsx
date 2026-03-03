@@ -390,6 +390,53 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
     return "";
   }, [profile?.name, session?.user?.name, session?.user?.email]);
 
+  const upcomingColumns = useMemo<MRT_ColumnDef<Booking>[]>(
+    () => [
+      {
+        header: "Meeting",
+        accessorKey: "meetingTypeKey",
+        Cell: ({ row }) => (
+          <div className="text-sm font-semibold text-gray-900">
+            {(row.original.meetingTypeKey ?? "Meeting") +
+              " · " +
+              row.original.mode}
+          </div>
+        ),
+      },
+      {
+        header: "Time",
+        accessorKey: "startAtUtc",
+        Cell: ({ row }) => {
+          const start = DateTime.fromJSDate(
+            row.original.startAtUtc instanceof Date
+              ? row.original.startAtUtc
+              : new Date(row.original.startAtUtc),
+          ).setZone(timezone);
+          const end = DateTime.fromJSDate(
+            row.original.endAtUtc instanceof Date
+              ? row.original.endAtUtc
+              : new Date(row.original.endAtUtc),
+          ).setZone(timezone);
+          return (
+            <div className="text-xs text-gray-600">
+              {start.toFormat("ccc, LLL dd · HH:mm")}–{end.toFormat("HH:mm")}
+            </div>
+          );
+        },
+      },
+      {
+        header: "Status",
+        accessorKey: "status",
+        Cell: ({ cell }) => (
+          <span className="inline-flex rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-700">
+            {cell.getValue<string>()}
+          </span>
+        ),
+      },
+    ],
+    [timezone],
+  );
+
   if (status !== "authenticated") {
     return (
       <div className="mx-auto w-full max-w-6xl px-4 py-12">
@@ -436,51 +483,6 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
       return start > DateTime.utc().minus({ minutes: 1 });
     })
     .slice(0, 5);
-
-  const upcomingColumns = useMemo<MRT_ColumnDef<Booking>[]>(
-    () => [
-      {
-        header: "Meeting",
-        accessorKey: "meetingTypeKey",
-        Cell: ({ row }) => (
-          <div className="text-sm font-semibold text-gray-900">
-            {(row.original.meetingTypeKey ?? "Meeting") + " · " + row.original.mode}
-          </div>
-        ),
-      },
-      {
-        header: "Time",
-        accessorKey: "startAtUtc",
-        Cell: ({ row }) => {
-          const start = DateTime.fromJSDate(
-            row.original.startAtUtc instanceof Date
-              ? row.original.startAtUtc
-              : new Date(row.original.startAtUtc),
-          ).setZone(timezone);
-          const end = DateTime.fromJSDate(
-            row.original.endAtUtc instanceof Date
-              ? row.original.endAtUtc
-              : new Date(row.original.endAtUtc),
-          ).setZone(timezone);
-          return (
-            <div className="text-xs text-gray-600">
-              {start.toFormat("ccc, LLL dd · HH:mm")}–{end.toFormat("HH:mm")}
-            </div>
-          );
-        },
-      },
-      {
-        header: "Status",
-        accessorKey: "status",
-        Cell: ({ cell }) => (
-          <span className="inline-flex rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-700">
-            {cell.getValue<string>()}
-          </span>
-        ),
-      },
-    ],
-    [timezone],
-  );
 
   const handleProfileSave = async () => {
     setProfileSaving(true);
