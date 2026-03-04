@@ -1,9 +1,6 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import BookingsClient from "./BookingsClientFinal";
 import { getServerSession } from "next-auth/next";
 import ProductShell from "@/components/scheduling/ProductShell";
-import SectionCard from "@/components/scheduling/SectionCard";
 
 import { authOptions } from "@/lib/auth";
 import {
@@ -44,22 +41,8 @@ export default async function SchedulingBookingsPage({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors duration-300">
-      <Header />
-      <div className="flex-1">
-        <ProductShell>
-          {orgContext?.orgId ? (
-            <BookingsClient orgId={orgContext?.orgId ?? ""} tz={tz} />
-          ) : (
-            <SectionCard>
-              <div className="text-sm text-amber-900">
-                No org found for this account.
-              </div>
-            </SectionCard>
-          )}
-        </ProductShell>
-      </div>
-      <Footer />
-    </div>
+    <ProductShell>
+      <BookingsClient orgId={orgContext?.orgId ?? ""} tz={tz} />
+    </ProductShell>
   );
 }

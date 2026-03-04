@@ -1,9 +1,6 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import SettingsClient from "./SettingsClient";
 import { getServerSession } from "next-auth/next";
 import ProductShell from "@/components/scheduling/ProductShell";
-import SectionCard from "@/components/scheduling/SectionCard";
 
 import { authOptions } from "@/lib/auth";
 import {
@@ -41,24 +38,8 @@ export default async function SchedulingSettingsPage({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors duration-300">
-      <Header />
-      <div className="flex-1">
-        <ProductShell>
-          {orgContext?.orgId ? (
-            <SettingsClient
-              orgId={orgContext?.orgId ?? ""}
-            />
-          ) : (
-            <SectionCard>
-              <div className="text-sm text-amber-900">
-                No org found for this account.
-              </div>
-            </SectionCard>
-          )}
-        </ProductShell>
-      </div>
-      <Footer />
-    </div>
+    <ProductShell>
+      <SettingsClient orgId={orgContext?.orgId ?? ""} />
+    </ProductShell>
   );
 }

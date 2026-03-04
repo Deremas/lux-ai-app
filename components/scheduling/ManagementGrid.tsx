@@ -33,12 +33,13 @@ export default function ManagementGrid({ tiles, className }: ManagementGridProps
                     href={tile.href}
                     className={cn(
                         // Tile base styling
-                        "group rounded-2xl border bg-white p-5 shadow-sm transition-all duration-200",
-                        "hover:shadow-md hover:-translate-y-1",
-                        "dark:border-slate-700 dark:bg-slate-900",
+                        "group relative overflow-hidden rounded-3xl border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] transition-all duration-200 backdrop-blur",
+                        "hover:-translate-y-1 hover:shadow-[0_24px_60px_-40px_rgba(15,23,42,0.45)]",
+                        "dark:border-slate-700/60 dark:bg-slate-900/70",
                         "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                     )}
                 >
+                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500/70 via-blue-500/70 to-accent-500/70 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
                             <div className="flex items-center gap-2">
@@ -65,7 +66,7 @@ export default function ManagementGrid({ tiles, className }: ManagementGridProps
                                 </p>
                             )}
                         </div>
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-50 dark:bg-slate-800 group-hover:bg-primary-100 dark:group-hover:bg-slate-700 transition-colors">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-500/10 text-primary-700 dark:bg-slate-800 dark:text-slate-200 group-hover:bg-primary-500/15 transition-colors">
                             {tile.icon}
                         </div>
                     </div>

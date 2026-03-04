@@ -14,9 +14,10 @@ export default function SectionCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-gray-200 bg-white p-6 shadow-md dark:border-slate-700 dark:bg-slate-900",
+        "relative rounded-3xl border border-white/70 bg-white/85 p-6 text-card-foreground shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur",
+        "dark:border-slate-700/60 dark:bg-slate-900/70 dark:shadow-[0_26px_60px_-45px_rgba(0,0,0,0.6)]",
         highlight &&
-          "bg-gradient-to-br from-gray-50 to-blue-50 dark:from-slate-800 dark:to-slate-700",
+          "bg-gradient-to-br from-white via-blue-50/60 to-white dark:from-slate-900/80 dark:to-slate-900/60",
         className
       )}
     >

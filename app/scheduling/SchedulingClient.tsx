@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { DateTime } from "luxon";
 import { toast } from "sonner";
 
 import AvailabilityCalendar from "@/components/scheduling/AvailabilityCalendar";
+import Stepper from "@/components/scheduling/Stepper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -286,7 +287,7 @@ function TimezonePicker({
       <button
         type="button"
         className={[
-          "flex h-9 items-center justify-between gap-3 rounded-md border border-input bg-white px-3 text-sm leading-6 shadow-sm",
+          "flex h-10 items-center justify-between gap-3 rounded-xl border border-white/70 bg-white/80 px-3 text-sm leading-6 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70",
           "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
           buttonClassName ?? "",
         ].join(" ")}
@@ -301,12 +302,12 @@ function TimezonePicker({
       {open && (
         <div
           className={[
-            "absolute z-20 mt-2 rounded-md border border-gray-200 bg-white p-2 shadow-lg",
+            "absolute z-20 mt-2 rounded-xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90",
             menuClassName ?? "w-full",
           ].join(" ")}
         >
           <input
-            className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-9 w-full rounded-lg border border-white/70 bg-white/90 px-3 text-sm text-gray-900 leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/80 dark:text-gray-100"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search timezone"
@@ -315,10 +316,12 @@ function TimezonePicker({
           />
           <div
             ref={listRef}
-            className="mt-2 max-h-60 overflow-auto rounded-md border border-gray-100"
+            className="mt-2 max-h-60 overflow-auto rounded-lg border border-gray-100/80 dark:border-slate-700/60"
           >
             {filtered.length === 0 ? (
-              <div className="px-3 py-2 text-sm text-gray-500">No matches</div>
+              <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                No matches
+              </div>
             ) : (
               filtered.map((zone, index) => (
                 <button
@@ -326,9 +329,9 @@ function TimezonePicker({
                   type="button"
                   data-tz-index={index}
                   className={[
-                    "w-full px-3 py-2 text-left text-sm hover:bg-gray-100",
+                    "w-full px-3 py-2 text-left text-sm hover:bg-gray-100/80 dark:hover:bg-slate-800/60",
                     zone === value ? "font-semibold" : "",
-                    index === highlight ? "bg-gray-100" : "",
+                    index === highlight ? "bg-gray-100/80 dark:bg-slate-800/60" : "",
                   ].join(" ")}
                   onClick={() => {
                     onChange(zone);
@@ -468,7 +471,7 @@ export default function SchedulingClient(props: Props) {
     () => ({
       step1: Boolean(selectedMeetingTypeId),
       step2: Boolean(selectedMeetingTypeId && selectedMode),
-      step3: Boolean(profile) && !showForm,
+      step3: Boolean(profile) && !showForm && confirmed,
       step4: Boolean(selectedSlot) || Boolean(bookingSummary),
       step5: Boolean(bookingSummary),
     }),
@@ -477,10 +480,50 @@ export default function SchedulingClient(props: Props) {
       selectedMode,
       profile,
       showForm,
+      confirmed,
       selectedSlot,
       bookingSummary,
     ]
   );
+  const [activeStep, setActiveStep] = useState(1);
+  const canAdvanceStep = useMemo(
+    () => ({
+      1: isAuthed && Boolean(selectedMeetingTypeId),
+      2: Boolean(selectedMeetingTypeId && selectedMode),
+      3: Boolean(profile) && !showForm && confirmed,
+      4: Boolean(selectedSlot) || Boolean(bookingSummary),
+    }),
+    [
+      isAuthed,
+      selectedMeetingTypeId,
+      selectedMode,
+      profile,
+      showForm,
+      confirmed,
+      selectedSlot,
+      bookingSummary,
+    ]
+  );
+
+  useEffect(() => {
+    setActiveStep((prev) => {
+      if (!isAuthed) return 1;
+      if (prev > 1 && !selectedMeetingTypeId) return 1;
+      if (prev > 2 && !selectedMode) return 2;
+      if (prev > 3 && (!profile || showForm || !confirmed)) return 3;
+      if (prev > 4 && !selectedSlot && !bookingSummary) return 4;
+      return prev;
+    });
+  }, [
+    isAuthed,
+    selectedMeetingTypeId,
+    selectedMode,
+    profile,
+    showForm,
+    confirmed,
+    selectedSlot,
+    bookingSummary,
+  ]);
   useEffect(() => {
     setBookingSummary(null);
     setSelectedSlot(null);
@@ -933,8 +976,9 @@ export default function SchedulingClient(props: Props) {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div className="space-y-10">
+      <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/85 p-8 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 via-blue-500 to-accent-500" />
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
@@ -949,59 +993,48 @@ export default function SchedulingClient(props: Props) {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {isAuthed ? (
-              <>
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200">
-                  Signed in
-                </span>
-                <Button type="button" variant="outline" asChild>
-                  <Link href={myBookingsHref}>My bookings</Link>
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => signOut({ callbackUrl: "/scheduling" })}
-                >
-                  Sign out
-                </Button>
-              </>
-            ) : (
-              <Button
-                type="button"
-                onClick={() =>
-                  signIn(undefined, { callbackUrl: "/scheduling" })
-                }
-              >
-                Sign in to continue
-              </Button>
-            )}
-          </div>
         </div>
+      </div>
 
-        <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div id="step-1" className="mb-6" />
-          <div className="mb-6 flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.25em] text-gray-400">
-            {[
-              { id: "1", label: "Step 1 · Type", done: stepStatus.step1 },
-              { id: "2", label: "Step 2 · Mode", done: stepStatus.step2 },
-              { id: "3", label: "Step 3 · Profile", done: stepStatus.step3 },
-              { id: "4", label: "Step 4 · Time", done: stepStatus.step4 },
-              { id: "5", label: "Step 5 · Confirm", done: stepStatus.step5 },
-            ].map((step) => (
-              <span
-                key={step.id}
-                className={[
-                  "rounded-full border px-3 py-1",
-                  step.done
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                    : "border-gray-200 bg-gray-50 text-gray-400",
-                ].join(" ")}
-              >
-                {step.label}
-              </span>
-            ))}
-          </div>
+      <div className="rounded-3xl border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+        <Stepper
+          steps={[
+            {
+              id: "1",
+              label: "Type",
+              isCompleted: stepStatus.step1,
+              isActive: activeStep === 1,
+            },
+            {
+              id: "2",
+              label: "Mode",
+              isCompleted: stepStatus.step2,
+              isActive: activeStep === 2,
+            },
+            {
+              id: "3",
+              label: "Profile",
+              isCompleted: stepStatus.step3,
+              isActive: activeStep === 3,
+            },
+            {
+              id: "4",
+              label: "Time",
+              isCompleted: stepStatus.step4,
+              isActive: activeStep === 4,
+            },
+            {
+              id: "5",
+              label: "Confirm",
+              isCompleted: stepStatus.step5,
+              isActive: activeStep === 5,
+            },
+          ]}
+        />
+      </div>
+
+      {activeStep === 1 && (
+        <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -1014,8 +1047,17 @@ export default function SchedulingClient(props: Props) {
           </div>
 
           {!isAuthed ? (
-            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              Sign in to choose a meeting type and continue.
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900">
+              <span>Sign in to choose a meeting type and continue.</span>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() =>
+                  signIn(undefined, { callbackUrl: "/scheduling" })
+                }
+              >
+                Sign in
+              </Button>
             </div>
           ) : (
             <>
@@ -1064,12 +1106,12 @@ export default function SchedulingClient(props: Props) {
                             type="button"
                             onClick={() => setSelectedMeetingTypeId(item.id)}
                             className={[
-                              "w-full rounded-2xl border px-4 py-4 text-left transition",
+                              "w-full rounded-3xl border px-4 py-4 text-left transition backdrop-blur",
                               selected
-                                ? "border-gray-900 bg-gray-900 text-white"
-                                : "border-gray-200 bg-white text-gray-900 hover:border-gray-400",
-                              "dark:border-slate-700 dark:bg-slate-900",
-                              selected ? "dark:border-white" : "dark:text-white",
+                                ? "border-primary-600 bg-gradient-to-br from-primary-600 to-indigo-600 text-white shadow-[0_18px_45px_-30px_rgba(14,66,126,0.6)]"
+                                : "border-white/70 bg-white/80 text-gray-900 hover:border-primary-200 hover:bg-white",
+                              "dark:border-slate-700/60 dark:bg-slate-900/70",
+                              selected ? "dark:border-primary-400" : "dark:text-white",
                             ].join(" ")}
                           >
                             <div className="flex items-start justify-between gap-3">
@@ -1121,9 +1163,23 @@ export default function SchedulingClient(props: Props) {
                 )}
             </>
           )}
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+            <Button type="button" variant="outline" disabled>
+              Back
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setActiveStep(2)}
+              disabled={!canAdvanceStep[1]}
+            >
+              Next
+            </Button>
+          </div>
         </div>
+      )}
 
-        <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      {activeStep === 2 && (
+        <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
           <div id="step-2" className="mb-6" />
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -1140,18 +1196,18 @@ export default function SchedulingClient(props: Props) {
           </div>
 
           {!isAuthed ? (
-            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <div className="mt-4 rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 backdrop-blur">
               Sign in to choose a meeting mode.
             </div>
           ) : (
             <>
               {!canProceedToMode && (
-                <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <div className="mt-4 rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 backdrop-blur">
                   Select a meeting type first to unlock meeting modes.
                 </div>
               )}
               {canProceedToMode && selectedMeetingType && (
-                <div className="mt-4 rounded-2xl border border-gray-200 bg-white px-4 py-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div className="mt-4 rounded-2xl border border-white/70 bg-white/80 px-4 py-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
@@ -1188,10 +1244,10 @@ export default function SchedulingClient(props: Props) {
                           type="button"
                           onClick={() => setSelectedMode(value)}
                           className={[
-                            "rounded-full border px-4 py-2 text-sm font-semibold transition",
+                            "rounded-full border px-4 py-2 text-sm font-semibold transition backdrop-blur",
                             active
-                              ? "border-gray-900 bg-gray-900 text-white"
-                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-400",
+                              ? "border-primary-500 bg-gradient-to-r from-primary-600 to-indigo-600 text-white"
+                              : "border-white/70 bg-white/80 text-gray-700 hover:border-primary-200 hover:bg-white",
                           ].join(" ")}
                         >
                           {label}
@@ -1231,79 +1287,24 @@ export default function SchedulingClient(props: Props) {
               )}
             </>
           )}
-        </div>
-
-        {!isAuthed && (
-          <div className="mt-8 space-y-6">
-            <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-sm text-gray-700 dark:border-slate-800 dark:bg-slate-800/40 dark:text-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  What happens next
-                </h2>
-                <p className="mt-2 text-gray-600 dark:text-gray-300">
-                  Sign in to confirm your identity. Then we’ll capture a short
-                  booking profile (name, phone, timezone, and meeting notes)
-                  before showing live availability.
-                </p>
-                <ul className="mt-4 space-y-2 text-sm">
-                  {[
-                    "Full name, phone, company, role (if applicable)",
-                    "Preferred timezone for meeting times",
-                    "Meeting concept notes to prepare the right expert",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2">
-                      <span className="mt-1 h-2 w-2 rounded-full bg-primary-500" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Ready to book?
-                </h3>
-                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                  Sign in to unlock live scheduling and confirm a slot.
-                </p>
-                <Button
-                  type="button"
-                  className="mt-4 w-full"
-                  onClick={() =>
-                    signIn(undefined, { callbackUrl: "/scheduling" })
-                  }
-                >
-                  Sign in
-                </Button>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 text-sm text-gray-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-gray-300">
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-400">
-                Steps after sign in
-              </p>
-              <div className="mt-3 grid gap-3 md:grid-cols-3">
-                {[
-                  "Step 2 · Meeting mode",
-                  "Step 3 · Booking profile",
-                  "Step 4 · Choose a time",
-                  "Step 5 · Confirmation",
-                ].map((label) => (
-                  <div
-                    key={label}
-                    className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-gray-200"
-                  >
-                    {label}
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+            <Button type="button" variant="outline" onClick={() => setActiveStep(1)}>
+              Back
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setActiveStep(3)}
+              disabled={!canAdvanceStep[2]}
+            >
+              Next
+            </Button>
           </div>
-        )}
+        </div>
+      )}
 
-        {isAuthed && (
+      {activeStep === 3 && (
           <div className="mt-8 space-y-6">
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 dark:border-slate-800 dark:bg-slate-800/40">
+            <div className="rounded-3xl border border-white/70 bg-white/80 p-6 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -1325,7 +1326,7 @@ export default function SchedulingClient(props: Props) {
               </div>
 
               {!canProceedToProfile && (
-                <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                <div className="mt-4 rounded-lg border border-amber-200/70 bg-amber-50/80 px-3 py-2 text-sm text-amber-900 backdrop-blur">
                   Select a meeting type and meeting mode to unlock the booking profile.
                 </div>
               )}
@@ -1543,7 +1544,7 @@ export default function SchedulingClient(props: Props) {
               {canProceedToProfile && !showForm && profile && (
                 <div className="mt-6 space-y-4">
                   <div className="grid gap-3 text-sm text-gray-700 dark:text-gray-200 sm:grid-cols-2">
-                    <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+                    <div className="rounded-xl border border-white/70 bg-white/80 p-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                       <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
                         Contact
                       </p>
@@ -1560,7 +1561,7 @@ export default function SchedulingClient(props: Props) {
                         </p>
                       )}
                     </div>
-                    <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+                    <div className="rounded-xl border border-white/70 bg-white/80 p-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                       <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
                         Timezone
                       </p>
@@ -1573,7 +1574,7 @@ export default function SchedulingClient(props: Props) {
                     </div>
                   </div>
 
-                  <label className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  <label className="flex items-start gap-3 rounded-xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 backdrop-blur">
                     <input
                       type="checkbox"
                       checked={confirmed}
@@ -1586,10 +1587,333 @@ export default function SchedulingClient(props: Props) {
                   </label>
                 </div>
               )}
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+                <Button type="button" variant="outline" onClick={() => setActiveStep(2)}>
+                  Back
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => setActiveStep(4)}
+                  disabled={!canAdvanceStep[3]}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
+          </div>
+        )}
 
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      {activeStep === 5 && (
+        <div className="space-y-4">
+          {selectedSlot || bookingSummary ? (
+            <div className="rounded-3xl border border-emerald-200/70 bg-emerald-50/80 px-5 py-4 text-emerald-900 shadow-[0_18px_45px_-40px_rgba(16,185,129,0.45)] backdrop-blur">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold">
+                    Step 5 · Confirmation
+                  </h3>
+                  <p className="text-sm text-emerald-800">
+                    Review details before confirming your booking.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedSlot(null);
+                    setBookingSummary(null);
+                    setActiveStep(1);
+                  }}
+                >
+                  Change meeting type
+                </Button>
+              </div>
+
+              <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                <div className="rounded-xl border border-emerald-200/70 bg-white/80 px-4 py-3 backdrop-blur">
+                  <p className="text-xs uppercase tracking-[0.25em] text-emerald-600">
+                    Meeting
+                  </p>
+                  <p className="mt-2 font-semibold text-emerald-900">
+                    {normalizeMeetingTitle(
+                      selectedMeetingType?.title ?? "Session",
+                      selectedMeetingType?.durationMin ?? 60
+                    )}
+                  </p>
+                  <p className="text-xs text-emerald-700">
+                    {selectedMeetingType?.durationMin ?? 60} min
+                  </p>
+                  <p className="mt-1 text-xs text-emerald-700">
+                    {selectedModeLabel}
+                  </p>
+                  {selectedMode === "phone" && profile?.phone && (
+                    <p className="mt-2 text-xs text-emerald-700">
+                      Phone call to: {profile.phone}
+                    </p>
+                  )}
+                  {selectedMode !== "phone" &&
+                    selectedMode !== "in_person" &&
+                    bookingSummary?.meetingLink &&
+                    bookingSummary.status === "confirmed" && (
+                      <a
+                        className="mt-2 inline-block text-xs text-emerald-700 underline"
+                        href={bookingSummary.meetingLink}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Join meeting link
+                      </a>
+                    )}
+                  {selectedMode !== "phone" &&
+                    selectedMode !== "in_person" &&
+                    (bookingSummary?.status ?? "pending") !== "confirmed" && (
+                      <p className="mt-2 text-xs text-emerald-700">
+                        Meeting link will be emailed after confirmation.
+                      </p>
+                    )}
+                </div>
+                <div className="rounded-xl border border-emerald-200/70 bg-white/80 px-4 py-3 backdrop-blur">
+                  <p className="text-xs uppercase tracking-[0.25em] text-emerald-600">
+                    Time
+                  </p>
+                  <p className="mt-2 font-semibold text-emerald-900">
+                    {DateTime.fromISO(
+                      (bookingSummary?.slot ?? selectedSlot)?.startUtc ?? ""
+                    )
+                      .setZone(displayTz)
+                      .toFormat("ccc, LLL dd · HH:mm")}
+                    {" - "}
+                    {DateTime.fromISO(
+                      (bookingSummary?.slot ?? selectedSlot)?.endUtc ?? ""
+                    )
+                      .setZone(displayTz)
+                      .toFormat("HH:mm")}
+                  </p>
+                  <p className="text-xs text-emerald-700">{displayTz}</p>
+                </div>
+                <div className="rounded-xl border border-emerald-200/70 bg-white/80 px-4 py-3 backdrop-blur">
+                  <p className="text-xs uppercase tracking-[0.25em] text-emerald-600">
+                    Booker
+                  </p>
+                  <p className="mt-2 font-semibold text-emerald-900">
+                    {profile?.fullName ?? "—"}
+                  </p>
+                  <p className="text-xs text-emerald-700">
+                    {profile?.phone ?? "—"}
+                  </p>
+                  <p className="text-xs text-emerald-700">
+                    {profile?.company
+                      ? `${profile.company} · ${profile.companyRole || ""}`
+                      : "Personal booking"}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-emerald-200/70 bg-white/80 px-4 py-3 backdrop-blur">
+                  <p className="text-xs uppercase tracking-[0.25em] text-emerald-600">
+                    Notes
+                  </p>
+                  <p className="mt-2 text-sm text-emerald-900">
+                    {profile?.notes ?? "—"}
+                  </p>
+                  <p className="mt-2 text-xs text-emerald-700">
+                    Preferred timezone: {profile?.timezone ?? "—"}
+                  </p>
+                </div>
+              </div>
+
+              {paymentRequiredByPolicy && (
+                <div className="mt-4 rounded-xl border border-emerald-200/70 bg-white/80 px-4 py-4 text-sm text-emerald-900 backdrop-blur">
+                  <p className="text-xs uppercase tracking-[0.25em] text-emerald-600">
+                    Payment
+                  </p>
+                  {missingPaymentConfig ? (
+                    <div className="mt-2 rounded-lg border border-amber-200/70 bg-amber-50/80 px-3 py-2 text-amber-900 backdrop-blur">
+                      Payment is required by policy, but this meeting type is
+                      missing a price or currency. Please contact the admin.
+                    </div>
+                  ) : (
+                    <>
+                      <p className="mt-2 text-sm">
+                        {paymentPriceLabel
+                          ? `${paymentPriceLabel} required`
+                          : "Payment required"}
+                      </p>
+                      {convertedPriceLabel && (
+                        <p className="mt-1 text-xs text-emerald-700">
+                          ≈ {convertedPriceLabel} (display only)
+                        </p>
+                      )}
+                      <p className="text-xs text-emerald-700">
+                        Policy:{" "}
+                        {effectivePaymentPolicy === "PAY_BEFORE_CONFIRM"
+                          ? "Pay before confirmation"
+                          : effectivePaymentPolicy === "APPROVE_THEN_PAY"
+                          ? "Approve then pay"
+                          : "Free"}
+                      </p>
+
+                      {!bookingSummary && mustPayBeforeConfirm && (
+                        <div className="mt-3 space-y-2">
+                          <p className="text-xs text-emerald-700">
+                            Click “Proceed to payment” to complete your booking
+                            in Stripe.
+                          </p>
+                          {paymentUrl && (
+                            <p className="text-xs text-emerald-700">
+                              If redirect fails, use the payment link provided
+                              by your admin.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      {!bookingSummary &&
+                        effectivePaymentPolicy === "APPROVE_THEN_PAY" && (
+                          <p className="mt-3 text-xs text-emerald-700">
+                            You can confirm now. We’ll send payment
+                            instructions after approval.
+                          </p>
+                        )}
+                      {bookingSummary?.payment && (
+                        <p className="mt-3 text-xs text-emerald-700">
+                          Payment status: {bookingSummary.payment.status}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
+              {bookingError && (
+                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {bookingError}
+                </div>
+              )}
+
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                {bookingSummary ? (
+                  <Button type="button" variant="outline" asChild>
+                    <Link href={myBookingsHref}>View my bookings</Link>
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={handleConfirmBooking}
+                    disabled={
+                      !selectedSlot ||
+                      bookingSubmitting ||
+                      missingPaymentConfig ||
+                      !isAuthed
+                    }
+                  >
+                    {bookingSubmitting
+                      ? "Booking..."
+                      : !isAuthed
+                      ? "Sign in to book"
+                      : mustPayBeforeConfirm
+                      ? "Proceed to payment"
+                      : "Confirm booking"}
+                  </Button>
+                )}
+                {bookingSummary && (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        const title = normalizeMeetingTitle(
+                          selectedMeetingType?.title ?? "Lux AI Session",
+                          selectedMeetingType?.durationMin ?? 60
+                        );
+                        const details = `Meeting with Lux AI${
+                          profile?.notes ? `\n\nNotes: ${profile.notes}` : ""
+                        }`;
+                        const ics = buildIcsContent({
+                          title,
+                          description: details,
+                          startUtc: bookingSummary.slot.startUtc,
+                          endUtc: bookingSummary.slot.endUtc,
+                        });
+                        const blob = new Blob([ics], {
+                          type: "text/calendar;charset=utf-8",
+                        });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "luxai-booking.ics";
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        URL.revokeObjectURL(url);
+                      }}
+                    >
+                      Download ICS
+                    </Button>
+                    <Button type="button" variant="outline" asChild>
+                      <Link
+                        href={buildGoogleCalendarUrl({
+                          title: `${normalizeMeetingTitle(
+                            selectedMeetingType?.title ?? "Lux AI Session",
+                            selectedMeetingType?.durationMin ?? 60
+                          )} · ${selectedModeLabel}`,
+                          details: [
+                            `Mode: ${selectedModeLabel}`,
+                            bookingSummary?.meetingLink &&
+                            bookingSummary.status === "confirmed"
+                              ? `Meeting link: ${bookingSummary.meetingLink}`
+                              : selectedMode === "phone"
+                              ? `Phone: ${profile?.phone ?? "n/a"}`
+                              : "",
+                            profile?.notes
+                              ? `Notes: ${profile.notes}`
+                              : "Meeting with Lux AI",
+                          ]
+                            .filter(Boolean)
+                            .join("\n"),
+                          startUtc: bookingSummary.slot.startUtc,
+                          endUtc: bookingSummary.slot.endUtc,
+                        })}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Add to Google Calendar
+                      </Link>
+                    </Button>
+                  </>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setBookingSummary(null);
+                    setSelectedSlot(null);
+                    setActiveStep(4);
+                  }}
+                >
+                  Book another time
+                </Button>
+                <span className="text-xs text-emerald-800">
+                  You will receive a confirmation email if notifications are
+                  enabled.
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 backdrop-blur">
+              Select a time to review your booking details.
+            </div>
+          )}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Button type="button" variant="outline" onClick={() => setActiveStep(4)}>
+              Back
+            </Button>
+          </div>
+        </div>
+      )}
+
+
+
+      {activeStep === 4 && (
+        <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/70 bg-white/85 px-4 py-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Step 4 · Choose a time
@@ -1616,10 +1940,10 @@ export default function SchedulingClient(props: Props) {
               </div>
 
               {allowedCurrencies.length > 0 && (
-                <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-gray-200">
+                <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-sm text-gray-700 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200">
                   <span className="font-medium">Display currency</span>
                   <select
-                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/70"
                     value={displayCurrency ?? ""}
                     onChange={(e) => setDisplayCurrency(e.target.value)}
                   >
@@ -1638,17 +1962,17 @@ export default function SchedulingClient(props: Props) {
               )}
 
               {!selectedMeetingTypeId && (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 backdrop-blur">
                   Select a meeting type to unlock available times.
                 </div>
               )}
               {selectedMeetingTypeId && !selectedMode && (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 backdrop-blur">
                   Select a meeting mode to unlock available times.
                 </div>
               )}
               {selectedMeetingTypeId && selectedMode && (!profile || showForm) && (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 backdrop-blur">
                   Complete your booking profile to unlock available times.
                 </div>
               )}
@@ -1657,7 +1981,7 @@ export default function SchedulingClient(props: Props) {
                 profile &&
                 !showForm &&
                 !confirmed && (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 backdrop-blur">
                   Confirm your booking profile to unlock available times.
                 </div>
               )}
@@ -1682,307 +2006,21 @@ export default function SchedulingClient(props: Props) {
                   }
                 />
               )}
-            </div>
-
-            {(selectedSlot || bookingSummary) && (
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-900">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-lg font-semibold">
-                      Step 5 · Confirmation
-                    </h3>
-                    <p className="text-sm text-emerald-800">
-                      Review details before confirming your booking.
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setSelectedSlot(null);
-                      setBookingSummary(null);
-                      document.getElementById("step-1")?.scrollIntoView({
-                        behavior: "smooth",
-                      });
-                    }}
-                  >
-                    Change meeting type
-                  </Button>
-                </div>
-
-                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-                  <div className="rounded-xl border border-emerald-200 bg-white px-4 py-3">
-                    <p className="text-xs uppercase tracking-[0.25em] text-emerald-600">
-                      Meeting
-                    </p>
-                    <p className="mt-2 font-semibold text-emerald-900">
-                      {normalizeMeetingTitle(
-                        selectedMeetingType?.title ?? "Session",
-                        selectedMeetingType?.durationMin ?? 60
-                      )}
-                    </p>
-                    <p className="text-xs text-emerald-700">
-                      {selectedMeetingType?.durationMin ?? 60} min
-                    </p>
-                    <p className="mt-1 text-xs text-emerald-700">
-                      {selectedModeLabel}
-                    </p>
-                    {selectedMode === "phone" && profile?.phone && (
-                      <p className="mt-2 text-xs text-emerald-700">
-                        Phone call to: {profile.phone}
-                      </p>
-                    )}
-                      {selectedMode !== "phone" &&
-                        selectedMode !== "in_person" &&
-                        bookingSummary?.meetingLink &&
-                        bookingSummary.status === "confirmed" && (
-                          <a
-                            className="mt-2 inline-block text-xs text-emerald-700 underline"
-                            href={bookingSummary.meetingLink}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            Join meeting link
-                          </a>
-                        )}
-                      {selectedMode !== "phone" &&
-                        selectedMode !== "in_person" &&
-                        (bookingSummary?.status ?? "pending") !== "confirmed" && (
-                          <p className="mt-2 text-xs text-emerald-700">
-                            Meeting link will be emailed after confirmation.
-                          </p>
-                        )}
-                  </div>
-                  <div className="rounded-xl border border-emerald-200 bg-white px-4 py-3">
-                    <p className="text-xs uppercase tracking-[0.25em] text-emerald-600">
-                      Time
-                    </p>
-                    <p className="mt-2 font-semibold text-emerald-900">
-                      {DateTime.fromISO(
-                        (bookingSummary?.slot ?? selectedSlot)?.startUtc ?? ""
-                      )
-                        .setZone(displayTz)
-                        .toFormat("ccc, LLL dd · HH:mm")}
-                      {" - "}
-                      {DateTime.fromISO(
-                        (bookingSummary?.slot ?? selectedSlot)?.endUtc ?? ""
-                      )
-                        .setZone(displayTz)
-                        .toFormat("HH:mm")}
-                    </p>
-                    <p className="text-xs text-emerald-700">{displayTz}</p>
-                  </div>
-                  <div className="rounded-xl border border-emerald-200 bg-white px-4 py-3">
-                    <p className="text-xs uppercase tracking-[0.25em] text-emerald-600">
-                      Booker
-                    </p>
-                    <p className="mt-2 font-semibold text-emerald-900">
-                      {profile?.fullName ?? "—"}
-                    </p>
-                    <p className="text-xs text-emerald-700">
-                      {profile?.phone ?? "—"}
-                    </p>
-                    <p className="text-xs text-emerald-700">
-                      {profile?.company
-                        ? `${profile.company} · ${profile.companyRole || ""}`
-                        : "Personal booking"}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-emerald-200 bg-white px-4 py-3">
-                    <p className="text-xs uppercase tracking-[0.25em] text-emerald-600">
-                      Notes
-                    </p>
-                    <p className="mt-2 text-sm text-emerald-900">
-                      {profile?.notes ?? "—"}
-                    </p>
-                    <p className="mt-2 text-xs text-emerald-700">
-                      Preferred timezone: {profile?.timezone ?? "—"}
-                    </p>
-                  </div>
-                </div>
-
-                {paymentRequiredByPolicy && (
-                  <div className="mt-4 rounded-xl border border-emerald-200 bg-white px-4 py-4 text-sm text-emerald-900">
-                    <p className="text-xs uppercase tracking-[0.25em] text-emerald-600">
-                      Payment
-                    </p>
-                    {missingPaymentConfig ? (
-                      <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-900">
-                        Payment is required by policy, but this meeting type
-                        is missing a price or currency. Please contact the admin.
-                      </div>
-                    ) : (
-                      <>
-                        <p className="mt-2 text-sm">
-                          {paymentPriceLabel
-                            ? `${paymentPriceLabel} required`
-                            : "Payment required"}
-                        </p>
-                        {convertedPriceLabel && (
-                          <p className="mt-1 text-xs text-emerald-700">
-                            ≈ {convertedPriceLabel} (display only)
-                          </p>
-                        )}
-                        <p className="text-xs text-emerald-700">
-                          Policy:{" "}
-                          {effectivePaymentPolicy === "PAY_BEFORE_CONFIRM"
-                            ? "Pay before confirmation"
-                            : effectivePaymentPolicy === "APPROVE_THEN_PAY"
-                            ? "Approve then pay"
-                            : "Free"}
-                        </p>
-
-                        {!bookingSummary && mustPayBeforeConfirm && (
-                          <div className="mt-3 space-y-2">
-                            <p className="text-xs text-emerald-700">
-                              Click “Proceed to payment” to complete your
-                              booking in Stripe.
-                            </p>
-                            {paymentUrl && (
-                              <p className="text-xs text-emerald-700">
-                                If redirect fails, use the payment link provided
-                                by your admin.
-                              </p>
-                            )}
-                          </div>
-                        )}
-                        {!bookingSummary &&
-                          effectivePaymentPolicy === "APPROVE_THEN_PAY" && (
-                            <p className="mt-3 text-xs text-emerald-700">
-                              You can confirm now. We’ll send payment
-                              instructions after approval.
-                            </p>
-                          )}
-                        {bookingSummary?.payment && (
-                          <p className="mt-3 text-xs text-emerald-700">
-                            Payment status: {bookingSummary.payment.status}
-                          </p>
-                        )}
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {bookingError && (
-                  <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                    {bookingError}
-                  </div>
-                )}
-
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  {bookingSummary ? (
-                    <Button type="button" variant="outline" asChild>
-                      <Link href={myBookingsHref}>View my bookings</Link>
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      onClick={handleConfirmBooking}
-                      disabled={
-                        !selectedSlot ||
-                        bookingSubmitting ||
-                        missingPaymentConfig ||
-                        !isAuthed
-                      }
-                    >
-                      {bookingSubmitting
-                        ? "Booking..."
-                        : !isAuthed
-                        ? "Sign in to book"
-                        : mustPayBeforeConfirm
-                        ? "Proceed to payment"
-                        : "Confirm booking"}
-                    </Button>
-                  )}
-                  {bookingSummary && (
-                    <>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          const title = normalizeMeetingTitle(
-                            selectedMeetingType?.title ?? "Lux AI Session",
-                            selectedMeetingType?.durationMin ?? 60
-                          );
-                          const details = `Meeting with Lux AI${
-                            profile?.notes ? `\n\nNotes: ${profile.notes}` : ""
-                          }`;
-                          const ics = buildIcsContent({
-                            title,
-                            description: details,
-                            startUtc: bookingSummary.slot.startUtc,
-                            endUtc: bookingSummary.slot.endUtc,
-                          });
-                          const blob = new Blob([ics], {
-                            type: "text/calendar;charset=utf-8",
-                          });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement("a");
-                          a.href = url;
-                          a.download = "luxai-booking.ics";
-                          document.body.appendChild(a);
-                          a.click();
-                          a.remove();
-                          URL.revokeObjectURL(url);
-                        }}
-                      >
-                        Download ICS
-                      </Button>
-                      <Button type="button" variant="outline" asChild>
-                        <Link
-                          href={buildGoogleCalendarUrl({
-                            title: `${normalizeMeetingTitle(
-                              selectedMeetingType?.title ?? "Lux AI Session",
-                              selectedMeetingType?.durationMin ?? 60
-                            )} · ${selectedModeLabel}`,
-                            details: [
-                              `Mode: ${selectedModeLabel}`,
-                                bookingSummary?.meetingLink &&
-                                bookingSummary.status === "confirmed"
-                                  ? `Meeting link: ${bookingSummary.meetingLink}`
-                                  : selectedMode === "phone"
-                                ? `Phone: ${profile?.phone ?? "n/a"}`
-                                : "",
-                              profile?.notes
-                                ? `Notes: ${profile.notes}`
-                                : "Meeting with Lux AI",
-                            ]
-                              .filter(Boolean)
-                              .join("\n"),
-                            startUtc: bookingSummary.slot.startUtc,
-                            endUtc: bookingSummary.slot.endUtc,
-                          })}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Add to Google Calendar
-                        </Link>
-                      </Button>
-                    </>
-                  )}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setBookingSummary(null)}
-                  >
-                    Book another time
-                  </Button>
-                  <span className="text-xs text-emerald-800">
-                    You will receive a confirmation email if notifications are
-                    enabled.
-                  </span>
-                </div>
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+                <Button type="button" variant="outline" onClick={() => setActiveStep(3)}>
+                  Back
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => setActiveStep(5)}
+                  disabled={!canAdvanceStep[4]}
+                >
+                  Next
+                </Button>
               </div>
-            )}
+        </div>
 
-            {profile && !showForm && !selectedMeetingTypeId && (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                Select a meeting type and meeting mode to view availability.
-              </div>
-            )}
-          </div>
-        )}
+      )}
       </div>
-    </div>
   );
 }

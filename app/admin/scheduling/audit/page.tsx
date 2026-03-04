@@ -1,8 +1,5 @@
 import { getServerSession } from "next-auth/next";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import ProductShell from "@/components/scheduling/ProductShell";
-import SectionCard from "@/components/scheduling/SectionCard";
 
 import { authOptions } from "@/lib/auth";
 import { getFirstOrgContext, getUserOrgContext } from "@/lib/scheduling/org-context";
@@ -39,27 +36,12 @@ export default async function AuditLogPage({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors duration-300">
-      <Header />
-      <div className="flex-1">
-        <ProductShell>
-          {orgId ? (
-            <AuditLogClient
-              orgId={orgId}
-              orgName={orgContext?.orgName ?? null}
-              tz={orgContext?.defaultTz ?? "UTC"}
-              returnTo={returnTo}
-            />
-          ) : (
-            <SectionCard>
-              <div className="text-sm text-amber-900">
-                No org found for this account.
-              </div>
-            </SectionCard>
-          )}
-        </ProductShell>
-      </div>
-      <Footer />
-    </div>
+    <ProductShell>
+      <AuditLogClient
+        orgId={orgId}
+        orgName={orgContext?.orgName ?? null}
+        tz={orgContext?.defaultTz ?? "UTC"}
+      />
+    </ProductShell>
   );
 }

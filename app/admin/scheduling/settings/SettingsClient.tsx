@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
@@ -402,7 +401,7 @@ export default function SettingsClient({ orgId }: Props) {
   if (status !== "authenticated") {
     return (
       <div className="space-y-8">
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-3xl border border-white/70 bg-white/85 p-8 text-center shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             Sign in to manage scheduling settings
           </h1>
@@ -420,14 +419,6 @@ export default function SettingsClient({ orgId }: Props) {
   return (
     <div className="space-y-8">
       <div className="space-y-8">
-        <div className="flex justify-end">
-          <Link
-            href="/admin/scheduling"
-            className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500 hover:underline dark:text-gray-400"
-          >
-            Back to dashboard
-          </Link>
-        </div>
         <div className="mt-3 space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
             Scheduling Admin
@@ -438,6 +429,21 @@ export default function SettingsClient({ orgId }: Props) {
           <p className="text-sm text-gray-600 dark:text-gray-300">
             Control approval, payment, and notification defaults.
           </p>
+        </div>
+        <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500 dark:text-gray-400">
+                Open times
+              </p>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                Define your weekly availability with the working hours JSON.
+              </p>
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <a href="#working-hours">Edit open times</a>
+            </Button>
+          </div>
         </div>
 
         {loading && (
@@ -465,7 +471,7 @@ export default function SettingsClient({ orgId }: Props) {
                 Approval policy
               </label>
               <select
-                className="mt-2 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="mt-2 flex h-10 w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-gray-900 shadow-sm backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-100"
                 value={form.approvalPolicy}
                 onChange={(e) =>
                   setForm((prev) =>
@@ -488,7 +494,7 @@ export default function SettingsClient({ orgId }: Props) {
                 Payment policy
               </label>
               <select
-                className="mt-2 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="mt-2 flex h-10 w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-gray-900 shadow-sm backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-100"
                 value={form.paymentPolicy}
                 onChange={(e) =>
                   setForm((prev) =>
@@ -621,9 +627,9 @@ export default function SettingsClient({ orgId }: Props) {
                   <span aria-hidden>▾</span>
                 </button>
                 {tzOpen && (
-                  <div className="absolute z-20 mt-2 w-full rounded-md border border-gray-200 bg-white p-2 shadow-lg">
+                  <div className="absolute z-20 mt-2 w-full rounded-xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
                     <input
-                      className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      className="h-9 w-full rounded-md border border-white/70 bg-white/90 px-3 text-sm text-gray-900 leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/80 dark:text-gray-100"
                       value={tzQuery}
                       onChange={(e) => setTzQuery(e.target.value)}
                       placeholder="Search timezone"
@@ -672,7 +678,7 @@ export default function SettingsClient({ orgId }: Props) {
                 Default locale
               </label>
               <select
-                className="mt-2 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="mt-2 flex h-10 w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-gray-900 shadow-sm backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-100"
                 value={form.defaultLocale}
                 onChange={(e) =>
                   setForm((prev) =>
@@ -709,7 +715,7 @@ export default function SettingsClient({ orgId }: Props) {
               </p>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <div className="rounded-xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500">
                 Notification channels
               </p>
@@ -776,7 +782,7 @@ export default function SettingsClient({ orgId }: Props) {
               </p>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <div className="rounded-xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500">
                 Provider secrets
               </p>
@@ -785,7 +791,7 @@ export default function SettingsClient({ orgId }: Props) {
                 database using APP_SECRET_KEY.
               </p>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <div className="rounded-xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-gray-800">
                       Meta WhatsApp
@@ -822,7 +828,7 @@ export default function SettingsClient({ orgId }: Props) {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <div className="rounded-xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-gray-800">
                       Twilio WhatsApp
@@ -871,7 +877,7 @@ export default function SettingsClient({ orgId }: Props) {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-gray-200 bg-white p-4">
+                <div className="rounded-xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-gray-800">
                       Telnyx WhatsApp
@@ -910,7 +916,7 @@ export default function SettingsClient({ orgId }: Props) {
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <div className="rounded-xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500">
                 Test notifications
               </p>
@@ -945,9 +951,9 @@ export default function SettingsClient({ orgId }: Props) {
               )}
             </div>
 
-            <div>
+            <div id="working-hours" className="scroll-mt-24">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                Org default working hours (JSON)
+                Open times (working hours JSON)
               </label>
               <Textarea
                 className="mt-2 min-h-[220px] font-mono text-xs"

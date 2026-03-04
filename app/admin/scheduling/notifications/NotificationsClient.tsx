@@ -295,7 +295,7 @@ export default function NotificationsClient({ orgId, tz }: Props) {
   if (status !== "authenticated") {
     return (
       <div className="mx-auto w-full max-w-6xl px-4 py-12">
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-3xl border border-white/70 bg-white/85 p-8 text-center shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             Sign in to view notifications
           </h1>
@@ -324,11 +324,6 @@ export default function NotificationsClient({ orgId, tz }: Props) {
             Email delivery logs and booking alerts. Times shown in {timezone}.
           </p>
         </div>
-        <Button variant="outline" asChild>
-          <Link href="/admin/scheduling">
-            Back to dashboard
-          </Link>
-        </Button>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
@@ -344,24 +339,13 @@ export default function NotificationsClient({ orgId, tz }: Props) {
           placeholder="Search email or template..."
         />
         <select
-          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 text-sm text-gray-900 shadow-sm backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-100"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
         >
           {STATUS_OPTIONS.map((opt) => (
             <option key={opt} value={opt}>
               {opt}
-            </option>
-          ))}
-        </select>
-        <select
-          className="h-9 rounded-md border border-input bg-transparent px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          value={pageSize}
-          onChange={(e) => setPageSize(Number(e.target.value))}
-        >
-          {[10, 25, 50].map((size) => (
-            <option key={size} value={size}>
-              {size} rows
             </option>
           ))}
         </select>
@@ -432,7 +416,7 @@ export default function NotificationsClient({ orgId, tz }: Props) {
             }
           }}
         >
-          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl dark:bg-slate-900">
+          <div className="w-full max-w-lg rounded-2xl border border-white/70 bg-white/95 p-6 shadow-2xl backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Booking detail
@@ -628,7 +612,7 @@ export default function NotificationsClient({ orgId, tz }: Props) {
                 !selectedDetail.error &&
                 (selectedDetail.status === "pending" ||
                   selectedDetail.status === "confirmed") && (
-                  <div className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800">
+                  <div className="mt-5 rounded-xl border border-white/70 bg-white/80 p-4 text-sm text-gray-800 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200">
                     <p className="font-semibold">Need to cancel?</p>
                     <p className="mt-1 text-xs text-gray-600">
                       Canceling will notify the customer and free the slot.

@@ -162,7 +162,7 @@ export default function CustomersClient({ orgId, tz }: Props) {
   if (status !== "authenticated") {
     return (
       <div className="space-y-8">
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-3xl border border-white/70 bg-white/85 p-8 text-center shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Sign in to view customers</h1>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Admin access is required.</p>
           <Button className="mt-6" onClick={() => signIn(undefined, { callbackUrl: "/admin/scheduling/customers" })}>
@@ -173,27 +173,8 @@ export default function CustomersClient({ orgId, tz }: Props) {
     );
   }
 
-  if (!orgId) {
-    return (
-      <div className="space-y-8">
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
-          No organization found for this account.
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-8">
-      <div className="flex justify-end">
-        <Link
-          href="/admin/scheduling"
-          className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500 hover:underline dark:text-gray-400"
-        >
-          Back to dashboard
-        </Link>
-      </div>
-
       <ProductHero
         eyebrow="Customers"
         title="Customer management"
@@ -203,21 +184,11 @@ export default function CustomersClient({ orgId, tz }: Props) {
 
       <FilterBar>
         <Input
-          className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+          className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search name, email, phone..."
         />
-        <select
-          className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
-          value={pageSize}
-          onChange={(e) => setPageSize(Number(e.target.value))}
-        >
-          <option value={10}>10</option>
-          <option value={25}>25</option>
-          <option value={50}>50</option>
-        </select>
-        <span className="text-xs text-gray-500">Total: {total}</span>
       </FilterBar>
 
       {error && (

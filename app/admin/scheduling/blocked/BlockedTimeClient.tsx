@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { DateTime } from "luxon";
 import { signIn, useSession } from "next-auth/react";
 
@@ -70,6 +69,7 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
   const [tzHighlight, setTzHighlight] = useState(0);
   const tzRef = useRef<HTMLDivElement | null>(null);
   const tzListRef = useRef<HTMLDivElement | null>(null);
+  const formRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (defaultTz && defaultTz !== inputTz) {
@@ -170,7 +170,6 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
     }
   };
 
-  const dashboardHref = "/admin/scheduling";
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -209,6 +208,10 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
   function resetForm() {
     setForm(emptyForm(inputTz));
     setEditingId(null);
+  }
+
+  function scrollToForm() {
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function loadForEdit(item: Blocked) {
@@ -383,7 +386,7 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
   if (status !== "authenticated") {
     return (
       <div className="space-y-8">
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-3xl border border-white/70 bg-white/85 p-8 text-center shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             Sign in to manage blocked time
           </h1>
@@ -398,27 +401,9 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
     );
   }
 
-  if (!orgId) {
-    return (
-      <div className="space-y-8">
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
-          No org found for this account.
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-8">
       <div className="space-y-8">
-        <div className="flex justify-end">
-          <Link
-            href={dashboardHref}
-            className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500 hover:underline dark:text-gray-400"
-          >
-            Back to dashboard
-          </Link>
-        </div>
         <div className="mt-3 space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
             Scheduling Admin
@@ -449,10 +434,21 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
           </div>
         )}
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]">
+        <div className="mt-8 grid gap-8 md:grid-cols-[1fr_360px]">
           <MrtCardTable
             title="Blocked time"
             subtitle={items.length ? `${items.length} entries` : "No blocked time entries yet."}
+            headerRight={
+              <Button
+                size="sm"
+                onClick={() => {
+                  resetForm();
+                  scrollToForm();
+                }}
+              >
+                New blocked time
+              </Button>
+            }
             table={{
               columns,
               data: items,
@@ -472,7 +468,10 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
             }}
           />
 
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
+          <div
+            ref={formRef}
+            className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 md:sticky md:top-24 self-start"
+          >
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               {editingId ? "Edit blocked time" : "Add blocked time"}
             </h2>
@@ -494,9 +493,9 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
                     <span aria-hidden>▾</span>
                   </button>
                   {tzOpen && (
-                    <div className="absolute z-20 mt-2 w-full rounded-md border border-gray-200 bg-white p-2 shadow-lg">
+                    <div className="absolute z-20 mt-2 w-full rounded-xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
                       <input
-                        className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="h-9 w-full rounded-md border border-white/70 bg-white/90 px-3 text-sm text-gray-900 leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/80 dark:text-gray-100"
                         value={tzQuery}
                         onChange={(e) => setTzQuery(e.target.value)}
                         placeholder="Search timezone"

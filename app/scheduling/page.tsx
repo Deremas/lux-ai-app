@@ -1,9 +1,6 @@
 // app/scheduling/page.tsx
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import SchedulingClient from "./SchedulingClient";
 import ProductShell from "@/components/scheduling/ProductShell";
-import SectionCard from "@/components/scheduling/SectionCard";
 import { getServerSession } from "next-auth/next";
 
 import { authOptions } from "@/lib/auth";
@@ -42,38 +39,14 @@ export default async function SchedulingPage({
   const meetingTypeId = pickParam(searchParams?.meetingTypeId);
   const tz = pickParam(searchParams?.tz) || orgContext?.defaultTz || FALLBACK_TZ;
 
-  if (!orgContext?.orgId) {
-    return (
-      <div className="min-h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors duration-300">
-        <Header />
-      <div className="flex-1">
-        <ProductShell>
-          <SectionCard>
-            <div className="text-sm text-amber-900">
-              No organization found. Please sign in or contact support.
-            </div>
-          </SectionCard>
-        </ProductShell>
-      </div>
-        <Footer />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors duration-300">
-      <Header />
-      <div className="flex-1">
-        <ProductShell>
-          <SchedulingClient
-            orgId={orgContext.orgId}
-            meetingTypeId={meetingTypeId}
-            tz={tz}
-          />
-        </ProductShell>
-      </div>
-      <Footer />
-    </div>
+    <ProductShell>
+      <SchedulingClient
+        orgId={orgContext?.orgId ?? ""}
+        meetingTypeId={meetingTypeId}
+        tz={tz}
+      />
+    </ProductShell>
   );
 }
 

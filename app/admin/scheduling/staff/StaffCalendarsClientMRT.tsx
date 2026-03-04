@@ -11,7 +11,7 @@ import FilterBar from "@/components/scheduling/FilterBar";
 import Badge, { BookingStatus } from "@/components/scheduling/Badge";
 import ProductHero from "@/components/scheduling/ProductHero";
 import CompactSectionNav from "@/components/scheduling/CompactSectionNav";
-import type { MRT_ColumnDef } from "material-react-table";
+import type { MRT_ColumnDef, MRT_PaginationState } from "material-react-table";
 
 type Props = {
     orgId: string;
@@ -36,6 +36,13 @@ const ROLE_OPTIONS = [
     { value: "staff", label: "Staff" },
     { value: "customer", label: "Customer" },
 ] as const;
+
+function resolvePagination(
+    updaterOrValue: MRT_PaginationState | ((prev: MRT_PaginationState) => MRT_PaginationState),
+    prev: MRT_PaginationState
+) {
+    return typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue;
+}
 
 export default function StaffCalendarsClient({ orgId, tz }: Props) {
     const { status } = useSession();
@@ -120,10 +127,10 @@ export default function StaffCalendarsClient({ orgId, tz }: Props) {
         });
     }, [items, roleFilter, debouncedQuery]);
 
-    const paginated = useMemo(() => {
-        const start = (page - 1) * pageSize;
-        return filtered.slice(start, start + pageSize);
-    }, [filtered, page, pageSize]);
+    const pagination = useMemo(
+        () => ({ pageIndex: page - 1, pageSize }),
+        [page, pageSize]
+    );
 
     const columns = useMemo<MRT_ColumnDef<StaffUser>[]>(() => [
         {
@@ -203,27 +210,8 @@ export default function StaffCalendarsClient({ orgId, tz }: Props) {
         },
     ], [timezoneDisplay]);
 
-    if (!orgId) {
-        return (
-            <div className="mx-auto w-full max-w-6xl px-4 py-12">
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
-                    No organization found for this account.
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="space-y-8">
-            <div className="flex justify-end">
-                <Link
-                    href="/admin/scheduling"
-                    className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500 hover:underline dark:text-gray-400"
-                >
-                    Back to dashboard
-                </Link>
-            </div>
-
             <ProductHero
                 eyebrow="Staff Management"
                 title="Staff Users"
@@ -260,7 +248,7 @@ export default function StaffCalendarsClient({ orgId, tz }: Props) {
 
             <FilterBar>
                 <select
-                    className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
                     value={roleFilter}
                     onChange={(e) => setRoleFilter(e.target.value)}
                 >
@@ -271,21 +259,11 @@ export default function StaffCalendarsClient({ orgId, tz }: Props) {
                     ))}
                 </select>
                 <Input
-                    className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search name, email, phone..."
                 />
-                <select
-                    className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
-                    value={pageSize}
-                    onChange={(e) => setPageSize(Number(e.target.value))}
-                >
-                    <option value={10}>10</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                </select>
-                <span className="text-xs text-gray-500">Total: {total}</span>
             </FilterBar>
 
             {loading && (
@@ -315,17 +293,21 @@ export default function StaffCalendarsClient({ orgId, tz }: Props) {
                     enablePagination: true,
                     enableSorting: true,
                     enableFilters: true,
-                    initialState: {
-                        pagination: {
-                            pageIndex: page - 1,
-                            pageSize,
-                        },
+                    manualPagination: true,
+                    rowCount: total,
+                    state: {
+                        isLoading: loading,
+                        pagination,
                     },
-                    onPaginationChange: (updater) => {
-                        const newPagination = typeof updater === 'function'
-                            ? updater({ pageIndex: page - 1, pageSize })
-                            : updater;
-                        setPage(newPagination.pageIndex + 1);
+                    onPaginationChange: (updaterOrValue) => {
+                        const next = resolvePagination(updaterOrValue, pagination);
+                        if (next.pageSize !== pageSize) {
+                            setPageSize(next.pageSize);
+                            setPage(1);
+                        }
+                        if (next.pageIndex !== pagination.pageIndex) {
+                            setPage(next.pageIndex + 1);
+                        }
                     },
                     renderEmptyRowsFallback: () => (
                         <div className="p-4 text-sm text-gray-600">

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
@@ -114,7 +113,6 @@ export default function StaffCalendarsClient({ orgId }: Props) {
   const [staffForm, setStaffForm] = useState<StaffUserForm>(emptyStaffForm());
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
 
-  const dashboardHref = "/admin/scheduling";
 
   const timezones = useMemo<string[]>(() => {
     const fallback = [
@@ -577,7 +575,7 @@ export default function StaffCalendarsClient({ orgId }: Props) {
   if (status !== "authenticated") {
     return (
       <div className="space-y-8">
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-3xl border border-white/70 bg-white/85 p-8 text-center shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             Sign in to manage staff calendars
           </h1>
@@ -592,30 +590,12 @@ export default function StaffCalendarsClient({ orgId }: Props) {
     );
   }
 
-  if (!orgId) {
-    return (
-      <div className="space-y-8">
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
-          No org found for this account.
-        </div>
-      </div>
-    );
-  }
-
   const calendarDisabled =
     !form.staffUserId.trim() || !form.workingHoursJson.trim();
 
   return (
     <div className="space-y-8">
       <div className="space-y-8">
-        <div className="flex justify-end">
-          <Link
-            href={dashboardHref}
-            className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500 hover:underline dark:text-gray-400"
-          >
-            Back to dashboard
-          </Link>
-        </div>
         <div className="mt-3 space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
             Scheduling Admin
@@ -669,7 +649,7 @@ export default function StaffCalendarsClient({ orgId }: Props) {
             }}
           />
 
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
+          <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               {editingId ? "Edit staff calendar" : "Add staff calendar"}
             </h2>
@@ -826,7 +806,7 @@ export default function StaffCalendarsClient({ orgId }: Props) {
             />
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
+          <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               {editingUserId ? "Edit staff user" : "Add staff user"}
             </h2>

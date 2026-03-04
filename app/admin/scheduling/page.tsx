@@ -1,5 +1,3 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import AdminDashboardClient from "./AdminDashboardClient";
 import { getServerSession } from "next-auth/next";
 import ProductShell from "@/components/scheduling/ProductShell";
@@ -40,18 +38,12 @@ export default async function SchedulingAdminPage({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors duration-300">
-      <Header />
-      <div className="flex-1">
-        <ProductShell>
-          <AdminDashboardClient
-            orgId={orgContext?.orgId ?? ""}
-            orgName={orgContext?.orgName ?? null}
-            tz={orgContext?.defaultTz ?? "Europe/Luxembourg"}
-          />
-        </ProductShell>
-      </div>
-      <Footer />
-    </div>
+    <ProductShell>
+      <AdminDashboardClient
+        orgId={orgContext?.orgId ?? ""}
+        orgName={orgContext?.orgName ?? null}
+        tz={orgContext?.defaultTz ?? "Europe/Luxembourg"}
+      />
+    </ProductShell>
   );
 }

@@ -1,10 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { DateTime } from "luxon";
 import { signIn, useSession } from "next-auth/react";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -101,7 +99,7 @@ const mrtSurfaceProps = {
   },
   muiTableContainerProps: {
     sx: (theme: any) => ({
-      borderRadius: 12,
+      borderRadius: 10,
       border: `1px solid ${theme.palette.divider}`,
       overflow: "auto",
     }),
@@ -145,7 +143,6 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
     return "UTC";
   }, [tz]);
 
-  const backToList = "/admin/scheduling/bookings";
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -327,7 +324,7 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
   if (status !== "authenticated") {
     return (
       <div className="space-y-8">
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-3xl border border-white/70 bg-white/85 p-8 text-center shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             Sign in to view booking details
           </h1>
@@ -425,22 +422,9 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
             Full booking context and actions. Times shown in {timezone}.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" asChild>
-            <Link href={backToList}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to bookings
-            </Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/admin/scheduling">
-              Back to dashboard
-            </Link>
-          </Button>
-        </div>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="mt-6 rounded-3xl border border-white/70 bg-white/85 p-6 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
         {loading && (
           <div className="text-sm text-gray-600 dark:text-gray-300">
             Loading booking...
@@ -452,14 +436,14 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
           </div>
         )}
         {notice && (
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          <div className="rounded-lg border border-emerald-200/70 bg-emerald-50/80 px-3 py-2 text-sm text-emerald-700 backdrop-blur">
             {notice}
           </div>
         )}
 
         {!loading && !error && appointment && (
           <div className="grid gap-4 lg:grid-cols-[2fr_1.2fr]">
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 text-sm dark:border-slate-700 dark:bg-slate-800/40">
+            <div className="rounded-xl border border-white/70 bg-white/80 p-5 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500 dark:text-gray-400">
@@ -472,7 +456,7 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
                     {appointment.mode}
                   </p>
                 </div>
-                <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-700 dark:border-slate-600 dark:bg-slate-900 dark:text-gray-200">
+                <span className="rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-semibold text-gray-700 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200">
                   {appointment.status}
                 </span>
               </div>
@@ -488,7 +472,7 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 text-sm dark:border-slate-700 dark:bg-slate-800/40">
+            <div className="rounded-xl border border-white/70 bg-white/80 p-5 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
               <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500 dark:text-gray-400">
                 Booker
               </p>
@@ -521,13 +505,13 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
 
         {!loading && !error && appointment && (
           <div className="mt-4 grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-            <div className="rounded-xl border border-gray-200 bg-white p-5 text-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="rounded-xl border border-white/70 bg-white/80 p-5 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
               <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Notes</p>
               <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">
                 {appointment.notes ?? "No notes"}
               </p>
             </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-5 text-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="rounded-xl border border-white/70 bg-white/80 p-5 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
               <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Payment</p>
               <div className="mt-2 text-sm text-gray-700 dark:text-gray-300">
                 <p>Policy: {appointment.paymentPolicy ?? "n/a"}</p>
@@ -553,7 +537,7 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
         )}
 
         {!loading && !error && detail && (
-          <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-5 text-sm dark:border-slate-700 dark:bg-slate-800/40">
+          <div className="mt-6 rounded-xl border border-white/70 bg-white/80 p-5 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
             <div className="flex items-center justify-between">
               <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
                 Status history
@@ -622,3 +606,4 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
     </div>
   );
 }
+

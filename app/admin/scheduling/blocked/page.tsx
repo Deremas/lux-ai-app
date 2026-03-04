@@ -1,9 +1,6 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import BlockedTimeClient from "./BlockedTimeClient";
 import { getServerSession } from "next-auth/next";
 import ProductShell from "@/components/scheduling/ProductShell";
-import SectionCard from "@/components/scheduling/SectionCard";
 
 import { authOptions } from "@/lib/auth";
 import { getFirstOrgContext, getUserOrgContext } from "@/lib/scheduling/org-context";
@@ -38,25 +35,11 @@ export default async function SchedulingBlockedPage({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors duration-300">
-      <Header />
-      <div className="flex-1">
-        <ProductShell>
-          {orgContext?.orgId ? (
-            <BlockedTimeClient
-              orgId={orgContext?.orgId ?? ""}
-              defaultTz={orgContext?.defaultTz || "Europe/Luxembourg"}
-            />
-          ) : (
-            <SectionCard>
-              <div className="text-sm text-amber-900">
-                No org found for this account.
-              </div>
-            </SectionCard>
-          )}
-        </ProductShell>
-      </div>
-      <Footer />
-    </div>
+    <ProductShell>
+      <BlockedTimeClient
+        orgId={orgContext?.orgId ?? ""}
+        defaultTz={orgContext?.defaultTz || "Europe/Luxembourg"}
+      />
+    </ProductShell>
   );
 }

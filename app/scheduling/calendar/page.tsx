@@ -1,5 +1,3 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { SchedulingCalendar } from "@/components/scheduling/SchedulingCalendar";
 import ProductShell from "@/components/scheduling/ProductShell";
 import ProductHero from "@/components/scheduling/ProductHero";
@@ -34,45 +32,22 @@ export default async function SchedulingCalendarPage({
 }) {
   const orgContext = await resolveOrgId();
   const tz = pickParam(searchParams?.tz) || orgContext?.defaultTz || FALLBACK_TZ;
-  if (!orgContext?.orgId) {
-    return (
-      <div className="min-h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors duration-300">
-        <Header />
-        <div className="flex-1">
-          <ProductShell>
-            <SectionCard>
-              <div className="text-sm text-amber-900">
-                No organization found. Please sign in or contact support.
-              </div>
-            </SectionCard>
-          </ProductShell>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors duration-300">
-      <Header />
-      <div className="flex-1">
-        <ProductShell>
-          <ProductHero
-            eyebrow="Scheduling"
-            title="Calendar"
-            subtitle="Review upcoming availability and booking windows."
+    <ProductShell>
+      <ProductHero
+        eyebrow="Scheduling"
+        title="Calendar"
+        subtitle="Review upcoming availability and booking windows."
+      />
+      <div className="mt-6">
+        <SectionCard className="p-4 md:p-6">
+          <SchedulingCalendar
+            orgId={orgContext?.orgId ?? ""}
+            tz={tz}
+            includeBuffer={true}
           />
-          <div className="mt-6">
-            <SectionCard className="p-4 md:p-6">
-              <SchedulingCalendar
-                orgId={orgContext.orgId}
-                tz={tz}
-                includeBuffer={true}
-              />
-            </SectionCard>
-          </div>
-        </ProductShell>
+        </SectionCard>
       </div>
-      <Footer />
-    </div>
+    </ProductShell>
   );
 }

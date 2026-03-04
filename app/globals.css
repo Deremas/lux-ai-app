@@ -1,56 +1,52 @@
+@import url("https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.5.0/remixicon.min.css");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* ============================= */
-/* Base Scrollbar & Layout Rules */
-/* ============================= */
-
 html {
-  height: 100%;
   scrollbar-gutter: stable both-edges;
   scrollbar-width: thin;
   scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
 }
-
 body {
-  min-height: 100%;
-  overflow-y: auto;
-  font-family: "Manrope", "Segoe UI", Arial, sans-serif;
+  overflow-y: scroll;
 }
-
-/* Scroll lock support (for modals/drawers) */
-body[data-scroll-locked] {
-  overflow: hidden !important;
+html body[data-scroll-locked] {
+  overflow: visible !important;
   margin-right: 0 !important;
 }
-
-/* Fix libraries that disable pointer events */
+body[data-scroll-locked] {
+  overflow: hidden !important;
+  pointer-events: auto !important;
+}
 body[style*="pointer-events: none"] {
   pointer-events: auto !important;
 }
-
-/* WebKit scrollbar */
+.scrollbar-gutter-stable {
+  scrollbar-gutter: stable both-edges;
+}
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
   background-color: rgba(100, 116, 139, 0.3);
   border-radius: 4px;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.3s ease;
 }
-
 ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(100, 116, 139, 0.5);
+} /* Dark mode */
+.dark html {
+  scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
 }
-
-/* ============================= */
-/* CSS Variables (Light Mode)   */
-/* ============================= */
-
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.2);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.4);
+}
 :root {
   --background: 0 0% 100%;
   --foreground: 222 47% 11%;
@@ -69,21 +65,36 @@ body[style*="pointer-events: none"] {
   --border: 214 32% 91%;
   --input: 214 32% 91%;
   --ring: 213 94% 68%;
-
   --surface: 0 0% 100%;
   --surface-2: 210 40% 98%;
   --text: 222 47% 11%;
   --subtle: 215 28% 64%;
   --link: 214 71% 29%;
-
+  --status-success-bg: 142 76% 94%;
+  --status-success-text: 142 76% 25%;
+  --status-success-border: 142 60% 80%;
+  --status-warning-bg: 48 96% 94%;
+  --status-warning-text: 35 92% 30%;
+  --status-warning-border: 48 96% 80%;
+  --status-danger-bg: 0 93% 94%;
+  --status-danger-text: 0 72% 40%;
+  --status-danger-border: 0 85% 80%;
+  --status-info-bg: 204 94% 94%;
+  --status-info-text: 212 82% 35%;
+  --status-info-border: 204 94% 80%;
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
   --shadow-md: 0 8px 20px rgba(15, 23, 42, 0.12);
+  --site-header-height: 4rem;
+
+  --sidebar-background: 0 0% 100%;
+  --sidebar-foreground: 222 47% 11%;
+  --sidebar-primary: 214 71% 29%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 210 40% 96%;
+  --sidebar-accent-foreground: 222 47% 11%;
+  --sidebar-border: 214 32% 91%;
+  --sidebar-ring: 213 94% 68%;
 }
-
-/* ============================= */
-/* Dark Mode Variables          */
-/* ============================= */
-
 .dark {
   --background: 222 47% 7%;
   --foreground: 210 40% 98%;
@@ -102,128 +113,180 @@ body[style*="pointer-events: none"] {
   --border: 217 16% 28%;
   --input: 217 16% 28%;
   --ring: 213 94% 68%;
-
   --surface: 222 47% 11%;
   --surface-2: 223 47% 15%;
   --text: 210 40% 98%;
   --subtle: 215 16% 65%;
   --link: 213 94% 70%;
-
+  --status-success-bg: 142 76% 20%;
+  --status-success-text: 142 76% 80%;
+  --status-success-border: 142 60% 30%;
+  --status-warning-bg: 40 92% 20%;
+  --status-warning-text: 45 96% 80%;
+  --status-warning-border: 45 92% 35%;
+  --status-danger-bg: 0 62% 20%;
+  --status-danger-text: 0 85% 80%;
+  --status-danger-border: 0 62% 35%;
+  --status-info-bg: 214 50% 20%;
+  --status-info-text: 214 90% 80%;
+  --status-info-border: 214 50% 35%;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.35);
+
+  --sidebar-background: 222 47% 11%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 214 70% 45%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 222 47% 15%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 217 16% 28%;
+  --sidebar-ring: 213 94% 68%;
 }
-
-/* Dark mode scrollbar */
-.dark {
-  scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
+.scheduling-shell {
+  --sidebar-background: 210 40% 98%;
+  --sidebar-foreground: 222 47% 11%;
+  --sidebar-primary: 214 71% 29%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 210 40% 96%;
+  --sidebar-accent-foreground: 222 47% 11%;
+  --sidebar-border: 214 32% 88%;
+  --sidebar-ring: 213 94% 68%;
 }
-
-.dark ::-webkit-scrollbar-thumb {
-  background-color: rgba(148, 163, 184, 0.2);
+.dark .scheduling-shell {
+  --sidebar-background: 222 47% 10%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 214 70% 45%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 222 47% 16%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 217 16% 28%;
+  --sidebar-ring: 213 94% 68%;
 }
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(148, 163, 184, 184, 0.4);
-}
-
-/* ============================= */
-/* Tailwind Base Layer          */
-/* ============================= */
-
 @layer base {
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
   }
 }
-
-/* ============================= */
-/* FullCalendar Styling         */
-/* ============================= */
-
 @layer components {
+  /* FullCalendar base */
   .fc {
-    @apply text-gray-800;
-  }
-
+    @apply text-slate-700;
+  } /* Header toolbar */
   .fc .fc-toolbar-title {
-    @apply text-2xl font-semibold text-gray-900;
-  }
-
+    @apply text-2xl font-semibold text-slate-900;
+  } /* Buttons (today, prev, next) */
   .fc .fc-button {
-    @apply rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 shadow-sm transition;
+    @apply rounded-xl border border-white/70 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur transition;
   }
-
   .fc .fc-button:hover {
-    @apply bg-gray-50;
+    @apply bg-white;
   }
-
   .fc .fc-button:focus {
-    @apply outline-none ring-2 ring-gray-900/10;
+    @apply outline-none ring-2 ring-primary-500/20;
   }
-
   .fc .fc-button-primary:not(:disabled).fc-button-active,
   .fc .fc-button-primary:not(:disabled):active {
-    @apply bg-gray-900 text-white border-gray-900;
+    @apply bg-primary-600 text-white border-primary-600;
   }
-
   .fc .fc-button:disabled {
     @apply opacity-60;
-  }
-
+  } /* Grid look */
   .fc .fc-scrollgrid {
-    @apply rounded-xl border border-gray-200;
+    @apply rounded-2xl border border-white/70 bg-white/60 backdrop-blur;
   }
-
   .fc .fc-timegrid-slot-label,
   .fc .fc-col-header-cell-cushion {
-    @apply text-sm text-gray-700 font-medium;
-  }
-
+    @apply text-sm text-slate-600 font-medium;
+  } /* Highlight selectable time cells for scheduling */
   .fc .fc-timegrid-slot:hover {
-    background-color: rgba(59, 130, 246, 0.08);
+    background-color: rgba(14, 66, 126, 0.08);
   }
-
   .fc .fc-timegrid-slot-lane:hover {
-    background-color: rgba(59, 130, 246, 0.06);
-  }
-
+    background-color: rgba(14, 66, 126, 0.06);
+  } /* Busy blocks (background events) */
   .fc .fc-busy-bg {
-    @apply bg-gray-300/70;
+    @apply bg-slate-300/70;
   }
-
+  .fc .fc-bg-event .fc-event-title,
+  .fc .fc-bg-event .fc-event-time {
+    @apply text-slate-700 font-semibold;
+  } /* Available slot “chips” */
   .fc .fc-slot-chip {
-    @apply rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900 shadow-sm;
+    @apply rounded-xl border border-emerald-200/70 bg-emerald-50/80 text-emerald-900 shadow-sm;
   }
-
   .fc .fc-slot-chip:hover {
-    @apply bg-emerald-100;
+    @apply bg-emerald-100/80;
+  }
+  .fc .fc-slot-chip .fc-event-title,
+  .fc .fc-slot-chip .fc-event-time {
+    @apply text-emerald-900 font-semibold;
+  }
+  .dark .fc .fc-toolbar-title {
+    @apply text-slate-100;
+  }
+  .dark .fc .fc-button {
+    @apply border-slate-700/60 bg-slate-900/70 text-slate-200;
+  }
+  .dark .fc .fc-button:hover {
+    @apply bg-slate-900;
+  }
+  .dark .fc .fc-scrollgrid {
+    @apply border-slate-700/60 bg-slate-900/50;
+  }
+  .dark .fc .fc-timegrid-slot-label,
+  .dark .fc .fc-col-header-cell-cushion {
+    @apply text-slate-300;
+  }
+  .dark .fc .fc-busy-bg {
+    @apply bg-slate-700/40;
+  }
+  .dark .fc .fc-bg-event .fc-event-title,
+  .dark .fc .fc-bg-event .fc-event-time {
+    @apply text-slate-200;
   }
 }
-
-/* ============================= */
-/* Auth Animations              */
-/* ============================= */
-
 @layer utilities {
+  .auth-font {
+    font-family: "Manrope", "Segoe UI", Arial, sans-serif;
+  }
   .auth-fade-up {
     animation: auth-fade-up 700ms ease-out both;
   }
-
   .auth-fade-up-delay {
     animation: auth-fade-up 900ms ease-out 120ms both;
   }
-
   .auth-blob {
     position: absolute;
     filter: blur(10px);
     opacity: 0.7;
     animation: auth-float 14s ease-in-out infinite;
   }
-
+  .auth-blob--one {
+    width: 320px;
+    height: 320px;
+    top: -80px;
+    left: -60px;
+    background: radial-gradient(circle at 30% 30%, #fde68a, transparent 65%);
+  }
+  .auth-blob--two {
+    width: 360px;
+    height: 360px;
+    bottom: -120px;
+    right: -80px;
+    background: radial-gradient(circle at 60% 40%, #93c5fd, transparent 65%);
+    animation-delay: 2s;
+  }
+  .auth-blob--three {
+    width: 220px;
+    height: 220px;
+    top: 40%;
+    right: 12%;
+    background: radial-gradient(circle at 50% 50%, #a7f3d0, transparent 65%);
+    animation-delay: 4s;
+  }
   @keyframes auth-fade-up {
     from {
       opacity: 0;
@@ -234,9 +297,9 @@ body[style*="pointer-events: none"] {
       transform: translateY(0);
     }
   }
-
   @keyframes auth-float {
-    0%, 100% {
+    0%,
+    100% {
       transform: translateY(0) translateX(0);
     }
     50% {
@@ -244,3 +307,4 @@ body[style*="pointer-events: none"] {
     }
   }
 }
+

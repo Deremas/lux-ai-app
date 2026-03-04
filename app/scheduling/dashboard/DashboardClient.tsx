@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { DateTime } from "luxon";
 
 import { Button } from "@/components/ui/button";
@@ -35,13 +35,6 @@ type Booking = {
   priceCents?: number | null;
   currency?: string | null;
   createdAt: string | Date;
-};
-
-type Profile = {
-  name: string | null;
-  phone: string | null;
-  timezone: string | null;
-  email: string | null;
 };
 
 function formatIcsUtc(dtIso: string) {
@@ -89,15 +82,6 @@ export default function DashboardClient({ orgId, tz }: Props) {
   const [items, setItems] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [profileError, setProfileError] = useState<string | null>(null);
-  const [profileSaving, setProfileSaving] = useState(false);
-  const [profileForm, setProfileForm] = useState({
-    name: "",
-    phone: "",
-    timezone: "",
-  });
   const [rescheduleTarget, setRescheduleTarget] = useState<Booking | null>(null);
   const [rescheduleSlot, setRescheduleSlot] = useState<{
     startUtc: string;
@@ -122,6 +106,8 @@ export default function DashboardClient({ orgId, tz }: Props) {
     }
     return "UTC";
   }, [tz]);
+  const displayName =
+    session?.user?.name || session?.user?.email?.split("@")[0] || "";
 
   const bookingColumns = useMemo<MRT_ColumnDef<Booking>[]>(
     () => [
@@ -360,40 +346,6 @@ export default function DashboardClient({ orgId, tz }: Props) {
   }, [orgId, status, page, pageSize]);
 
   useEffect(() => {
-    if (status !== "authenticated") return;
-    let cancelled = false;
-    setProfileLoading(true);
-    setProfileError(null);
-
-    fetch("/api/me/profile", { cache: "no-store" })
-      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-      .then(({ ok, data }) => {
-        if (cancelled) return;
-        if (!ok) {
-          setProfileError(data?.error ?? "Failed to load profile");
-          return;
-        }
-        const next = (data?.profile ?? null) as Profile | null;
-        setProfile(next);
-        setProfileForm({
-          name: next?.name ?? "",
-          phone: next?.phone ?? "",
-          timezone: next?.timezone ?? "",
-        });
-      })
-      .catch(() => {
-        if (!cancelled) setProfileError("Failed to load profile");
-      })
-      .finally(() => {
-        if (!cancelled) setProfileLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [status]);
-
-  useEffect(() => {
     if (!rescheduleTarget && !requestTarget) return;
     const handleKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
@@ -409,51 +361,6 @@ export default function DashboardClient({ orgId, tz }: Props) {
       document.removeEventListener("keydown", handleKey);
     };
   }, [rescheduleTarget, requestTarget]);
-
-  const timezones = useMemo(() => {
-    const fallback = [
-      "UTC",
-      "Africa/Addis_Ababa",
-      "Europe/Luxembourg",
-      "Europe/London",
-      "America/New_York",
-      "Asia/Dubai",
-    ];
-    const anyIntl = Intl as unknown as {
-      supportedValuesOf?: (k: string) => string[];
-    };
-    if (typeof anyIntl?.supportedValuesOf === "function") {
-      try {
-        const list = anyIntl.supportedValuesOf("timeZone");
-        return list.length ? list : fallback;
-      } catch {
-        return fallback;
-      }
-    }
-    return fallback;
-  }, []);
-
-  const handleProfileSave = async () => {
-    setProfileSaving(true);
-    setProfileError(null);
-    try {
-      const res = await fetch("/api/me/profile", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(profileForm),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setProfileError(json?.error ?? "Failed to save profile");
-        return;
-      }
-      setProfile(json.profile as Profile);
-    } catch {
-      setProfileError("Failed to save profile");
-    } finally {
-      setProfileSaving(false);
-    }
-  };
 
   const handleRescheduleConfirm = async () => {
     if (!rescheduleTarget || !rescheduleSlot) return;
@@ -534,7 +441,7 @@ export default function DashboardClient({ orgId, tz }: Props) {
   if (status !== "authenticated") {
     return (
       <div className="space-y-8">
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-3xl border border-white/70 bg-white/85 p-8 text-center shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             Sign in to view your bookings
           </h1>
@@ -554,8 +461,10 @@ export default function DashboardClient({ orgId, tz }: Props) {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+      <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/85 p-6 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 via-blue-500 to-accent-500" />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
             Bookings
           </p>
@@ -565,108 +474,21 @@ export default function DashboardClient({ orgId, tz }: Props) {
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
             Times shown in {timezone}.
           </p>
-          {profile?.name && (
+          {displayName && (
             <p className="mt-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
-              Welcome, {profile.name}
-            </p>
-          )}
-          {!profile?.name && typeof session?.user?.email === "string" && (
-            <p className="mt-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
-              Welcome, {session.user.email.split("@")[0]}
+              Welcome, {displayName}
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/scheduling">
-              Book another session
-            </Link>
-          </Button>
-          <Button variant="outline" onClick={() => signOut()}>
-            Log out
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/scheduling">
+                Book another session
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
-
-      <section className="mt-8">
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Profile
-          </h2>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-            Update your name, phone, and timezone.
-          </p>
-          {profileLoading && (
-            <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">
-              Loading profile...
-            </p>
-          )}
-          {profileError && (
-            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {profileError}
-            </div>
-          )}
-          {!profileLoading && (
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                  Full name
-                </label>
-                <input
-                  className="mt-1 h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100"
-                  value={profileForm.name}
-                  onChange={(e) =>
-                    setProfileForm((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                  Phone
-                </label>
-                <input
-                  className="mt-1 h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100"
-                  value={profileForm.phone}
-                  onChange={(e) =>
-                    setProfileForm((prev) => ({ ...prev, phone: e.target.value }))
-                  }
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                  Timezone
-                </label>
-                <select
-                  className="mt-1 h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100"
-                  value={profileForm.timezone}
-                  onChange={(e) =>
-                    setProfileForm((prev) => ({
-                      ...prev,
-                      timezone: e.target.value,
-                    }))
-                  }
-                >
-                  <option value="">Select timezone</option>
-                  {timezones.map((zone) => (
-                    <option key={zone} value={zone}>
-                      {zone}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="md:col-span-3 flex justify-end">
-                <Button
-                  type="button"
-                  onClick={handleProfileSave}
-                  disabled={profileSaving}
-                >
-                  {profileSaving ? "Saving..." : "Save profile"}
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
 
       <section className="mt-6 space-y-4">
         {error && (
@@ -714,7 +536,7 @@ export default function DashboardClient({ orgId, tz }: Props) {
       </section>
       {rescheduleTarget && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 sm:p-6">
-          <div className="w-full max-w-5xl max-h-[85vh] overflow-hidden rounded-2xl bg-white shadow-2xl">
+          <div className="w-full max-w-5xl max-h-[85vh] overflow-hidden rounded-3xl border border-white/70 bg-white/95 shadow-2xl backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
             <div className="max-h-[85vh] overflow-y-auto p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -799,7 +621,7 @@ export default function DashboardClient({ orgId, tz }: Props) {
       )}
       {detailTarget && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 sm:p-6">
-          <div className="w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+          <div className="w-full max-w-4xl overflow-hidden rounded-3xl border border-white/70 bg-white/95 shadow-2xl backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
             <div className="p-6">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -824,7 +646,7 @@ export default function DashboardClient({ orgId, tz }: Props) {
               </div>
 
               <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <div className="rounded-xl border border-white/70 bg-white/80 p-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                   <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
                     Time
                   </p>
@@ -853,7 +675,7 @@ export default function DashboardClient({ orgId, tz }: Props) {
                   )}
                 </div>
 
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <div className="rounded-xl border border-white/70 bg-white/80 p-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                   <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
                     Mode
                   </p>
@@ -891,7 +713,7 @@ export default function DashboardClient({ orgId, tz }: Props) {
                   )}
                 </div>
 
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/80 p-4 backdrop-blur">
                   <p className="text-xs uppercase tracking-[0.25em] text-emerald-700">
                     Payment
                   </p>
@@ -907,7 +729,7 @@ export default function DashboardClient({ orgId, tz }: Props) {
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <div className="rounded-xl border border-white/70 bg-white/80 p-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                   <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
                     Notes
                   </p>
@@ -930,14 +752,14 @@ export default function DashboardClient({ orgId, tz }: Props) {
       )}
       {requestTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-lg rounded-3xl border border-white/70 bg-white/95 p-6 shadow-2xl backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
             <div className="text-lg font-semibold text-gray-900">
               Request reschedule
             </div>
             <p className="mt-2 text-sm text-gray-600">
               Send a reschedule request to the admin/staff. They will contact you.
             </p>
-            <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+            <div className="mt-4 rounded-xl border border-white/70 bg-white/80 px-4 py-3 text-sm text-gray-700 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200">
               <div className="font-semibold text-gray-900">
                 {requestTarget.meetingTypeKey ?? "Meeting"} · {requestTarget.mode}
               </div>
@@ -964,7 +786,7 @@ export default function DashboardClient({ orgId, tz }: Props) {
               Note (optional)
             </label>
             <textarea
-              className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400"
+              className="mt-2 w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-gray-400 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-100"
               rows={4}
               value={requestNote}
               onChange={(e) => setRequestNote(e.target.value)}
@@ -988,3 +810,4 @@ export default function DashboardClient({ orgId, tz }: Props) {
     </div>
   );
 }
+

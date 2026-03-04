@@ -8,7 +8,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import type { DatesSetArg, EventClickArg, EventInput } from "@fullcalendar/core";
 import { DateTime } from "luxon";
 import Link from "next/link";
-import { signIn, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 
@@ -82,8 +82,6 @@ export default function AvailabilityCalendar({
   const tz = tzProp || "Europe/Luxembourg";
   const displayTz = displayTzProp || tz;
   const { data: session, status } = useSession();
-  const userId = session?.user?.id ?? null;
-
   const [range, setRange] = useState<{ from: string; to: string } | null>(null);
   const [busyEvents, setBusyEvents] = useState<CalendarEvent[]>([]);
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
@@ -346,80 +344,10 @@ export default function AvailabilityCalendar({
     [onSelectSlot]
   );
 
-  const suggestedByDay = useMemo(() => {
-    if (!slots.length) return new Map<string, AvailabilitySlot[]>();
-    const sorted = [...slots].sort((a, b) =>
-      a.startUtc.localeCompare(b.startUtc)
-    );
-    const byDay = new Map<string, AvailabilitySlot[]>();
-    for (const slot of sorted) {
-      const dayKey = DateTime.fromISO(slot.startUtc)
-        .setZone(displayTz)
-        .toISODate();
-      if (!dayKey) continue;
-      const list = byDay.get(dayKey) ?? [];
-      if (list.length < 8) {
-        list.push(slot);
-        byDay.set(dayKey, list);
-      }
-    }
-    return byDay;
-  }, [slots, displayTz]);
-
-  const suggestedDays = useMemo(
-    () => Array.from(suggestedByDay.keys()).sort(),
-    [suggestedByDay]
-  );
-
-  const [suggestedDay, setSuggestedDay] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (suggestedDays.length === 0) {
-      setSuggestedDay(null);
-      return;
-    }
-
-    setSuggestedDay((prev) => {
-      if (prev && suggestedDays.includes(prev)) return prev;
-      const todayKey = DateTime.now().setZone(displayTz).toISODate();
-      if (todayKey && suggestedDays.includes(todayKey)) return todayKey;
-      return suggestedDays[0];
-    });
-  }, [suggestedDays, displayTz]);
-
-  const suggestedSlots = useMemo(() => {
-    if (!suggestedDay) return [];
-    return suggestedByDay.get(suggestedDay) ?? [];
-  }, [suggestedByDay, suggestedDay]);
-
-  const suggestedDayIndex = useMemo(() => {
-    if (!suggestedDay) return -1;
-    return suggestedDays.indexOf(suggestedDay);
-  }, [suggestedDay, suggestedDays]);
-
-  const suggestedDayLabel = useMemo(() => {
-    if (!suggestedDay) return "";
-    const dt = DateTime.fromISO(suggestedDay).setZone(displayTz);
-    if (!dt.isValid) return suggestedDay;
-    return dt.toFormat("cccc, LLL dd");
-  }, [suggestedDay, displayTz]);
-
-  const shiftSuggestedDay = useCallback(
-    (delta: number) => {
-      setSuggestedDay((prev) => {
-        if (!prev) return prev;
-        const idx = suggestedDays.indexOf(prev);
-        if (idx < 0) return prev;
-        return suggestedDays[idx + delta] ?? prev;
-      });
-    },
-    [suggestedDays]
-  );
-
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between px-5 py-4">
+    <div className="grid gap-6">
+      <div className="rounded-3xl border border-white/70 bg-white/85 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+        <div className="flex items-center justify-between border-b border-white/70 bg-white/70 px-5 py-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/60">
           <div className="space-y-1">
             <h2 className="text-lg font-semibold text-gray-900">Calendar</h2>
             <p className="text-sm text-gray-500">
@@ -434,14 +362,14 @@ export default function AvailabilityCalendar({
               TZ: <span className="text-gray-700">{displayTz}</span>
             </span>
             {loading && (
-              <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600">
+              <span className="rounded-full border border-white/70 bg-white/80 px-2 py-1 text-xs text-gray-600 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-300">
                 Loading…
               </span>
             )}
           </div>
         </div>
 
-        <div className="border-t border-gray-200 p-3">
+        <div className="border-t border-white/70 p-3 dark:border-slate-700/60">
           {availabilityError && (
             <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {availabilityError}
@@ -488,125 +416,6 @@ export default function AvailabilityCalendar({
           />
         </div>
       </div>
-
-      <aside className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <div className="px-5 py-4">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Suggested slots
-          </h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Click a slot to book (same as clicking “Available” on the calendar).
-          </p>
-        </div>
-
-        <div className="border-t border-gray-200 p-4">
-          {suggestedDays.length > 1 && (
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => shiftSuggestedDay(-1)}
-                disabled={suggestedDayIndex <= 0}
-                className={[
-                  "rounded-lg border px-2 py-1 text-xs font-medium transition",
-                  suggestedDayIndex <= 0
-                    ? "cursor-not-allowed border-gray-200 text-gray-300"
-                    : "border-gray-200 text-gray-600 hover:bg-gray-50",
-                ].join(" ")}
-              >
-                Prev
-              </button>
-              <div className="flex flex-wrap gap-2">
-                {suggestedDays.map((day) => {
-                  const dt = DateTime.fromISO(day).setZone(displayTz);
-                  const label = dt.isValid
-                    ? dt.toFormat("ccc dd")
-                    : day;
-                  const isActive = day === suggestedDay;
-
-                  return (
-                    <button
-                      key={day}
-                      type="button"
-                      onClick={() => setSuggestedDay(day)}
-                      className={[
-                        "rounded-full border px-3 py-1 text-xs font-medium transition",
-                        isActive
-                          ? "border-gray-900 bg-gray-900 text-white"
-                          : "border-gray-200 text-gray-600 hover:bg-gray-50",
-                      ].join(" ")}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-              <button
-                type="button"
-                onClick={() => shiftSuggestedDay(1)}
-                disabled={
-                  suggestedDayIndex < 0 ||
-                  suggestedDayIndex >= suggestedDays.length - 1
-                }
-                className={[
-                  "rounded-lg border px-2 py-1 text-xs font-medium transition",
-                  suggestedDayIndex < 0 ||
-                  suggestedDayIndex >= suggestedDays.length - 1
-                    ? "cursor-not-allowed border-gray-200 text-gray-300"
-                    : "border-gray-200 text-gray-600 hover:bg-gray-50",
-                ].join(" ")}
-              >
-                Next
-              </button>
-            </div>
-          )}
-          {suggestedDayLabel && (
-            <div className="mb-3 text-xs font-medium text-gray-500">
-              Showing {suggestedDayLabel}
-            </div>
-          )}
-          {loading ? (
-            <div className="text-sm text-gray-600">Loading…</div>
-          ) : suggestedSlots.length === 0 ? (
-            <div className="text-sm text-gray-600">
-              No available slots in this range.
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {suggestedSlots.map((s, index) => {
-                const start = DateTime.fromISO(s.startUtc).setZone(displayTz);
-                const end = DateTime.fromISO(s.endUtc).setZone(displayTz);
-                const label = `${start.toFormat("ccc, LLL dd")} · ${start.toFormat(
-                  "HH:mm"
-                )}–${end.toFormat("HH:mm")}`;
-
-                return (
-                  <button
-                    key={`${s.startUtc}-${s.endUtc}-${s.staffUserId ?? "org"}-${index}`}
-                    onClick={() => onSelectSlot?.(s)}
-                    disabled={!userId || !canBook}
-                    className={[
-                      "w-full rounded-xl border text-left transition",
-                      "border-gray-200 bg-white hover:bg-gray-50",
-                      "px-4 py-3",
-                      "focus:outline-none focus:ring-2 focus:ring-gray-900/10",
-                      !userId || !canBook
-                        ? "cursor-not-allowed opacity-70"
-                        : "cursor-pointer",
-                    ].join(" ")}
-                  >
-                    <div className="text-sm font-semibold text-gray-900">
-                      {label}
-                    </div>
-                    <div className="mt-0.5 text-xs text-gray-500">
-                      Tap to book
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </aside>
     </div>
   );
 }

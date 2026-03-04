@@ -1,10 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DateTime } from "luxon";
-import { ArrowLeft, CalendarDays, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronRight } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -133,7 +132,7 @@ const mrtSurfaceProps = {
   },
   muiTableContainerProps: {
     sx: (theme: any) => ({
-      borderRadius: 16,
+      borderRadius: 10,
       border: `1px solid ${theme.palette.divider}`,
       overflow: "auto",
     }),
@@ -752,11 +751,19 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
     [chartTz]
   );
 
-  const staffColumns = useMemo<MRT_ColumnDef<StaffRow>[]>(
-    () => [
+  const staffColumns = useMemo<MRT_ColumnDef<StaffRow>[]>(() => {
+    const numericAlign: "right" = "right";
+    const numericCellProps = {
+      muiTableHeadCellProps: { align: numericAlign, sx: { textAlign: "right" } },
+      muiTableBodyCellProps: { align: numericAlign, sx: { textAlign: "right" } },
+    };
+
+    return [
       {
         accessorKey: "name",
         header: "Staff",
+        size: 220,
+        minSize: 200,
         Cell: ({ row }) => (
           <div>
             <p className="font-semibold text-gray-900">
@@ -771,6 +778,8 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
       {
         id: "utilization",
         header: "Utilization",
+        size: 220,
+        minSize: 200,
         Cell: ({ row }) => {
           const completion =
             row.original.total > 0
@@ -780,7 +789,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
             (row.original.total / maxStaffTotal) * 100
           );
           return (
-            <div className="min-w-[180px]">
+            <div className="min-w-[200px]">
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <span>{utilization}%</span>
                 <span className="text-gray-300">·</span>
@@ -794,13 +803,21 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
       {
         accessorKey: "total",
         header: "Total",
+        size: 90,
+        minSize: 80,
+        ...numericCellProps,
         Cell: ({ row }) => (
-          <span className="block text-right font-semibold">{row.original.total}</span>
+          <span className="block text-right font-semibold">
+            {row.original.total}
+          </span>
         ),
       },
       {
         accessorKey: "pending",
         header: "Pending",
+        size: 90,
+        minSize: 80,
+        ...numericCellProps,
         Cell: ({ row }) => (
           <span className="block text-right">{row.original.pending}</span>
         ),
@@ -808,6 +825,9 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
       {
         accessorKey: "confirmed",
         header: "Confirmed",
+        size: 90,
+        minSize: 80,
+        ...numericCellProps,
         Cell: ({ row }) => (
           <span className="block text-right">{row.original.confirmed}</span>
         ),
@@ -815,6 +835,9 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
       {
         accessorKey: "completed",
         header: "Completed",
+        size: 100,
+        minSize: 90,
+        ...numericCellProps,
         Cell: ({ row }) => (
           <span className="block text-right">{row.original.completed}</span>
         ),
@@ -822,6 +845,9 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
       {
         accessorKey: "declined",
         header: "Declined",
+        size: 100,
+        minSize: 90,
+        ...numericCellProps,
         Cell: ({ row }) => (
           <span className="block text-right">{row.original.declined}</span>
         ),
@@ -829,49 +855,42 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
       {
         accessorKey: "canceled",
         header: "Canceled",
+        size: 100,
+        minSize: 90,
+        ...numericCellProps,
         Cell: ({ row }) => (
           <span className="block text-right">{row.original.canceled}</span>
         ),
       },
-    ],
-    [maxStaffTotal]
-  );
+    ];
+  }, [maxStaffTotal]);
 
   return (
     <div className="space-y-6">
       <div className="space-y-6">
-        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-semibold text-gray-900">
+        <div className="rounded-3xl border border-white/70 bg-white/85 px-5 py-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+          <div className="grid gap-4 xl:grid-cols-[1.35fr_1fr]">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-2xl font-semibold text-gray-900 tracking-tight sm:text-3xl">
                   Analytics
                 </h1>
-                <Link
-                  className="ml-auto inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
-                    href="/admin/scheduling"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back
-                </Link>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
                 <Badge
                   variant="secondary"
-                  className="bg-slate-100 text-slate-600"
+                  className="border border-white/70 bg-white/70 text-slate-600 shadow-sm backdrop-blur"
                 >
                   TZ {chartTz}
                 </Badge>
                 <Badge
                   variant="secondary"
-                  className="bg-slate-100 text-slate-600"
+                  className="border border-white/70 bg-white/70 text-slate-600 shadow-sm backdrop-blur"
                 >
                   {rangeLabel}
                 </Badge>
                 {statusFilter !== "all" && (
                   <Badge
                     variant="secondary"
-                    className="bg-slate-100 text-slate-600"
+                    className="border border-white/70 bg-white/70 text-slate-600 shadow-sm backdrop-blur"
                   >
                     {titleCase(statusFilter)}
                   </Badge>
@@ -882,13 +901,13 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-              <div className="flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 sm:w-auto">
+            <div className="grid gap-3 sm:grid-cols-2 sm:justify-items-end">
+              <div className="flex w-full items-center gap-2 rounded-xl border border-white/70 bg-white/80 px-3 py-2 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 sm:w-auto sm:justify-self-end">
                 <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                   Range
                 </span>
                 <select
-                  className="bg-transparent text-sm font-semibold text-slate-900 focus:outline-none"
+                  className="rounded-md border border-white/70 bg-white/80 px-2 py-1 text-sm font-semibold text-slate-900 shadow-sm focus:outline-none dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-slate-100"
                   value={rangeId}
                   onChange={(e) => {
                     const next = e.target.value;
@@ -908,9 +927,9 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                   <button
                     type="button"
                     className={[
-                      "flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold sm:w-auto",
-                      "border-slate-200 bg-white text-slate-900 shadow-sm",
-                      "hover:bg-slate-100 transition",
+                      "flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold sm:w-auto sm:justify-self-end",
+                      "border-white/70 bg-white/80 text-slate-900 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-slate-100",
+                      "hover:bg-white transition",
                     ].join(" ")}
                   >
                     <CalendarDays className="h-4 w-4 text-slate-500" />
@@ -928,7 +947,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                     <ChevronRight className="h-4 w-4 text-slate-400" />
                   </button>
                 </DialogTrigger>
-                <DialogContent className="max-w-none w-[min(1040px,94vw)] max-h-[90vh] overflow-y-auto bg-white p-0 shadow-2xl dark:bg-slate-900">
+                <DialogContent className="max-w-none w-[min(1040px,94vw)] max-h-[90vh] overflow-y-auto border border-white/70 bg-white/95 p-0 shadow-2xl backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
                   <div className="p-6">
                     <DialogHeader>
                       <DialogTitle>Choose a custom range</DialogTitle>
@@ -941,7 +960,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                       <div className="flex flex-wrap items-center gap-2">
                         <button
                           type="button"
-                          className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          className="rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white"
                           onClick={() =>
                             applyQuickRange(
                               now.startOf("month"),
@@ -953,7 +972,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                         </button>
                         <button
                           type="button"
-                          className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          className="rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white"
                           onClick={() => {
                             const lastMonth = now.minus({ months: 1 });
                             applyQuickRange(
@@ -966,7 +985,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                         </button>
                         <button
                           type="button"
-                          className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          className="rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white"
                           onClick={() =>
                             applyQuickRange(
                               now.startOf("year"),
@@ -978,7 +997,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                         </button>
                         <button
                           type="button"
-                          className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          className="rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white"
                           onClick={() => {
                             const lastYear = now.minus({ years: 1 });
                             applyQuickRange(
@@ -991,7 +1010,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                         </button>
                         <button
                           type="button"
-                          className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          className="rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white"
                           onClick={() =>
                             applyQuickRange(
                               now.minus({ months: 12 }).startOf("day"),
@@ -1008,7 +1027,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                           <input
                             type="number"
                             inputMode="numeric"
-                            className="h-8 w-24 rounded-md border border-slate-200 px-2 text-sm text-slate-900"
+                            className="h-8 w-24 rounded-md border border-white/70 bg-white/80 px-2 text-sm text-slate-900 shadow-sm backdrop-blur"
                             value={yearJump}
                             onChange={(e) => setYearJump(e.target.value)}
                             onKeyDown={(e) => {
@@ -1018,7 +1037,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                           />
                           <button
                             type="button"
-                            className="rounded-md border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                            className="rounded-md border border-white/70 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white"
                             onClick={applyYearJump}
                           >
                             Go
@@ -1082,7 +1101,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                           type="button"
                           className={[
                             "rounded-md border px-3 py-1 text-xs font-semibold",
-                            "border-slate-200 text-slate-700 hover:bg-slate-50",
+                            "border-white/70 bg-white/80 text-slate-700 shadow-sm backdrop-blur hover:bg-white",
                           ].join(" ")}
                           onClick={() => setRangeDialogOpen(false)}
                         >
@@ -1094,8 +1113,8 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                           className={[
                             "rounded-md border px-3 py-1 text-xs font-semibold",
                             draftRange?.from && draftRange?.to
-                              ? "border-slate-900 bg-slate-900 text-white hover:bg-slate-800"
-                              : "border-slate-200 text-slate-400 cursor-not-allowed",
+                              ? "border-primary-600 bg-primary-600 text-white hover:bg-primary-500"
+                              : "border-white/70 bg-white/60 text-slate-400 cursor-not-allowed",
                           ].join(" ")}
                           onClick={applyDraftRange}
                         >
@@ -1106,12 +1125,12 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                   </div>
                 </DialogContent>
               </Dialog>
-              <div className="flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 sm:w-auto">
+              <div className="flex w-full items-center gap-2 rounded-xl border border-white/70 bg-white/80 px-3 py-2 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 sm:w-auto sm:col-span-2 xl:col-span-1 sm:justify-self-end">
                 <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                   Status
                 </span>
                 <select
-                  className="bg-transparent text-sm font-semibold text-slate-900 focus:outline-none"
+                  className="rounded-md border border-white/70 bg-white/80 px-2 py-1 text-sm font-semibold text-slate-900 shadow-sm focus:outline-none dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-slate-100"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -1127,9 +1146,9 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
         </div>
 
         <Dialog open={listOpen} onOpenChange={setListOpen}>
-          <DialogContent className="max-w-none w-[min(1100px,94vw)] h-[calc(100vh-6rem)] max-h-[calc(100vh-6rem)] overflow-hidden bg-white p-0 shadow-2xl dark:bg-slate-900 top-16 sm:top-20 translate-y-0 flex flex-col [&>button]:right-6 [&>button]:top-6 [&>button]:rounded-full [&>button]:bg-white [&>button]:shadow [&>button]:opacity-100 [&>button]:z-10">
+          <DialogContent className="max-w-none w-[min(1100px,94vw)] h-[calc(100vh-6rem)] max-h-[calc(100vh-6rem)] overflow-hidden border border-white/70 bg-white/95 p-0 shadow-2xl backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90 top-16 sm:top-20 translate-y-0 flex flex-col [&>button]:right-6 [&>button]:top-6 [&>button]:rounded-full [&>button]:bg-white/90 [&>button]:shadow [&>button]:opacity-100 [&>button]:z-10">
             <div className="flex h-full min-h-0 flex-col">
-              <div className="shrink-0 border-b border-slate-200 bg-white px-6 pt-6 pb-4 dark:bg-slate-900">
+              <div className="shrink-0 border-b border-white/70 bg-white/80 px-6 pt-6 pb-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/80">
                 <DialogHeader className="pr-12 text-left">
                   <DialogTitle>{listTitle}</DialogTitle>
                   <DialogDescription>{listContextLabel}</DialogDescription>
@@ -1145,7 +1164,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
               </div>
               <div className="flex-1 min-h-0 overflow-hidden px-6 py-4 pb-6 flex flex-col gap-4">
                 {listLoading && (
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                  <div className="rounded-lg border border-white/70 bg-white/80 px-4 py-3 text-sm text-slate-600 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                     Loading appointments...
                   </div>
                 )}
@@ -1155,7 +1174,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                   </div>
                 )}
                 {!listLoading && !listError && (
-                  <div className="flex-1 min-h-0 rounded-xl border border-slate-200 bg-white">
+                  <div className="flex-1 min-h-0 rounded-xl border border-white/70 bg-white/80 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                     <div
                       className="h-full min-h-0 overflow-auto overscroll-contain"
                       onWheelCapture={stopScrollPropagation}
@@ -1203,7 +1222,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
         </Dialog>
 
         {loading && (
-        <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+        <div className="rounded-lg border border-white/70 bg-white/80 px-4 py-3 text-sm text-gray-600 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200">
           Loading analytics...
         </div>
       )}
@@ -1215,9 +1234,9 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
 
       {data && !loading && (
         <div className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-5 md:grid-cols-4">
             <Card
-              className="relative overflow-hidden border-slate-200 cursor-pointer transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/70"
+              className="relative cursor-pointer overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] transition hover:-translate-y-1 hover:shadow-[0_24px_60px_-40px_rgba(15,23,42,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
               role="button"
               tabIndex={0}
               onClick={() => openList("all")}
@@ -1229,16 +1248,18 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
               }}
             >
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-emerald-400" />
-              <CardHeader className="pb-2">
-                <CardDescription>Total appointments</CardDescription>
-                <CardTitle className="text-3xl">
+              <CardHeader className="pb-3">
+                <CardDescription className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  Total appointments
+                </CardDescription>
+                <CardTitle className="text-3xl font-semibold text-slate-900 sm:text-4xl">
                   {data.totals.appointments}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <Badge
                   variant="secondary"
-                  className="bg-blue-50 text-blue-700"
+                  className="bg-blue-50 text-xs font-semibold text-blue-700"
                 >
                   Completion {completionRate}%
                 </Badge>
@@ -1247,7 +1268,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
             </Card>
 
             <Card
-              className="relative overflow-hidden border-slate-200 cursor-pointer transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/70"
+              className="relative cursor-pointer overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] transition hover:-translate-y-1 hover:shadow-[0_24px_60px_-40px_rgba(15,23,42,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
               role="button"
               tabIndex={0}
               onClick={() => openList("paid")}
@@ -1259,9 +1280,11 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
               }}
             >
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 to-lime-400" />
-              <CardHeader className="pb-2">
-                <CardDescription>Paid revenue</CardDescription>
-                <CardTitle className="text-3xl">
+              <CardHeader className="pb-3">
+                <CardDescription className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  Paid revenue
+                </CardDescription>
+                <CardTitle className="text-3xl font-semibold text-slate-900 sm:text-4xl">
                   {baseRevenue
                     ? formatCurrency(
                         baseRevenue.totalCents,
@@ -1273,7 +1296,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
               <CardContent>
                 <Badge
                   variant="secondary"
-                  className="bg-emerald-50 text-emerald-700"
+                  className="bg-emerald-50 text-xs font-semibold text-emerald-700"
                 >
                   {baseRevenue
                     ? `${baseRevenue.count} payments`
@@ -1283,7 +1306,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
             </Card>
 
             <Card
-              className="relative overflow-hidden border-slate-200 cursor-pointer transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/70"
+              className="relative cursor-pointer overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] transition hover:-translate-y-1 hover:shadow-[0_24px_60px_-40px_rgba(15,23,42,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
               role="button"
               tabIndex={0}
               onClick={() => openList("expected")}
@@ -1295,9 +1318,11 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
               }}
             >
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 to-sky-400" />
-              <CardHeader className="pb-2">
-                <CardDescription>Expected revenue</CardDescription>
-                <CardTitle className="text-3xl">
+              <CardHeader className="pb-3">
+                <CardDescription className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  Expected revenue
+                </CardDescription>
+                <CardTitle className="text-3xl font-semibold text-slate-900 sm:text-4xl">
                   {baseExpectedRevenue
                     ? formatCurrency(
                         baseExpectedRevenue.totalCents,
@@ -1309,7 +1334,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
               <CardContent>
                 <Badge
                   variant="secondary"
-                  className="bg-indigo-50 text-indigo-700"
+                  className="bg-indigo-50 text-xs font-semibold text-indigo-700"
                 >
                   {baseExpectedRevenue
                     ? `${baseExpectedRevenue.count} unpaid`
@@ -1319,7 +1344,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
             </Card>
 
             <Card
-              className="relative overflow-hidden border-slate-200 cursor-pointer transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/70"
+              className="relative cursor-pointer overflow-hidden rounded-3xl border border-white/70 bg-white/85 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] transition hover:-translate-y-1 hover:shadow-[0_24px_60px_-40px_rgba(15,23,42,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
               role="button"
               tabIndex={0}
               onClick={() => openList("all", "Avg per day appointments")}
@@ -1331,9 +1356,11 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
               }}
             >
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-400 to-orange-400" />
-              <CardHeader className="pb-2">
-                <CardDescription>Avg per day</CardDescription>
-                <CardTitle className="text-3xl">
+              <CardHeader className="pb-3">
+                <CardDescription className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  Avg per day
+                </CardDescription>
+                <CardTitle className="text-3xl font-semibold text-slate-900 sm:text-4xl">
                   {timeline.length
                     ? formatCompact(
                         Math.round(
@@ -1349,7 +1376,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
               <CardContent>
                 <Badge
                   variant="secondary"
-                  className="bg-amber-50 text-amber-700"
+                  className="bg-amber-50 text-xs font-semibold text-amber-700"
                 >
                   Based on {timeline.length} days
                 </Badge>
@@ -1357,28 +1384,30 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
             </Card>
           </div>
 
-          <Card className="border-slate-200">
-            <CardHeader>
-              <div className="flex flex-wrap items-center justify-between gap-2">
+          <Card className="rounded-3xl border border-white/70 bg-white/85 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+            <CardHeader className="pb-2">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <CardTitle>Appointments & revenue</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-base font-semibold tracking-tight text-slate-900">
+                    Appointments & revenue
+                  </CardTitle>
+                  <CardDescription className="text-sm text-slate-500">
                     Daily volume with paid revenue overlay.
                   </CardDescription>
                 </div>
                 <Badge
                   variant="secondary"
-                  className="bg-slate-100 text-slate-600"
+                  className="bg-slate-100 text-xs font-semibold text-slate-600"
                 >
                   Trend
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-5 sm:p-6">
                 <ChartContainer
                   config={trendConfig}
-                  className="h-[320px] w-full"
+                  className="h-[360px] w-full sm:h-[320px] lg:h-[360px]"
                 >
                   <AreaChart data={timeline} margin={{ left: 8, right: 12 }}>
                     <CartesianGrid vertical={false} />
@@ -1387,12 +1416,14 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                       tickLine={false}
                       axisLine={false}
                       tickMargin={8}
+                      tick={{ fontSize: 12, fill: "#64748b" }}
                     />
                     <YAxis
                       yAxisId="left"
                       tickLine={false}
                       axisLine={false}
                       tickMargin={8}
+                      tick={{ fontSize: 12, fill: "#64748b" }}
                     />
                     {baseCurrency && (
                       <YAxis
@@ -1401,6 +1432,7 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                         tickLine={false}
                         axisLine={false}
                         tickMargin={8}
+                        tick={{ fontSize: 12, fill: "#64748b" }}
                       />
                     )}
                     <ChartTooltip
@@ -1447,15 +1479,22 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
             </CardContent>
           </Card>
 
-          <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-            <Card className="border-slate-200">
-              <CardHeader>
-                <CardTitle>Status by day</CardTitle>
-                <CardDescription>Stacked breakdown of appointment states.</CardDescription>
+          <div className="grid gap-5 lg:grid-cols-[2fr_1fr]">
+            <Card className="rounded-3xl border border-white/70 bg-white/85 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold tracking-tight text-slate-900">
+                  Status by day
+                </CardTitle>
+                <CardDescription className="text-sm text-slate-500">
+                  Stacked breakdown of appointment states.
+                </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
-                  <ChartContainer config={statusConfig} className="h-[280px] w-full">
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-5 sm:p-6">
+                  <ChartContainer
+                    config={statusConfig}
+                    className="h-[320px] w-full sm:h-[300px] lg:h-[320px]"
+                  >
                     <BarChart data={timeline} margin={{ left: 8, right: 12 }}>
                       <CartesianGrid vertical={false} />
                       <XAxis
@@ -1463,11 +1502,13 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                         tickLine={false}
                         axisLine={false}
                         tickMargin={8}
+                        tick={{ fontSize: 12, fill: "#64748b" }}
                       />
                       <YAxis
                         tickLine={false}
                         axisLine={false}
                         tickMargin={8}
+                        tick={{ fontSize: 12, fill: "#64748b" }}
                       />
                       <ChartTooltip content={<ChartTooltipContent />} />
                       {statusKeys.map((status) => (
@@ -1485,14 +1526,21 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
               </CardContent>
             </Card>
 
-            <Card className="border-slate-200">
-              <CardHeader>
-                <CardTitle>Mode share</CardTitle>
-                <CardDescription>Which booking modes dominate.</CardDescription>
+            <Card className="rounded-3xl border border-white/70 bg-white/85 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold tracking-tight text-slate-900">
+                  Mode share
+                </CardTitle>
+                <CardDescription className="text-sm text-slate-500">
+                  Which booking modes dominate.
+                </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
-                  <ChartContainer config={modeConfig} className="h-[280px] w-full">
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-5 sm:p-6">
+                  <ChartContainer
+                    config={modeConfig}
+                    className="h-[320px] w-full sm:h-[300px] lg:h-[320px]"
+                  >
                     <PieChart>
                       <ChartTooltip content={<ChartTooltipContent nameKey="key" />} />
                       <Pie
@@ -1529,17 +1577,21 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
             </Card>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-            <Card className="border-slate-200">
-              <CardHeader>
-                <CardTitle>Top meeting types</CardTitle>
-                <CardDescription>Most requested meeting types.</CardDescription>
+          <div className="grid gap-5 lg:grid-cols-[2fr_1fr]">
+            <Card className="rounded-3xl border border-white/70 bg-white/85 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold tracking-tight text-slate-900">
+                  Top meeting types
+                </CardTitle>
+                <CardDescription className="text-sm text-slate-500">
+                  Most requested meeting types.
+                </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-5 sm:p-6">
                   <ChartContainer
                     config={meetingTypeConfig}
-                    className="h-[280px] w-full"
+                    className="h-[320px] w-full sm:h-[300px] lg:h-[320px]"
                   >
                     <BarChart
                       data={topMeetingTypes.map((row) => ({
@@ -1550,13 +1602,19 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
                       margin={{ left: 24, right: 12 }}
                     >
                       <CartesianGrid horizontal={false} />
-                      <XAxis type="number" tickLine={false} axisLine={false} />
+                      <XAxis
+                        type="number"
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fontSize: 12, fill: "#64748b" }}
+                      />
                       <YAxis
                         dataKey="name"
                         type="category"
                         tickLine={false}
                         axisLine={false}
                         width={120}
+                        tick={{ fontSize: 12, fill: "#64748b" }}
                       />
                       <ChartTooltip content={<ChartTooltipContent />} />
                       <Bar dataKey="count" fill="var(--color-count)" radius={6} />
@@ -1566,27 +1624,40 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
               </CardContent>
             </Card>
 
-            <Card className="border-slate-200">
-              <CardHeader>
-                <CardTitle>Staff volume</CardTitle>
-                <CardDescription>Bookings handled by staff.</CardDescription>
+            <Card className="rounded-3xl border border-white/70 bg-white/85 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold tracking-tight text-slate-900">
+                  Staff volume
+                </CardTitle>
+                <CardDescription className="text-sm text-slate-500">
+                  Bookings handled by staff.
+                </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
-                  <ChartContainer config={staffConfig} className="h-[280px] w-full">
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-5 sm:p-6">
+                  <ChartContainer
+                    config={staffConfig}
+                    className="h-[320px] w-full sm:h-[300px] lg:h-[320px]"
+                  >
                     <BarChart
                       data={staffChartData}
                       layout="vertical"
                       margin={{ left: 24, right: 12 }}
                     >
                       <CartesianGrid horizontal={false} />
-                      <XAxis type="number" tickLine={false} axisLine={false} />
+                      <XAxis
+                        type="number"
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fontSize: 12, fill: "#64748b" }}
+                      />
                       <YAxis
                         dataKey="name"
                         type="category"
                         tickLine={false}
                         axisLine={false}
                         width={120}
+                        tick={{ fontSize: 12, fill: "#64748b" }}
                       />
                       <ChartTooltip content={<ChartTooltipContent />} />
                       <Bar dataKey="total" fill="var(--color-total)" radius={6} />
@@ -1597,10 +1668,14 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
             </Card>
           </div>
 
-          <Card className="border-slate-200">
-            <CardHeader>
-              <CardTitle>Staff performance</CardTitle>
-              <CardDescription>Volume, status mix, and completion rate.</CardDescription>
+          <Card className="rounded-3xl border border-white/70 bg-white/85 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold tracking-tight text-slate-900">
+                Staff performance
+              </CardTitle>
+              <CardDescription className="text-sm text-slate-500">
+                Volume, status mix, and completion rate.
+              </CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="overflow-auto">
@@ -1656,3 +1731,4 @@ export default function AnalyticsClient({ orgId, tz }: Props) {
     </div>
   );
 }
+

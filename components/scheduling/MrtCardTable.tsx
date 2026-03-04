@@ -1,4 +1,4 @@
-import * as React from "react";
+﻿import * as React from "react";
 import SectionCard from "@/components/scheduling/SectionCard";
 import { cn } from "@/lib/utils";
 import {
@@ -45,7 +45,7 @@ export default function MrtCardTable<T extends MRT_RowData>({
   return (
     <SectionCard className={cn("p-0", className)}>
       {(title || subtitle || headerRight) && (
-        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-gray-200 px-6 py-4 dark:border-slate-800">
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/70 bg-white/70 px-6 py-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/60">
           <div className="min-w-0">
             {title && (
               <h3 className="truncate text-lg font-semibold text-gray-900 dark:text-white">
@@ -76,7 +76,7 @@ export default function MrtCardTable<T extends MRT_RowData>({
           }}
           muiTableContainerProps={{
             sx: (theme) => ({
-              borderRadius: 16,
+              borderRadius: 14,
               border: `1px solid ${theme.palette.divider}`,
               overflow: "auto",
             }),
@@ -85,8 +85,8 @@ export default function MrtCardTable<T extends MRT_RowData>({
             sx: (theme) => ({
               backgroundColor:
                 theme.palette.mode === "dark"
-                  ? "rgba(15,23,42,0.6)" // slate-900-ish
-                  : "rgba(248,250,252,1)", // slate-50
+                  ? "rgba(15,23,42,0.65)" // slate-900-ish
+                  : "rgba(255,255,255,0.9)", // airy white
               color: theme.palette.text.secondary,
               fontSize: "0.75rem",
               fontWeight: 700,
@@ -119,3 +119,5 @@ export default function MrtCardTable<T extends MRT_RowData>({
     </SectionCard>
   );
 }
+
+

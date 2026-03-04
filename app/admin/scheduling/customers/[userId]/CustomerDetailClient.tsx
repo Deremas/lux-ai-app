@@ -95,7 +95,7 @@ export default function CustomerDetailClient({ orgId, userId, tz }: Props) {
   if (status !== "authenticated") {
     return (
       <div className="space-y-8">
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-3xl border border-white/70 bg-white/85 p-8 text-center shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             Sign in to view customer details
           </h1>
@@ -131,21 +131,9 @@ export default function CustomerDetailClient({ orgId, userId, tz }: Props) {
             Full profile and booking history. Times shown in {timezone}.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/admin/scheduling/customers">
-              Back to customers
-            </Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/admin/scheduling">
-              Back to dashboard
-            </Link>
-          </Button>
-        </div>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="mt-6 rounded-3xl border border-white/70 bg-white/85 p-6 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
         {loading && (
           <div className="text-sm text-gray-600 dark:text-gray-300">
             Loading customer...
@@ -158,7 +146,7 @@ export default function CustomerDetailClient({ orgId, userId, tz }: Props) {
         )}
         {!loading && !error && user && (
           <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 text-sm dark:border-slate-700 dark:bg-slate-800/40">
+            <div className="rounded-xl border border-white/70 bg-white/80 p-5 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500 dark:text-gray-400">
@@ -171,7 +159,7 @@ export default function CustomerDetailClient({ orgId, userId, tz }: Props) {
                     {user.email}
                   </p>
                 </div>
-                <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
+                <span className="rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-medium text-gray-600 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-300">
                   {user.role}
                 </span>
               </div>
@@ -195,7 +183,7 @@ export default function CustomerDetailClient({ orgId, userId, tz }: Props) {
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 text-sm dark:border-slate-700 dark:bg-slate-800/40">
+            <div className="rounded-xl border border-white/70 bg-white/80 p-5 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
               <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500 dark:text-gray-400">
                 Bookings summary
               </p>
@@ -219,7 +207,7 @@ export default function CustomerDetailClient({ orgId, userId, tz }: Props) {
         )}
       </div>
 
-      <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="mt-6 rounded-3xl border border-white/70 bg-white/85 p-6 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             Bookings
@@ -243,7 +231,7 @@ export default function CustomerDetailClient({ orgId, userId, tz }: Props) {
               return (
                 <div
                   key={booking.id}
-                  className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-800/40"
+                  className="rounded-xl border border-white/70 bg-white/80 px-4 py-3 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -256,7 +244,7 @@ export default function CustomerDetailClient({ orgId, userId, tz }: Props) {
                         {booking.durationMin ?? 60} min
                       </p>
                     </div>
-                    <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
+                    <span className="rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-medium text-gray-600 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-300">
                       {booking.status}
                     </span>
                   </div>

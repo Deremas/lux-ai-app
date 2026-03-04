@@ -3,34 +3,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { DateTime } from "luxon";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import {
   Bell,
   MailCheck,
   MailX,
   Clock,
-  User,
-  Settings,
-  LogOut,
-  ChevronDown,
   Calendar,
-  BarChart3,
-  Users,
-  XCircle,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import MrtCardTable from "@/components/scheduling/MrtCardTable";
 import KpiCard from "@/components/scheduling/KpiCard";
-import ManagementGrid from "@/components/scheduling/ManagementGrid";
 import Badge, { BookingStatus } from "@/components/scheduling/Badge";
 import type { MRT_ColumnDef } from "material-react-table";
 
@@ -428,7 +413,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
         header: "Status",
         accessorKey: "status",
         Cell: ({ cell }) => (
-          <span className="inline-flex rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-700">
+          <span className="inline-flex rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-semibold text-gray-700 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200">
             {cell.getValue<string>()}
           </span>
         ),
@@ -440,7 +425,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
   if (status !== "authenticated") {
     return (
       <div className="mx-auto w-full max-w-6xl px-4 py-12">
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-3xl border border-white/70 bg-white/85 p-8 text-center shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             Sign in to manage scheduling
           </h1>
@@ -450,16 +435,6 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
           <Button className="mt-6" onClick={() => signIn()}>
             Sign in
           </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!orgId) {
-    return (
-      <div className="mx-auto w-full max-w-6xl px-4 py-12">
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
-          No org found for this account.
         </div>
       </div>
     );
@@ -509,193 +484,148 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
   return (
     <div className="space-y-8">
       <div className="space-y-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
-              Scheduling Admin
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">
-              Dashboard
-            </h1>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-              {orgName ? `${orgName} · ` : ""}
-              Times shown in {timezone}.
-            </p>
-            {displayName && (
-              <p className="mt-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
-                Welcome, {displayName}
+        <div className="relative overflow-visible rounded-2xl border border-white/70 bg-white/85 px-5 py-4 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.28)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 via-blue-500 to-accent-500" />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Dashboard
+              </h1>
+              <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-300">
+                Times shown in {timezone}.
               </p>
-            )}
-          </div>
-          <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
-            <div className="relative">
-              <Button
-                variant="outline"
-                className="relative h-10 w-10 p-0"
-                onClick={() => setNotifOpen((prev) => !prev)}
-                aria-label="Notifications"
-                ref={notifButtonRef}
-              >
-                <Bell className="h-5 w-5" />
-                {notifTotal > 0 && (
-                  <span className="absolute -right-1 -top-1 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                    {notifTotal > 99 ? "99+" : notifTotal}
-                  </span>
-                )}
-              </Button>
-              {notifOpen && (
-                <div
-                  ref={notifPanelRef}
-                  className="fixed left-4 right-4 z-50 mt-2 w-auto rounded-xl border border-gray-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-900 sm:absolute sm:left-auto sm:right-0 sm:w-96"
-                >
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                      Notifications
-                    </p>
-                    <Link
-                      className="text-xs text-blue-600 hover:underline"
-                      href={buildLink("/admin/scheduling/notifications")}
-                      onClick={() => setNotifOpen(false)}
-                    >
-                      View all
-                    </Link>
-                  </div>
-                  {notifLoading && (
-                    <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
-                      Loading notifications...
-                    </p>
-                  )}
-                  {notifError && (
-                    <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-                      {notifError}
-                    </div>
-                  )}
-                  {!notifLoading && !notifError && notifItems.length === 0 && (
-                    <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
-                      No unseen notifications.
-                    </p>
-                  )}
-                  {!notifLoading && !notifError && notifItems.length > 0 && (
-                    <div className="mt-3 max-h-[60vh] space-y-3 overflow-y-auto pr-1">
-                      {notifItems.map((item) => {
-                        const when = DateTime.fromJSDate(
-                          item.createdAt instanceof Date
-                            ? item.createdAt
-                            : new Date(item.createdAt),
-                        ).setZone(timezone);
-                        const start = DateTime.fromJSDate(
-                          item.startAtUtc instanceof Date
-                            ? item.startAtUtc
-                            : new Date(item.startAtUtc),
-                        ).setZone(timezone);
-                        const Icon =
-                          item.status === "failed" ? MailX : MailCheck;
-                        return (
-                          <div
-                            key={item.id}
-                            className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-700 transition hover:border-gray-400 dark:border-slate-700 dark:bg-slate-800/40 dark:text-gray-200"
-                            onClick={async () => {
-                              setSelectedNotif(item);
-                              setSelectedDetail(null);
-                              setActionError(null);
-                              setNote("");
-                              setNotifOpen(false);
-                              if (!item.seen) {
-                                await fetch("/api/scheduling/admin/notifications", {
-                                  method: "PATCH",
-                                  headers: { "content-type": "application/json" },
-                                  body: JSON.stringify({ ids: [item.id] }),
-                                });
-                                setNotifItems((prev) =>
-                                  prev.filter((n) => n.id !== item.id),
-                                );
-                                setNotifTotal((prev) => Math.max(0, prev - 1));
-                              }
-                            }}
-                          >
-                            <Icon
-                              className={`mt-0.5 h-4 w-4 ${item.status === "failed"
-                                ? "text-red-500"
-                                : "text-emerald-500"
-                                }`}
-                            />
-                            <div className="flex-1">
-                              <div className="font-semibold">
-                                {item.meetingTypeKey ?? "Meeting"} ·{" "}
-                                {item.templateKey ?? "notification"}
-                              </div>
-                              <div className="text-gray-500">
-                                To: {item.toAddress ?? "n/a"}
-                              </div>
-                              <div className="text-gray-500">
-                                {start.toFormat("ccc, LLL dd · HH:mm")} ·{" "}
-                                {item.apptStatus}
-                              </div>
-                              {item.error && (
-                                <div className="mt-1 text-red-600">
-                                  {item.error}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1 text-[11px] text-gray-400">
-                              <Clock className="h-3.5 w-3.5" />
-                              {when.toFormat("LLL dd · HH:mm")}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
-            <Button asChild variant="outline">
-              <Link href="/scheduling">View as user</Link>
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              {displayName && (
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  Welcome, {displayName}
+                </span>
+              )}
+              <div className="relative">
                 <Button
                   variant="outline"
-                  className="h-10 px-2.5 gap-1.5"
-                  aria-label="Account menu"
+                  className="relative h-10 w-10 p-0"
+                  onClick={() => setNotifOpen((prev) => !prev)}
+                  aria-label="Notifications"
+                  ref={notifButtonRef}
                 >
-                  <User className="h-5 w-5" />
-                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                  {notifTotal > 0 && (
+                    <span className="absolute -right-1 -top-1 h-3 w-3 animate-ping rounded-full bg-red-500/60" />
+                  )}
+                  <Bell className="h-5 w-5" />
+                  {notifTotal > 0 && (
+                    <span className="absolute -right-1 -top-1 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                      {notifTotal > 99 ? "99+" : notifTotal}
+                    </span>
+                  )}
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                sideOffset={8}
-                className="w-56 rounded-xl border border-gray-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900"
-              >
-                <DropdownMenuItem
-                  asChild
-                  className="gap-2 rounded-lg px-3 py-2 text-sm font-medium cursor-pointer"
-                >
-                  <Link href={buildLink("/admin/scheduling#profile")}>
-                    <User className="h-4 w-4 text-gray-500" />
-                    Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  asChild
-                  className="gap-2 rounded-lg px-3 py-2 text-sm font-medium cursor-pointer"
-                >
-                  <Link href={buildLink("/admin/scheduling/settings")}>
-                    <Settings className="h-4 w-4 text-gray-500" />
-                    Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-600 focus:text-red-600 cursor-pointer"
-                  onClick={() => signOut()}
-                >
-                  <LogOut className="h-4 w-4 text-red-500" />
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                {notifOpen && (
+                  <div
+                    ref={notifPanelRef}
+                    className="fixed left-4 right-4 z-50 mt-2 w-auto rounded-2xl border border-white/70 bg-white/95 p-4 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90 sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-96"
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                        Notifications
+                      </p>
+                      <Link
+                        className="text-xs text-blue-600 hover:underline"
+                        href={buildLink("/admin/scheduling/notifications")}
+                        onClick={() => setNotifOpen(false)}
+                      >
+                        View all
+                      </Link>
+                    </div>
+                    {notifLoading && (
+                      <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+                        Loading notifications...
+                      </p>
+                    )}
+                    {notifError && (
+                      <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                        {notifError}
+                      </div>
+                    )}
+                    {!notifLoading && !notifError && notifItems.length === 0 && (
+                      <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+                        No unseen notifications.
+                      </p>
+                    )}
+                    {!notifLoading && !notifError && notifItems.length > 0 && (
+                      <div className="mt-3 max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+                        {notifItems.map((item) => {
+                          const when = DateTime.fromJSDate(
+                            item.createdAt instanceof Date
+                              ? item.createdAt
+                              : new Date(item.createdAt),
+                          ).setZone(timezone);
+                          const start = DateTime.fromJSDate(
+                            item.startAtUtc instanceof Date
+                              ? item.startAtUtc
+                              : new Date(item.startAtUtc),
+                          ).setZone(timezone);
+                          const Icon =
+                            item.status === "failed" ? MailX : MailCheck;
+                          return (
+                            <div
+                              key={item.id}
+                              className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/70 bg-white/80 px-3 py-2 text-xs text-gray-700 transition hover:border-primary-200 dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200"
+                              onClick={async () => {
+                                setSelectedNotif(item);
+                                setSelectedDetail(null);
+                                setActionError(null);
+                                setNote("");
+                                setNotifOpen(false);
+                                if (!item.seen) {
+                                  await fetch("/api/scheduling/admin/notifications", {
+                                    method: "PATCH",
+                                    headers: { "content-type": "application/json" },
+                                    body: JSON.stringify({ ids: [item.id] }),
+                                  });
+                                  setNotifItems((prev) =>
+                                    prev.filter((n) => n.id !== item.id),
+                                  );
+                                  setNotifTotal((prev) => Math.max(0, prev - 1));
+                                }
+                              }}
+                            >
+                              <Icon
+                                className={`mt-0.5 h-4 w-4 ${item.status === "failed"
+                                  ? "text-red-500"
+                                  : "text-emerald-500"
+                                  }`}
+                              />
+                              <div className="flex-1">
+                                <div className="font-semibold">
+                                  {item.meetingTypeKey ?? "Meeting"} ·{" "}
+                                  {item.templateKey ?? "notification"}
+                                </div>
+                                <div className="text-gray-500">
+                                  To: {item.toAddress ?? "n/a"}
+                                </div>
+                                <div className="text-gray-500">
+                                  {start.toFormat("ccc, LLL dd · HH:mm")} ·{" "}
+                                  {item.apptStatus}
+                                </div>
+                                {item.error && (
+                                  <div className="mt-1 text-red-600">
+                                    {item.error}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1 text-[11px] text-gray-400">
+                                <Clock className="h-3.5 w-3.5" />
+                                {when.toFormat("LLL dd · HH:mm")}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -728,90 +658,6 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
             icon={
               <Calendar className="h-5 w-5 text-primary-600 dark:text-primary-400" />
             }
-          />
-        </div>
-
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Management
-          </h2>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-            Jump into specific areas.
-          </p>
-          <ManagementGrid
-            tiles={[
-              {
-                id: "bookings",
-                title: "Bookings",
-                description: "Manage appointment approvals and scheduling",
-                href: buildLink("/admin/scheduling/bookings"),
-                badge: {
-                  text: pendingCount > 0 ? String(pendingCount) : "0",
-                  variant: pendingCount > 0 ? "destructive" : "default"
-                },
-                icon: <Calendar className="h-5 w-5 text-primary-600" />
-              },
-              {
-                id: "analytics",
-                title: "Analytics",
-                description: "View booking trends and performance metrics",
-                href: buildLink("/admin/scheduling/analytics"),
-                icon: <BarChart3 className="h-5 w-5 text-primary-600" />
-              },
-              {
-                id: "settings",
-                title: "Settings",
-                description: "Configure policies and system preferences",
-                href: buildLink("/admin/scheduling/settings"),
-                icon: <Settings className="h-5 w-5 text-primary-600" />
-              },
-              {
-                id: "calendar",
-                title: "Calendar",
-                description: "View and manage schedule calendar",
-                href: buildLink("/admin/scheduling/calendar"),
-                icon: <Calendar className="h-5 w-5 text-primary-600" />
-              },
-              {
-                id: "meeting-types",
-                title: "Meeting Types",
-                description: "Configure available meeting types and pricing",
-                href: buildLink("/admin/scheduling/meeting-types"),
-                icon: <Clock className="h-5 w-5 text-primary-600" />
-              },
-              {
-                id: "staff",
-                title: "Staff Management",
-                description: "Manage staff users and calendars",
-                href: buildLink("/admin/scheduling/staff"),
-                icon: <Users className="h-5 w-5 text-primary-600" />
-              },
-              {
-                id: "customers",
-                title: "Customers",
-                description: "View and manage customer database",
-                href: buildLink("/admin/scheduling/customers"),
-                icon: <User className="h-5 w-5 text-primary-600" />
-              },
-              {
-                id: "blocked-time",
-                title: "Blocked Time",
-                description: "Set unavailable time periods",
-                href: buildLink("/admin/scheduling/blocked"),
-                icon: <XCircle className="h-5 w-5 text-primary-600" />
-              },
-              {
-                id: "notifications",
-                title: "Notifications",
-                description: "Configure email and system notifications",
-                href: buildLink("/admin/scheduling/notifications"),
-                badge: {
-                  text: failedNotifs > 0 ? String(failedNotifs) : "0",
-                  variant: failedNotifs > 0 ? "destructive" : "default"
-                },
-                icon: <Bell className="h-5 w-5 text-primary-600" />
-              }
-            ]}
           />
         </div>
 
@@ -851,7 +697,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
         >
           <div
             ref={notifModalRef}
-            className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl dark:bg-slate-900"
+            className="w-full max-w-lg rounded-2xl border border-white/70 bg-white/95 p-6 shadow-2xl backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90"
           >
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -1045,7 +891,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
                 !selectedDetail.error &&
                 (selectedDetail.status === "pending" ||
                   selectedDetail.status === "confirmed") && (
-                  <div className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800">
+                  <div className="mt-5 rounded-xl border border-white/70 bg-white/80 p-4 text-sm text-gray-800 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200">
                     <p className="font-semibold">Need to cancel?</p>
                     <p className="mt-1 text-xs text-gray-600">
                       Canceling will notify the customer and free the slot.

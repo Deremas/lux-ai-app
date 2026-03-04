@@ -1,10 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import RAGChatBot from "./Chatbot";
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const read = () =>
+      setSidebarOpen(document.body.hasAttribute("data-sidebar-open"));
+
+    read();
+
+    const obs = new MutationObserver(read);
+    obs.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["data-sidebar-open"],
+    });
+
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (sidebarOpen && isOpen) {
+      setIsOpen(false);
+    }
+  }, [sidebarOpen, isOpen]);
 
   return (
     <>
@@ -33,6 +55,7 @@ export default function ChatWidget() {
           "bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden",
           "overscroll-contain",
 
+          sidebarOpen ? "pointer-events-none opacity-0" : "opacity-100",
           isOpen ? "block" : "hidden",
         ].join(" ")}
       >
@@ -75,7 +98,9 @@ export default function ChatWidget() {
           "flex items-center gap-2 rounded-full shadow-xl",
           "bg-accent-500 hover:bg-amber-500 text-white px-3 py-2",
           "max-w-[calc(100svw-2rem)]",
+          sidebarOpen ? "pointer-events-none opacity-0 translate-y-2" : "",
         ].join(" ")}
+        aria-hidden={sidebarOpen ? "true" : "false"}
         aria-label={isOpen ? "Close chat" : "Open chat"}
         type="button"
       >

@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
@@ -97,8 +96,15 @@ export default function MeetingTypesClient({ orgId }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm());
-  const [locale, setLocale] = useState("en");
-  const [localeLocked, setLocaleLocked] = useState(false);
+  const [locale] = useState(() => {
+    if (typeof document !== "undefined") {
+      const lang =
+        document.documentElement.lang ||
+        (typeof navigator !== "undefined" ? navigator.language : "en");
+      return lang.split("-")[0] || "en";
+    }
+    return "en";
+  });
   const [currencyOptions, setCurrencyOptions] = useState<string[]>([
     "EUR",
     "USD",
@@ -107,8 +113,8 @@ export default function MeetingTypesClient({ orgId }: Props) {
     "CAD",
     "AUD",
   ]);
+  const formRef = useRef<HTMLDivElement | null>(null);
 
-  const dashboardHref = "/admin/scheduling";
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -122,9 +128,7 @@ export default function MeetingTypesClient({ orgId }: Props) {
       window.location.origin
     );
     url.searchParams.set("orgId", orgId);
-    if (localeLocked) {
-      url.searchParams.set("locale", locale);
-    }
+    url.searchParams.set("locale", locale);
 
     const settingsUrl = `/api/scheduling/admin/settings?orgId=${orgId}`;
 
@@ -146,10 +150,6 @@ export default function MeetingTypesClient({ orgId }: Props) {
         }
         const list = (typesRes.data?.items ?? []) as MeetingType[];
         setItems(list);
-        if (!localeLocked) {
-          setLocale(typesRes.data?.locale ?? "en");
-        }
-
         if (settingsRes.ok) {
           const raw = settingsRes.data?.settings?.allowedCurrencies ?? "";
           const parsed = typeof raw === "string"
@@ -173,7 +173,7 @@ export default function MeetingTypesClient({ orgId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [orgId, status, locale, localeLocked]);
+  }, [orgId, status, locale]);
 
   const isEditing = Boolean(form.id);
 
@@ -198,6 +198,10 @@ export default function MeetingTypesClient({ orgId }: Props) {
       modeDetails: item.modeDetails ?? {},
       isActive: item.isActive,
     });
+  }
+
+  function scrollToForm() {
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   async function handleDelete(item: MeetingType) {
@@ -228,6 +232,52 @@ export default function MeetingTypesClient({ orgId }: Props) {
       }
     } catch {
       setError("Failed to delete meeting type");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleToggleActive(item: MeetingType) {
+    if (!orgId) return;
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch(
+        `/api/scheduling/admin/meeting-types/${item.id}`,
+        {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            orgId,
+            key: item.key,
+            title: item.title,
+            subtitle: item.subtitle ?? null,
+            description: item.description ?? null,
+            durationMin: item.durationMin,
+            paymentPolicy: item.paymentPolicy ?? "FREE",
+            priceCents: item.priceCents ?? null,
+            currency: item.currency ?? null,
+            modes: item.modes ?? [],
+            modeDetails: item.modeDetails ?? {},
+            isActive: !item.isActive,
+            locale,
+          }),
+        }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data?.error ?? "Failed to update meeting type");
+        return;
+      }
+      setItems((prev) =>
+        prev.map((entry) =>
+          entry.id === item.id ? { ...entry, isActive: !item.isActive } : entry
+        )
+      );
+      setSuccess(item.isActive ? "Meeting type deactivated." : "Meeting type activated.");
+    } catch {
+      setError("Failed to update meeting type");
     } finally {
       setSaving(false);
     }
@@ -321,6 +371,47 @@ export default function MeetingTypesClient({ orgId }: Props) {
                 {row.original.description}
               </div>
             )}
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+              <Badge variant={row.original.isActive ? "default" : "secondary"}>
+                {row.original.isActive ? "Active" : "Inactive"}
+              </Badge>
+              <span className="font-semibold text-gray-700 dark:text-gray-200">
+                {row.original.paymentPolicy === "FREE"
+                  ? "Free"
+                  : row.original.paymentPolicy === "PAY_BEFORE_CONFIRM"
+                  ? "Pay before confirm"
+                  : "Pay after confirm"}
+              </span>
+              <span>{formatMoney(row.original.priceCents, row.original.currency)}</span>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  loadForEdit(row.original);
+                  scrollToForm();
+                }}
+              >
+                Edit
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={saving}
+                onClick={() => handleToggleActive(row.original)}
+              >
+                {row.original.isActive ? "Deactivate" : "Activate"}
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={saving}
+                onClick={() => handleDelete(row.original)}
+              >
+                Delete
+              </Button>
+            </div>
           </div>
         ),
       },
@@ -342,49 +433,6 @@ export default function MeetingTypesClient({ orgId }: Props) {
           </span>
         ),
       },
-      {
-        id: "payment",
-        header: "Payment",
-        Cell: ({ row }) => {
-          const policy = row.original.paymentPolicy ?? "FREE";
-          const price = formatMoney(row.original.priceCents, row.original.currency);
-          return (
-            <div className="text-xs text-gray-600 dark:text-gray-300">
-              <div className="font-semibold text-gray-800 dark:text-gray-200">
-                {policy === "FREE"
-                  ? "Free"
-                  : policy === "PAY_BEFORE_CONFIRM"
-                  ? "Pay before confirm"
-                  : "Pay after confirm"}
-              </div>
-              <div>{price}</div>
-            </div>
-          );
-        },
-      },
-      {
-        id: "status",
-        header: "Status",
-        Cell: ({ row }) => (
-          <Badge variant={row.original.isActive ? "default" : "secondary"}>
-            {row.original.isActive ? "Active" : "Inactive"}
-          </Badge>
-        ),
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        Cell: ({ row }) => (
-          <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => loadForEdit(row.original)}>
-              Edit
-            </Button>
-            <Button size="sm" variant="destructive" onClick={() => handleDelete(row.original)} disabled={saving}>
-              Delete
-            </Button>
-          </div>
-        ),
-      },
     ],
     [saving, items]
   );
@@ -392,7 +440,7 @@ export default function MeetingTypesClient({ orgId }: Props) {
   if (status !== "authenticated") {
     return (
       <div className="mx-auto w-full max-w-4xl px-4 py-12">
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-3xl border border-white/70 bg-white/85 p-8 text-center shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             Sign in to manage meeting types
           </h1>
@@ -402,16 +450,6 @@ export default function MeetingTypesClient({ orgId }: Props) {
           <Button className="mt-6" onClick={() => signIn()}>
             Sign in
           </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!orgId) {
-    return (
-      <div className="mx-auto w-full max-w-4xl px-4 py-12">
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
-          No org found for this account.
         </div>
       </div>
     );
@@ -430,14 +468,6 @@ export default function MeetingTypesClient({ orgId }: Props) {
   return (
     <div className="space-y-8">
       <div className="space-y-8">
-        <div className="flex justify-end">
-          <Link
-            href={dashboardHref}
-            className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500 hover:underline dark:text-gray-400"
-          >
-            Back to dashboard
-          </Link>
-        </div>
         <div className="mt-3 space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
             Scheduling Admin
@@ -446,28 +476,9 @@ export default function MeetingTypesClient({ orgId }: Props) {
             <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
               Meeting types
             </h1>
-            <div className="flex items-center gap-2 text-sm">
-              <label className="text-gray-600 dark:text-gray-300">
-                Translation locale
-              </label>
-              <select
-                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                value={locale}
-                onChange={(e) => {
-                  setLocale(e.target.value);
-                  setLocaleLocked(true);
-                }}
-              >
-                {["en", "fr", "de", "lb"].map((loc) => (
-                  <option key={loc} value={loc}>
-                    {loc.toUpperCase()}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            Create and update booking types. Editing affects the selected locale.
+            Create and update booking types used across the scheduling system.
           </p>
         </div>
 
@@ -489,10 +500,21 @@ export default function MeetingTypesClient({ orgId }: Props) {
           </div>
         )}
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]">
+        <div className="mt-8 grid gap-8 md:grid-cols-[1fr_360px]">
           <MrtCardTable
             title="Meeting types"
             subtitle={items.length ? `${items.length} types` : "No meeting types yet."}
+            headerRight={
+              <Button
+                size="sm"
+                onClick={() => {
+                  resetForm();
+                  scrollToForm();
+                }}
+              >
+                New meeting type
+              </Button>
+            }
             table={{
               columns,
               data: items,
@@ -512,7 +534,10 @@ export default function MeetingTypesClient({ orgId }: Props) {
             }}
           />
 
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
+          <div
+            ref={formRef}
+            className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 md:sticky md:top-24 self-start"
+          >
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               {isEditing ? "Edit meeting type" : "Create meeting type"}
             </h2>
@@ -596,7 +621,7 @@ export default function MeetingTypesClient({ orgId }: Props) {
                   Payment policy
                 </label>
                 <select
-                  className="mt-1 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="mt-1 h-9 w-full rounded-lg border border-white/70 bg-white/80 px-3 text-sm text-gray-900 shadow-sm backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-100"
                   value={form.paymentPolicy}
                   onChange={(e) =>
                     setForm((prev) => ({
@@ -674,7 +699,7 @@ export default function MeetingTypesClient({ orgId }: Props) {
                   {MODES.map((mode) => (
                     <label
                       key={mode}
-                      className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-200"
+                      className="flex items-center gap-2 rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs text-gray-700 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200"
                     >
                       <input
                         type="checkbox"
@@ -700,7 +725,7 @@ export default function MeetingTypesClient({ orgId }: Props) {
                   ))}
                 </div>
                 {form.modes.length > 0 && (
-                  <div className="mt-4 space-y-3 rounded-xl border border-gray-200 bg-white p-3 text-xs text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-200">
+                  <div className="mt-4 space-y-3 rounded-xl border border-white/70 bg-white/80 p-3 text-xs text-gray-700 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200">
                     <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-400">
                       Mode details
                     </p>

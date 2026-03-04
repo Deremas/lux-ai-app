@@ -12,23 +12,21 @@ export default function ProductShell({
   surfaceClassName,
 }: ProductShellProps) {
   return (
-    <div
+    <section
       className={cn(
-        "w-full bg-[radial-gradient(circle_at_top,_#e0f2fe_0%,_#f8fafc_35%,_#ffffff_70%)] dark:bg-[radial-gradient(circle_at_top,_#1e293b_0%,_#0f172a_55%,_#0b1120_100%)]",
+        "relative w-full overflow-hidden",
+        "bg-[radial-gradient(circle_at_top,_#e0f2fe_0%,_#f8fafc_40%,_#ffffff_75%)]",
+        "dark:bg-[radial-gradient(circle_at_top,_#1e293b_0%,_#0f172a_55%,_#0b1120_100%)]",
         className
       )}
     >
-      <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
-        <div
-          className={cn(
-            "rounded-2xl border border-gray-200 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900 md:p-10",
-            surfaceClassName
-          )}
-        >
+      <div className="pointer-events-none absolute -left-32 top-10 h-72 w-72 rounded-full bg-primary-500/15 blur-3xl" />
+      <div className="pointer-events-none absolute right-[-140px] top-24 h-80 w-80 rounded-full bg-accent-500/20 blur-3xl" />
+      <div className="relative mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className={cn("min-w-0 space-y-8", surfaceClassName)}>
           {children}
         </div>
-        <div className="mt-12" />
       </div>
-    </div>
+    </section>
   );
 }

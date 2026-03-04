@@ -310,13 +310,13 @@ export function AdminCalendar({
   };
 
   return (
-    <div className="rounded-2xl border p-3 space-y-3">
+    <div className="rounded-3xl border border-white/70 bg-white/85 p-4 space-y-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <label className="text-gray-600">Display timezone</label>
+        <label className="text-gray-600 dark:text-gray-300">Display timezone</label>
         <div className="relative" ref={tzRef}>
           <button
             type="button"
-            className="flex h-9 min-w-[260px] items-center justify-between gap-3 rounded-md border border-input bg-white px-3 text-sm leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="flex h-10 min-w-[260px] items-center justify-between gap-3 rounded-xl border border-white/70 bg-white/80 px-3 text-sm leading-6 shadow-sm backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/70"
             onClick={() => setTzOpen((prev) => !prev)}
             onKeyDown={handleTzKeyDown}
             aria-haspopup="listbox"
@@ -326,9 +326,9 @@ export function AdminCalendar({
             <span aria-hidden>▾</span>
           </button>
           {tzOpen && (
-            <div className="absolute z-20 mt-2 w-[280px] rounded-md border border-gray-200 bg-white p-2 shadow-lg">
+            <div className="absolute z-20 mt-2 w-[280px] rounded-xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
               <input
-                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="h-9 w-full rounded-lg border border-white/70 bg-transparent px-3 text-sm leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60"
                 value={tzQuery}
                 onChange={(e) => setTzQuery(e.target.value)}
                 placeholder="Search timezone"
@@ -337,10 +337,10 @@ export function AdminCalendar({
               />
               <div
                 ref={tzListRef}
-                className="mt-2 max-h-60 overflow-auto rounded-md border border-gray-100"
+                className="mt-2 max-h-60 overflow-auto rounded-lg border border-gray-100/80 dark:border-slate-700/60"
               >
                 {filteredTimezones.length === 0 ? (
-                  <div className="px-3 py-2 text-sm text-gray-500">
+                  <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
                     No matches
                   </div>
                 ) : (
@@ -350,9 +350,9 @@ export function AdminCalendar({
                       type="button"
                       data-tz-index={index}
                       className={[
-                        "w-full px-3 py-2 text-left text-sm hover:bg-gray-100",
+                        "w-full px-3 py-2 text-left text-sm hover:bg-gray-100/80 dark:hover:bg-slate-800/60",
                         zone === displayTz ? "font-semibold" : "",
-                        index === tzHighlight ? "bg-gray-100" : "",
+                        index === tzHighlight ? "bg-gray-100/80 dark:bg-slate-800/60" : "",
                       ].join(" ")}
                       onClick={() => {
                         setDisplayTz(zone);
@@ -389,7 +389,7 @@ export function AdminCalendar({
         open={!!selectedEvent}
         onOpenChange={() => setSelectedEvent(null)}
       >
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg rounded-2xl border border-white/70 bg-white/95 shadow-2xl backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
           <DialogHeader>
             <DialogTitle>
               {selectedEvent?.type === "blocked"
@@ -399,7 +399,7 @@ export function AdminCalendar({
           </DialogHeader>
           {selectedEvent && (
             <div className="space-y-3 text-sm text-gray-700">
-              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+              <div className="rounded-xl border border-white/70 bg-white/80 px-3 py-2 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                 <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
                   Time
                 </p>
@@ -414,7 +414,7 @@ export function AdminCalendar({
 
               {selectedEvent.type === "appointment" ? (
                 <>
-                  <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                  <div className="rounded-xl border border-white/70 bg-white/80 px-3 py-2 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                     <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
                       Meeting
                     </p>
@@ -431,7 +431,7 @@ export function AdminCalendar({
                     )}
                   </div>
 
-                  <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                  <div className="rounded-xl border border-white/70 bg-white/80 px-3 py-2 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                     <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
                       Staff
                     </p>
@@ -456,7 +456,7 @@ export function AdminCalendar({
                     )}
                   </div>
 
-                  <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                  <div className="rounded-xl border border-white/70 bg-white/80 px-3 py-2 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                     <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
                       Booker
                     </p>
@@ -493,7 +493,7 @@ export function AdminCalendar({
                   </div>
 
                   {showBookerDetails && (
-                    <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                    <div className="rounded-xl border border-white/70 bg-white/80 px-3 py-2 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                       <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
                         Booker details
                       </p>
@@ -520,12 +520,12 @@ export function AdminCalendar({
 
                   {selectedEvent.mode === "phone" &&
                     selectedEvent.userPhone && (
-                      <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                      <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/80 px-3 py-2 text-xs text-emerald-800">
                         Phone call · Tap the number to call.
                       </div>
                     )}
                   {selectedEvent.meetingLink && (
-                    <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                    <div className="rounded-xl border border-white/70 bg-white/80 px-3 py-2 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                       <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
                         Meeting link
                       </p>
@@ -539,7 +539,7 @@ export function AdminCalendar({
                       </a>
                     </div>
                   )}
-                  <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                  <div className="rounded-xl border border-white/70 bg-white/80 px-3 py-2 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                     <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
                       Add to calendar
                     </p>
@@ -573,23 +573,23 @@ export function AdminCalendar({
                     </a>
                   </div>
                   {selectedEvent.mode === "google_meet" && (
-                    <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                    <div className="rounded-xl border border-white/70 bg-white/80 px-3 py-2 text-xs text-gray-600 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-300">
                       Google Meet · Link available above.
                     </div>
                   )}
                   {selectedEvent.mode === "zoom" && (
-                    <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                    <div className="rounded-xl border border-white/70 bg-white/80 px-3 py-2 text-xs text-gray-600 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-300">
                       Zoom · Link available above.
                     </div>
                   )}
                   {selectedEvent.mode === "in_person" && (
-                    <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                    <div className="rounded-xl border border-white/70 bg-white/80 px-3 py-2 text-xs text-gray-600 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-300">
                       In-person meeting.
                     </div>
                   )}
                 </>
               ) : (
-                <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                <div className="rounded-xl border border-white/70 bg-white/80 px-3 py-2 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                   <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
                     Reason
                   </p>

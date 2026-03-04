@@ -287,17 +287,17 @@ export function SchedulingCalendar(props: {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <div className="text-sm opacity-80">
+        <div className="text-sm text-gray-600 dark:text-gray-300">
           {loading ? "Loading calendar..." : `Loaded ${events.length} events`}
         </div>
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <label className="text-gray-600">Display timezone</label>
+          <label className="text-gray-600 dark:text-gray-300">Display timezone</label>
           <div className="relative" ref={tzRef}>
             <button
               type="button"
-              className="flex h-9 min-w-[260px] items-center justify-between gap-3 rounded-md border border-input bg-white px-3 text-sm leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="flex h-10 min-w-[260px] items-center justify-between gap-3 rounded-xl border border-white/70 bg-white/80 px-3 text-sm leading-6 shadow-sm backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/70"
               onClick={() => setTzOpen((prev) => !prev)}
               onKeyDown={handleTzKeyDown}
               aria-haspopup="listbox"
@@ -307,9 +307,9 @@ export function SchedulingCalendar(props: {
               <span aria-hidden>▾</span>
             </button>
             {tzOpen && (
-              <div className="absolute z-20 mt-2 w-[280px] rounded-md border border-gray-200 bg-white p-2 shadow-lg">
+              <div className="absolute z-20 mt-2 w-[280px] rounded-xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
                 <input
-                  className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="h-9 w-full rounded-lg border border-white/70 bg-transparent px-3 text-sm leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60"
                   value={tzQuery}
                   onChange={(e) => setTzQuery(e.target.value)}
                   placeholder="Search timezone"
@@ -318,10 +318,10 @@ export function SchedulingCalendar(props: {
                 />
                 <div
                   ref={tzListRef}
-                  className="mt-2 max-h-60 overflow-auto rounded-md border border-gray-100"
+                  className="mt-2 max-h-60 overflow-auto rounded-lg border border-gray-100/80 dark:border-slate-700/60"
                 >
                   {filteredTimezones.length === 0 ? (
-                    <div className="px-3 py-2 text-sm text-gray-500">
+                    <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
                       No matches
                     </div>
                   ) : (
@@ -331,9 +331,9 @@ export function SchedulingCalendar(props: {
                         type="button"
                         data-tz-index={index}
                         className={[
-                          "w-full px-3 py-2 text-left text-sm hover:bg-gray-100",
+                          "w-full px-3 py-2 text-left text-sm hover:bg-gray-100/80 dark:hover:bg-slate-800/60",
                           zone === displayTz ? "font-semibold" : "",
-                          index === tzHighlight ? "bg-gray-100" : "",
+                          index === tzHighlight ? "bg-gray-100/80 dark:bg-slate-800/60" : "",
                         ].join(" ")}
                         onClick={() => {
                           setDisplayTz(zone);
@@ -351,13 +351,13 @@ export function SchedulingCalendar(props: {
           </div>
         </div>
         {selectedInfo ? (
-          <div className="text-sm px-3 py-1 rounded-md border">
+          <div className="text-sm px-3 py-1 rounded-full border border-white/70 bg-white/80 text-gray-700 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200">
             {selectedInfo}
           </div>
         ) : null}
       </div>
 
-      <div className="rounded-xl border p-2">
+      <div className="rounded-3xl border border-white/70 bg-white/90 p-3 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
         <FullCalendar
           plugins={[timeGridPlugin, dayGridPlugin, interactionPlugin]}
           initialView="timeGridWeek"

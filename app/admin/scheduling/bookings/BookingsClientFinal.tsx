@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import MrtCardTable from "@/components/scheduling/MrtCardTable";
 import FilterBar from "@/components/scheduling/FilterBar";
-import Badge, { BookingStatus } from "@/components/scheduling/Badge";
+import Badge, { BookingStatus, PaymentStatus, getStatusDisplay } from "@/components/scheduling/Badge";
 import ProductHero from "@/components/scheduling/ProductHero";
-import type { MRT_ColumnDef } from "material-react-table";
+import type { MRT_ColumnDef, MRT_PaginationState } from "material-react-table";
 
 type Props = {
     orgId: string;
@@ -72,6 +72,46 @@ function formatMoney(priceCents?: number | null, currency?: string | null) {
     } catch {
         return `${(priceCents / 100).toFixed(2)} ${currency}`;
     }
+}
+
+function formatKeyLabel(value: string) {
+    return value
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function formatModeLabel(mode: string) {
+    switch (mode) {
+        case "google_meet":
+            return "Google Meet";
+        case "zoom":
+            return "Zoom";
+        case "phone":
+            return "Phone";
+        case "in_person":
+            return "In person";
+        default:
+            return formatKeyLabel(mode);
+    }
+}
+
+function normalizePaymentStatus(
+    status: string | null | undefined,
+    requiresPayment: boolean | null | undefined
+): PaymentStatus {
+    if (status === "paid" || status === "unpaid" || status === "not_required") {
+        return status;
+    }
+    return requiresPayment ? "unpaid" : "not_required";
+}
+
+function resolvePagination(
+    updaterOrValue: MRT_PaginationState | ((prev: MRT_PaginationState) => MRT_PaginationState),
+    prev: MRT_PaginationState
+) {
+    return typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue;
 }
 
 export default function BookingsClient({ orgId, tz }: Props) {
@@ -226,21 +266,41 @@ export default function BookingsClient({ orgId, tz }: Props) {
         });
     }, [items, statusFilter, modeFilter, meetingTypeFilter, staffFilter, startDate, endDate, debouncedQuery]);
 
+    const pagination = useMemo(
+        () => ({ pageIndex: page - 1, pageSize }),
+        [page, pageSize]
+    );
+
+    const meetingTypeLookup = useMemo(() => {
+        return new Map(meetingTypes.map((type) => [type.id, type.title]));
+    }, [meetingTypes]);
+
+    const staffLookup = useMemo(() => {
+        return new Map(
+            staffUsers.map((staff) => [staff.id, staff.name || staff.email])
+        );
+    }, [staffUsers]);
+
     const columns = useMemo<MRT_ColumnDef<Booking>[]>(() => [
         {
             accessorKey: "meetingTypeKey",
             header: "Meeting",
             Cell: ({ row }) => (
-                <div>
+                <div className="space-y-2">
                     <div className="font-semibold text-gray-900 dark:text-white">
-                        {row.original.meetingTypeKey ?? "Meeting"}
+                        {meetingTypeLookup.get(row.original.meetingTypeId) ??
+                            formatKeyLabel(row.original.meetingTypeKey ?? "Meeting")}
                     </div>
-                    <div className="text-xs text-gray-500">{row.original.mode}</div>
-                    {row.original.durationMin && (
-                        <div className="mt-1 text-xs text-gray-400">
-                            {row.original.durationMin} min
-                        </div>
-                    )}
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="secondary" className="uppercase tracking-wide">
+                            {formatModeLabel(row.original.mode)}
+                        </Badge>
+                        {row.original.durationMin && (
+                            <span className="text-xs text-gray-500">
+                                {row.original.durationMin} min
+                            </span>
+                        )}
+                    </div>
                 </div>
             ),
         },
@@ -259,8 +319,13 @@ export default function BookingsClient({ orgId, tz }: Props) {
                         : new Date(row.original.endAtUtc)
                 ).setZone(timezoneDisplay);
                 return (
-                    <div className="text-xs text-gray-600 dark:text-gray-300">
-                        {start.toFormat("ccc, LLL dd · HH:mm")} – {end.toFormat("HH:mm")}
+                    <div className="space-y-1">
+                        <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                            {start.toFormat("ccc, LLL dd")}
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-300">
+                            {start.toFormat("HH:mm")} – {end.toFormat("HH:mm")} · {timezoneDisplay}
+                        </div>
                     </div>
                 );
             },
@@ -271,27 +336,25 @@ export default function BookingsClient({ orgId, tz }: Props) {
             Cell: ({ row }) => {
                 const displayName = row.original.userFullName || row.original.userName || "Booking user";
                 return (
-                    <div>
+                    <div className="space-y-1">
                         <div className="font-semibold text-gray-900 dark:text-white">
                             {displayName}
                         </div>
                         {row.original.userEmail && (
                             <a
-                                className="text-blue-600 hover:underline text-xs"
+                                className="text-xs text-blue-600 hover:underline"
                                 href={`mailto:${row.original.userEmail}`}
                             >
                                 {row.original.userEmail}
                             </a>
                         )}
                         {row.original.userPhone && (
-                            <div className="mt-1">
-                                <a
-                                    className="text-blue-600 hover:underline text-xs"
-                                    href={`tel:${row.original.userPhone}`}
-                                >
-                                    {row.original.userPhone}
-                                </a>
-                            </div>
+                            <a
+                                className="text-xs text-blue-600 hover:underline"
+                                href={`tel:${row.original.userPhone}`}
+                            >
+                                {row.original.userPhone}
+                            </a>
                         )}
                     </div>
                 );
@@ -302,7 +365,9 @@ export default function BookingsClient({ orgId, tz }: Props) {
             header: "Staff",
             Cell: ({ row }) => (
                 <div className="text-xs text-gray-600 dark:text-gray-300">
-                    {row.original.staffUserId ?? "Unassigned"}
+                    {row.original.staffUserId
+                        ? staffLookup.get(row.original.staffUserId) ?? row.original.staffUserId
+                        : "Unassigned"}
                 </div>
             ),
         },
@@ -311,19 +376,21 @@ export default function BookingsClient({ orgId, tz }: Props) {
             header: "Payment",
             Cell: ({ row }) => {
                 const priceLabel = formatMoney(row.original.priceCents, row.original.currency);
-                const paymentStatus = row.original.paymentStatus ?? "not_required";
-                const paymentRequired = Boolean(row.original.requiresPayment);
-                const paymentLabel = paymentRequired
-                    ? `${paymentStatus}${priceLabel ? ` · ${priceLabel}` : ""}`
-                    : "Not required";
+                const paymentStatus = normalizePaymentStatus(
+                    row.original.paymentStatus ?? null,
+                    row.original.requiresPayment
+                );
                 return (
-                    <div>
-                        <div className="font-semibold text-gray-800 dark:text-gray-200 text-xs">
-                            {paymentLabel}
+                    <div className="space-y-2">
+                        <Badge variant={paymentStatus}>
+                            {getStatusDisplay(paymentStatus)}
+                        </Badge>
+                        <div className="text-xs text-gray-600 dark:text-gray-300">
+                            {priceLabel ? priceLabel : "—"}
                         </div>
                         {row.original.paymentPolicy && (
-                            <div className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                Policy: {row.original.paymentPolicy}
+                            <div className="text-[11px] text-gray-500 dark:text-gray-400">
+                                Policy: {formatKeyLabel(row.original.paymentPolicy)}
                             </div>
                         )}
                     </div>
@@ -335,7 +402,7 @@ export default function BookingsClient({ orgId, tz }: Props) {
             header: "Status",
             Cell: ({ row }) => (
                 <Badge variant={row.original.status as BookingStatus}>
-                    {row.original.status}
+                    {getStatusDisplay(row.original.status as BookingStatus)}
                 </Badge>
             ),
         },
@@ -350,29 +417,10 @@ export default function BookingsClient({ orgId, tz }: Props) {
                 </Button>
             ),
         },
-    ], [timezoneDisplay]);
-
-    if (!orgId) {
-        return (
-            <div className="mx-auto w-full max-w-6xl px-4 py-12">
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
-                    No organization found for this account.
-                </div>
-            </div>
-        );
-    }
+    ], [timezoneDisplay, meetingTypeLookup, staffLookup]);
 
     return (
         <div className="space-y-8">
-            <div className="flex justify-end">
-                <Link
-                    href="/admin/scheduling"
-                    className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500 hover:underline dark:text-gray-400"
-                >
-                    Back to dashboard
-                </Link>
-            </div>
-
             <ProductHero
                 eyebrow="Bookings"
                 title="Booking approvals"
@@ -386,7 +434,7 @@ export default function BookingsClient({ orgId, tz }: Props) {
 
             <FilterBar>
                 <select
-                    className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value as any)}
                 >
@@ -398,7 +446,7 @@ export default function BookingsClient({ orgId, tz }: Props) {
                     <option value="completed">Completed</option>
                 </select>
                 <select
-                    className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
                     value={modeFilter}
                     onChange={(e) => setModeFilter(e.target.value)}
                 >
@@ -409,7 +457,7 @@ export default function BookingsClient({ orgId, tz }: Props) {
                     <option value="in_person">In Person</option>
                 </select>
                 <select
-                    className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
                     value={meetingTypeFilter}
                     onChange={(e) => setMeetingTypeFilter(e.target.value)}
                 >
@@ -421,7 +469,7 @@ export default function BookingsClient({ orgId, tz }: Props) {
                     ))}
                 </select>
                 <select
-                    className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
                     value={staffFilter}
                     onChange={(e) => setStaffFilter(e.target.value)}
                 >
@@ -434,32 +482,22 @@ export default function BookingsClient({ orgId, tz }: Props) {
                 </select>
                 <Input
                     type="date"
-                    className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                 />
                 <Input
                     type="date"
-                    className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                 />
                 <Input
-                    className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search name, email, phone..."
                 />
-                <select
-                    className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
-                    value={pageSize}
-                    onChange={(e) => setPageSize(Number(e.target.value))}
-                >
-                    <option value={10}>10</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                </select>
-                <span className="text-xs text-gray-500">Total: {total}</span>
             </FilterBar>
 
             {loading && (
@@ -469,7 +507,7 @@ export default function BookingsClient({ orgId, tz }: Props) {
             )}
 
             {notice && (
-                <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                <div className="mt-6 rounded-lg border border-emerald-200/70 bg-emerald-50/80 px-3 py-2 text-sm text-emerald-700 backdrop-blur">
                     {notice}
                 </div>
             )}
@@ -489,17 +527,21 @@ export default function BookingsClient({ orgId, tz }: Props) {
                     enablePagination: true,
                     enableSorting: true,
                     enableFilters: true,
-                    initialState: {
-                        pagination: {
-                            pageIndex: page - 1,
-                            pageSize,
-                        },
+                    manualPagination: true,
+                    rowCount: total,
+                    state: {
+                        isLoading: loading,
+                        pagination,
                     },
-                    onPaginationChange: (updater) => {
-                        const newPagination = typeof updater === 'function'
-                            ? updater({ pageIndex: page - 1, pageSize })
-                            : updater;
-                        setPage(newPagination.pageIndex + 1);
+                    onPaginationChange: (updaterOrValue) => {
+                        const next = resolvePagination(updaterOrValue, pagination);
+                        if (next.pageSize !== pageSize) {
+                            setPageSize(next.pageSize);
+                            setPage(1);
+                        }
+                        if (next.pageIndex !== pagination.pageIndex) {
+                            setPage(next.pageIndex + 1);
+                        }
                     },
                     renderEmptyRowsFallback: () => (
                         <div className="p-4 text-sm text-gray-600">

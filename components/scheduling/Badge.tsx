@@ -101,7 +101,7 @@ export default function Badge({
         <span
             className={cn(
                 // Base styles
-                "inline-flex items-center rounded-full border font-semibold",
+                "inline-flex items-center rounded-full border font-semibold shadow-sm backdrop-blur",
                 config.bg,
                 config.text,
                 config.border,

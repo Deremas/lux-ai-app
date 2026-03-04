@@ -2,11 +2,9 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { DateTime } from "luxon";
 import type { MRT_ColumnDef, MRT_PaginationState } from "material-react-table";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import MrtCardTable from "@/components/scheduling/MrtCardTable";
 import FilterBar from "@/components/scheduling/FilterBar";
@@ -16,7 +14,6 @@ type Props = {
   orgId: string;
   orgName: string | null;
   tz: string;
-  returnTo: string;
 };
 
 type AuditRow = {
@@ -52,7 +49,7 @@ function resolvePagination(
   return typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue;
 }
 
-export default function AuditLogClient({ orgId, orgName, tz, returnTo }: Props) {
+export default function AuditLogClient({ orgId, orgName, tz }: Props) {
   const [items, setItems] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -184,24 +181,8 @@ export default function AuditLogClient({ orgId, orgName, tz, returnTo }: Props) 
     [tz]
   );
 
-  if (!orgId) {
-    return (
-      <div className="space-y-8">
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
-          No org found for this account.
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-8">
-      <div className="flex justify-end">
-        <Button asChild variant="outline" size="sm">
-          <Link href={returnTo}>Back to dashboard</Link>
-        </Button>
-      </div>
-
       <ProductHero
         eyebrow="Scheduling Admin"
         title="Audit log"
@@ -218,7 +199,7 @@ export default function AuditLogClient({ orgId, orgName, tz, returnTo }: Props) 
         />
 
         <select
-          className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+          className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
           value={entityType}
           onChange={(e) => setEntityType(e.target.value)}
         >
@@ -231,7 +212,7 @@ export default function AuditLogClient({ orgId, orgName, tz, returnTo }: Props) 
         </select>
 
         <select
-          className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+          className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
           value={action}
           onChange={(e) => setAction(e.target.value)}
         >
@@ -252,18 +233,6 @@ export default function AuditLogClient({ orgId, orgName, tz, returnTo }: Props) 
 
         <Input type="date" className="h-9" value={from} onChange={(e) => setFrom(e.target.value)} />
         <Input type="date" className="h-9" value={to} onChange={(e) => setTo(e.target.value)} />
-
-        <select
-          className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
-          value={pageSize}
-          onChange={(e) => setPageSize(Number(e.target.value))}
-        >
-          {[10, 25, 50].map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
       </FilterBar>
 
       {error && (
@@ -300,13 +269,13 @@ export default function AuditLogClient({ orgId, orgName, tz, returnTo }: Props) 
             <div className="grid gap-4 p-4 md:grid-cols-2">
               <div>
                 <p className="text-xs font-semibold uppercase text-gray-500">Before</p>
-                <pre className="mt-2 max-h-64 overflow-auto rounded-lg border border-gray-200 bg-white p-3 text-xs text-gray-700">
+                <pre className="mt-2 max-h-64 overflow-auto rounded-lg border border-white/70 bg-white/80 p-3 text-xs text-gray-700 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200">
                   {jsonString(row.original.before)}
                 </pre>
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase text-gray-500">After</p>
-                <pre className="mt-2 max-h-64 overflow-auto rounded-lg border border-gray-200 bg-white p-3 text-xs text-gray-700">
+                <pre className="mt-2 max-h-64 overflow-auto rounded-lg border border-white/70 bg-white/80 p-3 text-xs text-gray-700 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200">
                   {jsonString(row.original.after)}
                 </pre>
               </div>

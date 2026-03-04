@@ -299,7 +299,7 @@ export default function PaymentSuccessPage() {
           {status === "done" && (
             <>
               <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                   <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
                     Meeting
                   </p>
@@ -321,7 +321,7 @@ export default function PaymentSuccessPage() {
                     </a>
                   )}
                 </div>
-                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                   <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
                     Time
                   </p>
@@ -394,9 +394,6 @@ export default function PaymentSuccessPage() {
           )}
 
           <div className="mt-8 flex flex-wrap items-center gap-2">
-            <Button asChild>
-              <Link href="/scheduling">Back to scheduling</Link>
-            </Button>
             <Button variant="outline" asChild>
               <Link href="/scheduling/my">My bookings</Link>
             </Button>

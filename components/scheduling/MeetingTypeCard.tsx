@@ -29,13 +29,13 @@ export default function MeetingTypeCard({
             onClick={onClick}
             className={cn(
                 // Base card styling
-                "w-full rounded-2xl border bg-white p-6 text-left shadow-md transition-all duration-200",
-                "hover:shadow-lg hover:-translate-y-1",
+                "w-full rounded-3xl border border-white/70 bg-white/85 p-6 text-left shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] transition-all duration-200 backdrop-blur",
+                "hover:-translate-y-1 hover:shadow-[0_24px_60px_-40px_rgba(15,23,42,0.45)]",
                 "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2",
-                "dark:border-slate-700 dark:bg-slate-900",
+                "dark:border-slate-700/60 dark:bg-slate-900/70",
                 // Active state
                 isActive &&
-                "ring-4 ring-primary-200 bg-primary-50 dark:bg-primary-900/20 dark:ring-primary-800",
+                "ring-4 ring-primary-200/70 bg-gradient-to-br from-primary-500/15 to-white dark:from-primary-900/20 dark:to-slate-900/70 dark:ring-primary-800/60",
                 className
             )}
         >
