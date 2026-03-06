@@ -213,9 +213,9 @@ export default function SchedulingShell({
         collapsible="icon"
         className="border-r border-sidebar-border bg-sidebar/95 backdrop-blur top-[var(--site-header-height)] h-[calc(100svh-var(--site-header-height))] overscroll-y-contain md:!sticky md:!top-[var(--site-header-height)] md:!bottom-auto md:!inset-auto md:!h-[calc(100svh-var(--site-header-height))] shadow-[0_22px_60px_-45px_rgba(15,23,42,0.4)]"
       >
-        <SidebarHeader className="gap-3 border-b border-sidebar-border px-3 py-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
+        <SidebarHeader className="gap-3 border-b border-sidebar-border px-3 py-4 group-data-[collapsible=icon]:gap-2 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-3">
+            <div className="flex items-center justify-between gap-3 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-2">
+              <div className="flex items-center gap-3 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-2">
                 <span
                   className={cn(
                     "flex h-9 w-9 items-center justify-center rounded-xl border border-sidebar-border bg-white/80 text-primary-700 shadow-sm backdrop-blur dark:bg-slate-900/70 dark:text-slate-200",
@@ -237,7 +237,7 @@ export default function SchedulingShell({
           </div>
         </SidebarHeader>
         <SidebarContent
-          className="touch-pan-y overscroll-y-contain scrollbar-gutter-stable group-data-[collapsible=icon]:overflow-auto"
+          className="touch-pan-y overscroll-y-contain scrollbar-gutter-stable"
           onWheel={handleSidebarWheel}
           onWheelCapture={handleSidebarWheel}
           onTouchMove={handleSidebarTouchMove}

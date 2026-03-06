@@ -110,6 +110,11 @@ async function ensureOrgSettings(orgId: string) {
       defaultLocale: FALLBACK_LOCALE,
       defaultTz: FALLBACK_TZ,
       notifyEmails: [],
+      notifyWhatsapp: [],
+      notifyEmailEnabled: true,
+      notifyWhatsappEnabled: false,
+      notifyCalendarEnabled: false,
+      allowedCurrencies: [],
       defaultPaymentCents: Number.isFinite(DEFAULT_PAYMENT_CENTS)
         ? DEFAULT_PAYMENT_CENTS
         : null,
@@ -186,6 +191,11 @@ async function autoProvisionOrgForUser(
           id: settingsId,
           orgId: org.id,
           notifyEmails: [],
+          notifyWhatsapp: [],
+          notifyEmailEnabled: true,
+          notifyWhatsappEnabled: false,
+          notifyCalendarEnabled: false,
+          allowedCurrencies: [],
           approvalPolicy: "REQUIRES_APPROVAL",
           paymentPolicy: "FREE",
           defaultLocale: FALLBACK_LOCALE,

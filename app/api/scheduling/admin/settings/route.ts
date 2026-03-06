@@ -51,6 +51,24 @@ function cleanString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
+async function ensureSettingsArrays(orgId: string) {
+  await prisma.$executeRaw(
+    Prisma.sql`UPDATE "org_settings"
+      SET "notify_emails" = '{}'::text[]
+      WHERE "org_id" = ${orgId} AND "notify_emails" IS NULL`
+  );
+  await prisma.$executeRaw(
+    Prisma.sql`UPDATE "org_settings"
+      SET "notify_whatsapp" = '{}'::text[]
+      WHERE "org_id" = ${orgId} AND "notify_whatsapp" IS NULL`
+  );
+  await prisma.$executeRaw(
+    Prisma.sql`UPDATE "org_settings"
+      SET "allowed_currencies" = '{}'::text[]
+      WHERE "org_id" = ${orgId} AND "allowed_currencies" IS NULL`
+  );
+}
+
 function normalizeNotifyEmails(
   raw: string
 ): string[] | null | { error: string } {
@@ -176,9 +194,27 @@ export async function GET(req: Request) {
     );
   }
 
-  const row = await prisma.orgSettings.findFirst({
-    where: { orgId },
-  });
+  try {
+    await ensureSettingsArrays(orgId);
+  } catch (err) {
+    console.warn("[settings] failed to normalize org_settings arrays", err);
+  }
+
+  let row = null;
+  try {
+    row = await prisma.orgSettings.findFirst({
+      where: { orgId },
+    });
+  } catch (err) {
+    console.error("[settings] failed to load org settings", err);
+    return NextResponse.json(
+      {
+        error:
+          "Settings unavailable. Please run database migrations and reload.",
+      },
+      { status: 500 }
+    );
+  }
   const secretRow = await prisma.orgSecret.findFirst({ where: { orgId } });
 
   if (!row) {
