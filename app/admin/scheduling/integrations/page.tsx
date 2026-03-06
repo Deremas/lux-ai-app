@@ -1,4 +1,4 @@
-import NotificationsSettingsClient from "./NotificationsSettingsClient";
+import IntegrationsClient from "./IntegrationsClient";
 import { getServerSession } from "next-auth/next";
 import ProductShell from "@/components/scheduling/ProductShell";
 
@@ -20,17 +20,17 @@ async function resolveOrgId() {
   return await getFirstOrgContext();
 }
 
-export default async function SchedulingNotificationsPage() {
+export default async function SchedulingIntegrationsPage() {
   const orgContext = await resolveOrgId();
 
   if (orgContext?.orgId) {
-    const returnTo = "/admin/scheduling/notifications";
+    const returnTo = "/admin/scheduling/integrations";
     await requireAdminOrStaffForOrg(orgContext.orgId, returnTo);
   }
 
   return (
     <ProductShell>
-      <NotificationsSettingsClient orgId={orgContext?.orgId ?? ""} />
+      <IntegrationsClient orgId={orgContext?.orgId ?? ""} />
     </ProductShell>
   );
 }

@@ -135,7 +135,7 @@ export default function PaymentSuccessPage() {
       const verifyRes = await fetch("/api/scheduling/payment/verify", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ sessionId }),
+        body: JSON.stringify({ sessionId, orgId: parsed?.orgId ?? "" }),
       });
       const verifyJson = await verifyRes.json().catch(() => ({}));
       if (!verifyRes.ok || !verifyJson?.paid) {

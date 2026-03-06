@@ -192,6 +192,12 @@ export async function GET(req: Request) {
   const twilioFromConfigured = hasSecret(secretRow?.twilioWhatsappFromEnc);
   const telnyxApiKeyConfigured = hasSecret(secretRow?.telnyxApiKeyEnc);
   const telnyxFromConfigured = hasSecret(secretRow?.telnyxWhatsappFromEnc);
+  const stripeSecretConfigured =
+    hasSecret(secretRow?.stripeSecretKeyEnc) || Boolean(process.env.STRIPE_SECRET_KEY);
+  const stripePublishableConfigured = hasSecret(secretRow?.stripePublishableKeyEnc);
+  const stripeWebhookConfigured =
+    hasSecret(secretRow?.stripeWebhookSecretEnc) ||
+    Boolean(process.env.STRIPE_WEBHOOK_SECRET);
 
   return NextResponse.json(
     {
@@ -204,7 +210,7 @@ export async function GET(req: Request) {
           ? JSON.stringify(row.workingHours, null, 2)
           : null,
       },
-      stripeConfigured: Boolean(process.env.STRIPE_SECRET_KEY),
+      stripeConfigured: stripeSecretConfigured,
       secretStatus: {
         metaTokenConfigured,
         metaPhoneConfigured,
@@ -217,6 +223,9 @@ export async function GET(req: Request) {
         telnyxApiKeyConfigured,
         telnyxFromConfigured,
         telnyxConfigured: telnyxApiKeyConfigured && telnyxFromConfigured,
+        stripeSecretConfigured,
+        stripePublishableConfigured,
+        stripeWebhookConfigured,
       },
     },
     { status: 200 }
@@ -268,8 +277,12 @@ export async function POST(req: Request) {
   const paymentPolicy = body.paymentPolicy;
   const defaultTz = cleanString(body.defaultTz);
   const defaultLocale = body.defaultLocale;
-  const notifyRaw = cleanString(body.notifyEmails);
-  const notifyWhatsappRaw = cleanString(body.notifyWhatsapp);
+  const hasNotifyEmails = Object.prototype.hasOwnProperty.call(body, "notifyEmails");
+  const hasNotifyWhatsapp = Object.prototype.hasOwnProperty.call(body, "notifyWhatsapp");
+  const notifyRaw = hasNotifyEmails ? cleanString(body.notifyEmails) : undefined;
+  const notifyWhatsappRaw = hasNotifyWhatsapp
+    ? cleanString(body.notifyWhatsapp)
+    : undefined;
   const notifyEmailEnabled = body.notifyEmailEnabled;
   const notifyWhatsappEnabled = body.notifyWhatsappEnabled;
   const notifyCalendarEnabled = body.notifyCalendarEnabled;
@@ -336,15 +349,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid default currency" }, { status: 400 });
   }
 
-  const normalizedNotify = normalizeNotifyEmails(notifyRaw);
-  if (normalizedNotify && !Array.isArray(normalizedNotify)) {
+  const normalizedNotify = hasNotifyEmails
+    ? normalizeNotifyEmails(notifyRaw ?? "")
+    : null;
+  if (hasNotifyEmails && normalizedNotify && !Array.isArray(normalizedNotify)) {
     return NextResponse.json({ error: normalizedNotify.error }, { status: 400 });
   }
+  const notifyEmailsValue = hasNotifyEmails
+    ? Array.isArray(normalizedNotify)
+      ? normalizedNotify
+      : []
+    : undefined;
 
-  const normalizedWhatsApp = normalizeNotifyPhones(notifyWhatsappRaw);
-  if (normalizedWhatsApp && !Array.isArray(normalizedWhatsApp)) {
+  const normalizedWhatsApp = hasNotifyWhatsapp
+    ? normalizeNotifyPhones(notifyWhatsappRaw ?? "")
+    : null;
+  if (hasNotifyWhatsapp && normalizedWhatsApp && !Array.isArray(normalizedWhatsApp)) {
     return NextResponse.json({ error: normalizedWhatsApp.error }, { status: 400 });
   }
+  const notifyWhatsappValue = hasNotifyWhatsapp
+    ? Array.isArray(normalizedWhatsApp)
+      ? normalizedWhatsApp
+      : []
+    : undefined;
 
   const normalizedCurrencies = normalizeAllowedCurrencies(allowedCurrenciesRaw);
   if (normalizedCurrencies && !Array.isArray(normalizedCurrencies)) {
@@ -409,8 +436,8 @@ export async function POST(req: Request) {
     data: {
       approvalPolicy: approvalPolicy ?? undefined,
       paymentPolicy: paymentPolicy ?? undefined,
-      notifyEmails: normalizedNotify ?? [],
-      notifyWhatsapp: normalizedWhatsApp ?? [],
+      notifyEmails: notifyEmailsValue,
+      notifyWhatsapp: notifyWhatsappValue,
       notifyEmailEnabled:
         typeof notifyEmailEnabled === "boolean" ? notifyEmailEnabled : undefined,
       notifyWhatsappEnabled:
@@ -475,6 +502,12 @@ export async function POST(req: Request) {
   const twilioFromConfigured = hasSecret(secretRow?.twilioWhatsappFromEnc);
   const telnyxApiKeyConfigured = hasSecret(secretRow?.telnyxApiKeyEnc);
   const telnyxFromConfigured = hasSecret(secretRow?.telnyxWhatsappFromEnc);
+  const stripeSecretConfigured =
+    hasSecret(secretRow?.stripeSecretKeyEnc) || Boolean(process.env.STRIPE_SECRET_KEY);
+  const stripePublishableConfigured = hasSecret(secretRow?.stripePublishableKeyEnc);
+  const stripeWebhookConfigured =
+    hasSecret(secretRow?.stripeWebhookSecretEnc) ||
+    Boolean(process.env.STRIPE_WEBHOOK_SECRET);
   return NextResponse.json(
     {
       settings: row
@@ -488,7 +521,7 @@ export async function POST(req: Request) {
               : null,
           }
         : null,
-      stripeConfigured: Boolean(process.env.STRIPE_SECRET_KEY),
+      stripeConfigured: stripeSecretConfigured,
       secretStatus: {
         metaTokenConfigured,
         metaPhoneConfigured,
@@ -501,6 +534,9 @@ export async function POST(req: Request) {
         telnyxApiKeyConfigured,
         telnyxFromConfigured,
         telnyxConfigured: telnyxApiKeyConfigured && telnyxFromConfigured,
+        stripeSecretConfigured,
+        stripePublishableConfigured,
+        stripeWebhookConfigured,
       },
     },
     { status: 200 }

@@ -58,6 +58,14 @@ function formatMoney(priceCents?: number | null, currency?: string | null) {
   }
 }
 
+function formatKeyLabel(value: string) {
+  return value
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
   const { status, data: session } = useSession();
   const [items, setItems] = useState<Booking[]>([]);
@@ -382,7 +390,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
         accessorKey: "meetingTypeKey",
         Cell: ({ row }) => (
           <div className="text-sm font-semibold text-gray-900">
-            {(row.original.meetingTypeKey ?? "Meeting") +
+            {formatKeyLabel(row.original.meetingTypeKey ?? "Meeting") +
               " · " +
               row.original.mode}
           </div>
@@ -530,7 +538,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
                       </p>
                       <Link
                         className="text-xs text-blue-600 hover:underline"
-                        href={buildLink("/admin/scheduling/notifications")}
+                        href={buildLink("/admin/scheduling/notifications/logs")}
                         onClick={() => setNotifOpen(false)}
                       >
                         View all
@@ -597,7 +605,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
                               />
                               <div className="flex-1">
                                 <div className="font-semibold">
-                                  {item.meetingTypeKey ?? "Meeting"} ·{" "}
+                                  {formatKeyLabel(item.meetingTypeKey ?? "Meeting")} ·{" "}
                                   {item.templateKey ?? "notification"}
                                 </div>
                                 <div className="text-gray-500">
@@ -719,7 +727,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
                   <>
                     <p>
                       <span className="font-semibold">Meeting:</span>{" "}
-                      {selectedDetail.meetingTypeKey ?? "Meeting"} ·{" "}
+                      {formatKeyLabel(selectedDetail.meetingTypeKey ?? "Meeting")} ·{" "}
                       {selectedDetail.mode ?? "mode"}
                     </p>
                     <p>

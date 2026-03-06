@@ -5,7 +5,9 @@ import {
   CalendarDays,
   ClipboardList,
   Clock,
+  CreditCard,
   LayoutDashboard,
+  Mail,
   Shield,
   Users,
   User,
@@ -17,6 +19,7 @@ export type SchedulingNavItem = {
   label: string;
   href: string;
   icon: typeof LayoutDashboard;
+  match?: "exact" | "prefix";
 };
 
 export type SchedulingNavSection = {
@@ -84,11 +87,6 @@ export const ADMIN_SCHEDULING_NAV: SchedulingNavSection[] = [
     label: "Operations",
     items: [
       {
-        label: "Notifications",
-        href: "/admin/scheduling/notifications",
-        icon: Bell,
-      },
-      {
         label: "Audit Log",
         href: "/admin/scheduling/audit",
         icon: Shield,
@@ -99,14 +97,72 @@ export const ADMIN_SCHEDULING_NAV: SchedulingNavSection[] = [
     label: "Settings",
     items: [
       {
-        label: "Settings",
+        label: "General",
         href: "/admin/scheduling/settings",
         icon: Settings,
+        match: "exact",
       },
       {
-        label: "Working Hours",
-        href: "/admin/scheduling/settings#working-hours",
-        icon: Clock,
+        label: "Booking policies",
+        href: "/admin/scheduling/settings/booking",
+        icon: ClipboardList,
+      },
+      {
+        label: "Payments",
+        href: "/admin/scheduling/settings/payments",
+        icon: CreditCard,
+      },
+    ],
+  },
+  {
+    label: "Integrations",
+    items: [
+      {
+        label: "Overview",
+        href: "/admin/scheduling/integrations",
+        icon: Settings,
+        match: "exact",
+      },
+      {
+        label: "Stripe",
+        href: "/admin/scheduling/integrations/stripe",
+        icon: CreditCard,
+      },
+      {
+        label: "WhatsApp",
+        href: "/admin/scheduling/integrations/whatsapp",
+        icon: Bell,
+      },
+      {
+        label: "Calendar",
+        href: "/admin/scheduling/integrations/calendar",
+        icon: CalendarDays,
+      },
+      {
+        label: "Email",
+        href: "/admin/scheduling/integrations/email",
+        icon: Mail,
+      },
+    ],
+  },
+  {
+    label: "Notifications",
+    items: [
+      {
+        label: "Settings",
+        href: "/admin/scheduling/notifications",
+        icon: Bell,
+        match: "exact",
+      },
+      {
+        label: "Templates",
+        href: "/admin/scheduling/notifications/templates",
+        icon: Mail,
+      },
+      {
+        label: "Logs",
+        href: "/admin/scheduling/notifications/logs",
+        icon: Bell,
       },
     ],
   },

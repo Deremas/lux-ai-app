@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { getStripeForOrg } from "@/lib/stripe";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
-import { isBodyTooLarge } from "@/lib/validation";
+import { isBodyTooLarge, isValidUuid } from "@/lib/validation";
 import { requireUserIdFromSession } from "@/lib/scheduling/authz";
 
 export async function POST(req: Request) {
@@ -23,8 +23,17 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const sessionId =
     typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
+  const orgId = typeof body?.orgId === "string" ? body.orgId.trim() : "";
   if (!sessionId) {
     return NextResponse.json({ error: "Missing sessionId" }, { status: 400 });
+  }
+  if (orgId && !isValidUuid(orgId)) {
+    return NextResponse.json({ error: "Invalid orgId" }, { status: 400 });
+  }
+
+  const stripe = await getStripeForOrg(orgId || null);
+  if (!stripe) {
+    return NextResponse.json({ error: "Stripe not configured" }, { status: 400 });
   }
 
   const session = await stripe.checkout.sessions.retrieve(sessionId);

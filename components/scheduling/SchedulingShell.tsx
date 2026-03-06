@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronRight,
   LogOut,
+  PanelLeft,
   Settings,
   Shield,
   User,
@@ -27,7 +28,6 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarSeparator,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
@@ -51,6 +51,44 @@ type SchedulingShellProps = {
 
 const BREAKPOINT_MOBILE = 768;
 const BREAKPOINT_DESKTOP = 1024;
+
+function MobileMenuBar() {
+  const { toggleSidebar, open, openMobile, isMobile } = useSidebar();
+  const isOpen = isMobile ? openMobile : open;
+
+  return (
+    <button
+      type="button"
+      onClick={toggleSidebar}
+      aria-expanded={isOpen}
+      className="flex h-12 w-full items-center gap-2 border-b border-white/70 bg-white/85 px-3 text-left shadow-sm backdrop-blur transition hover:bg-white/95 active:bg-white/90 dark:border-slate-700/60 dark:bg-slate-900/80 dark:hover:bg-slate-900/90"
+    >
+      <span className="flex h-7 w-7 items-center justify-center rounded-md text-slate-600 shadow-sm ring-1 ring-slate-200/70 dark:text-slate-200 dark:ring-slate-700/60">
+        <PanelLeft className="h-4 w-4" />
+      </span>
+      <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+        {isOpen ? "Close menu" : "Menu"}
+      </span>
+      <ChevronRight className="ml-auto h-4 w-4 text-slate-400 dark:text-slate-500" />
+    </button>
+  );
+}
+
+function SidebarToggleButton() {
+  const { toggleSidebar, open, openMobile, isMobile } = useSidebar();
+  const isOpen = isMobile ? openMobile : open;
+
+  return (
+    <button
+      type="button"
+      onClick={toggleSidebar}
+      aria-label={isOpen ? "Close menu" : "Open menu"}
+      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-sidebar-foreground/70 transition hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+    >
+      <PanelLeft className="h-4 w-4" />
+    </button>
+  );
+}
 
 export default function SchedulingShell({
   variant,
@@ -102,7 +140,11 @@ export default function SchedulingShell({
   }, []);
 
   const isActive = React.useCallback(
-    (href: string) => {
+    (item: { href: string; match?: "exact" | "prefix" }) => {
+      const { href, match } = item;
+      if (match === "exact") {
+        return pathname === href;
+      }
       if (href === "/scheduling" || href === "/admin/scheduling") {
         return pathname === href;
       }
@@ -172,23 +214,26 @@ export default function SchedulingShell({
         className="border-r border-sidebar-border bg-sidebar/95 backdrop-blur top-[var(--site-header-height)] h-[calc(100svh-var(--site-header-height))] overscroll-y-contain md:!sticky md:!top-[var(--site-header-height)] md:!bottom-auto md:!inset-auto md:!h-[calc(100svh-var(--site-header-height))] shadow-[0_22px_60px_-45px_rgba(15,23,42,0.4)]"
       >
         <SidebarHeader className="gap-3 border-b border-sidebar-border px-3 py-4">
-          <div className="flex items-center gap-3">
-            <span
-              className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-xl border border-sidebar-border bg-white/80 text-primary-700 shadow-sm backdrop-blur dark:bg-slate-900/70 dark:text-slate-200",
-                "group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8",
-              )}
-            >
-              <Calendar className="h-4 w-4" />
-            </span>
-            <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-              <span className="text-sm font-semibold text-sidebar-foreground">
-                Scheduling
-              </span>
-              <span className="text-xs text-sidebar-foreground/70">
-                {variant === "admin" ? "Admin" : "Client"}
-              </span>
-            </div>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span
+                  className={cn(
+                    "flex h-9 w-9 items-center justify-center rounded-xl border border-sidebar-border bg-white/80 text-primary-700 shadow-sm backdrop-blur dark:bg-slate-900/70 dark:text-slate-200",
+                    "group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8",
+                  )}
+                >
+                  <Calendar className="h-4 w-4" />
+                </span>
+                <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
+                  <span className="text-sm font-semibold text-sidebar-foreground">
+                    Scheduling
+                  </span>
+                  <span className="text-xs text-sidebar-foreground/70">
+                    {variant === "admin" ? "Admin" : "Client"}
+                  </span>
+                </div>
+              </div>
+            <SidebarToggleButton />
           </div>
         </SidebarHeader>
         <SidebarContent
@@ -209,7 +254,7 @@ export default function SchedulingShell({
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
                         asChild
-                        isActive={isActive(item.href)}
+                        isActive={isActive(item)}
                         tooltip={item.label}
                       >
                         <Link href={item.href}>
@@ -329,13 +374,7 @@ export default function SchedulingShell({
       </Sidebar>
       <SidebarInset className="min-w-0 w-0 flex-1 bg-transparent">
         <div className="fixed left-0 right-0 top-[var(--site-header-height)] z-40 lg:hidden">
-          <div className="flex h-12 items-center gap-2 border-b border-white/70 bg-white/85 px-3 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/80">
-            <SidebarTrigger className="shadow-sm" />
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Menu
-            </span>
-            <ChevronRight className="ml-auto h-4 w-4 text-slate-400 dark:text-slate-500" />
-          </div>
+          <MobileMenuBar />
         </div>
         <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden pb-12 pt-14 lg:pt-0">
           {children}

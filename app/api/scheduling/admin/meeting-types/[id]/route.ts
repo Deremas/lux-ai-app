@@ -55,7 +55,9 @@ function parseModes(input: unknown): MeetingMode[] {
 }
 
 function isValidKey(value: string) {
-  return /^[a-z0-9_]{3,60}$/.test(value);
+  if (value.length < 3 || value.length > 120) return false;
+  if (/[\r\n]/.test(value)) return false;
+  return true;
 }
 
 function parseLocale(input: unknown): Locale {
@@ -201,12 +203,15 @@ export async function PUT(
       );
     }
   }
-  if (!isStaff && body.key !== undefined) {
-    const key = cleanString(body.key);
-    if (!key || !isValidKey(key)) {
+  const rawTitle = cleanString(body.title);
+  const rawKey = cleanString(body.key);
+  const wantsTitleUpdate = !isStaff && ("title" in body || "key" in body);
+  const title = wantsTitleUpdate ? (rawTitle || rawKey) : "";
+  if (wantsTitleUpdate) {
+    if (!title || title.length < 3 || title.length > 120 || !isValidKey(title)) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
-    patch.key = key;
+    patch.key = title;
   }
 
   if (!isStaff && body.durationMin !== undefined) {
@@ -293,7 +298,6 @@ export async function PUT(
   });
 
   const locale = parseLocale(body.locale);
-  const title = cleanString(body.title);
   const subtitle = cleanString(body.subtitle);
   const description = cleanString(body.description);
 
@@ -410,11 +414,41 @@ export async function DELETE(
   });
   if (!authz.ok) return NextResponse.json({ error: authz.error }, { status: 403 });
 
-  try {
-    const before = await prisma.meetingType.findFirst({
+  const before = await prisma.meetingType.findFirst({
+    where: { orgId, id },
+    include: { modes: true, translations: true },
+  });
+  if (!before) {
+    return NextResponse.json({ error: "Meeting type not found" }, { status: 404 });
+  }
+
+  const hasAppointments = await prisma.appointment.findFirst({
+    where: { meetingTypeId: id },
+    select: { id: true },
+  });
+
+  if (hasAppointments) {
+    const archived = await prisma.meetingType.update({
+      where: { id },
+      data: { isActive: false, updatedAt: new Date() },
+    });
+    const after = await prisma.meetingType.findFirst({
       where: { orgId, id },
       include: { modes: true, translations: true },
     });
+    await writeAudit({
+      orgId,
+      actorUserId: who.userId,
+      entityType: "meeting_type",
+      entityId: id,
+      action: "archive",
+      before,
+      after: after ?? archived,
+    });
+    return NextResponse.json({ ok: true, archived: true });
+  }
+
+  try {
     await prisma.meetingType.delete({ where: { id } });
     await writeAudit({
       orgId,

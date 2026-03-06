@@ -10,6 +10,7 @@ import { requireUserIdFromSession } from "@/lib/scheduling/authz";
 import { getMeetingLink } from "@/lib/scheduling/meeting-link";
 import { pickStaffForSlot } from "@/lib/scheduling/auto-assignment";
 import { resolveOrgIdForRequest } from "@/lib/scheduling/org-resolver";
+import { getStripeForOrg } from "@/lib/stripe";
 import {
   isBodyTooLarge,
   isValidNotes,
@@ -51,11 +52,6 @@ function parseWorkingHours(raw: unknown): WorkingHours {
 
 function cleanString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
-}
-
-async function getStripe() {
-  const mod = await import("@/lib/stripe");
-  return mod.stripe;
 }
 
 type Body = {
@@ -120,7 +116,13 @@ export async function POST(req: Request) {
   let paymentSessionPaid = false;
 
   if (paymentSessionId) {
-    const stripe = await getStripe();
+    const stripe = await getStripeForOrg(orgId || null);
+    if (!stripe) {
+      return NextResponse.json(
+        { error: "Stripe is not configured for this organization." },
+        { status: 409 }
+      );
+    }
     stripeSession = await stripe.checkout.sessions.retrieve(paymentSessionId);
     const meta = stripeSession.metadata ?? {};
     const metaUserId = cleanString(meta.userId);

@@ -1,5 +1,6 @@
-import SettingsClient from "./SettingsClient";
+import GeneralSettingsClient from "./GeneralSettingsClient";
 import { getServerSession } from "next-auth/next";
+import { redirect } from "next/navigation";
 import ProductShell from "@/components/scheduling/ProductShell";
 
 import { authOptions } from "@/lib/auth";
@@ -14,6 +15,10 @@ function pickParam(value: string | string[] | undefined): string {
   return Array.isArray(value) ? value[0] ?? "" : value;
 }
 
+function normalizeTab(raw: string) {
+  return raw.toLowerCase().replace(/[^a-z]/g, "");
+}
+
 async function resolveOrgId() {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
@@ -25,11 +30,32 @@ async function resolveOrgId() {
   return await getFirstOrgContext();
 }
 
-export default async function SchedulingSettingsPage({
-  searchParams,
-}: {
-  searchParams?: {};
-}) {
+type PageProps = {
+  searchParams?: Record<string, string | string[] | undefined>;
+};
+
+export default async function SchedulingSettingsPage({ searchParams }: PageProps) {
+  const tabRaw =
+    pickParam(searchParams?.tab) ||
+    pickParam(searchParams?.section) ||
+    pickParam(searchParams?.view);
+  const tab = normalizeTab(tabRaw);
+  const redirects: Record<string, string> = {
+    booking: "/admin/scheduling/settings/booking",
+    bookingpolicies: "/admin/scheduling/settings/booking",
+    payments: "/admin/scheduling/settings/payments",
+    payment: "/admin/scheduling/settings/payments",
+    notifications: "/admin/scheduling/notifications",
+    notification: "/admin/scheduling/notifications",
+    integrations: "/admin/scheduling/integrations",
+    integration: "/admin/scheduling/integrations",
+    workinghours: "/admin/scheduling/settings#working-hours",
+    workinghour: "/admin/scheduling/settings#working-hours",
+    hours: "/admin/scheduling/settings#working-hours",
+  };
+  if (tab && redirects[tab]) {
+    redirect(redirects[tab]);
+  }
   const orgContext = await resolveOrgId();
 
   if (orgContext?.orgId) {
@@ -39,7 +65,7 @@ export default async function SchedulingSettingsPage({
 
   return (
     <ProductShell>
-      <SettingsClient orgId={orgContext?.orgId ?? ""} />
+      <GeneralSettingsClient orgId={orgContext?.orgId ?? ""} />
     </ProductShell>
   );
 }

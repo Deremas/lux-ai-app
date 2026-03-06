@@ -70,6 +70,14 @@ function formatPrice(priceCents: number | null, currency: string | null) {
   }
 }
 
+function formatKeyLabel(value: string) {
+  return value
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function resolvePagination(
   updaterOrValue: MRT_PaginationState | ((prev: MRT_PaginationState) => MRT_PaginationState),
   prev: MRT_PaginationState
@@ -77,8 +85,8 @@ function resolvePagination(
   return typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue;
 }
 
-export default function DashboardClient({ orgId, tz }: Props) {
-  const { data: session, status } = useSession();
+export default function DashboardClient({ orgId }: Props) {
+  const { status } = useSession();
   const [items, setItems] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -98,16 +106,10 @@ export default function DashboardClient({ orgId, tz }: Props) {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [detailTarget, setDetailTarget] = useState<Booking | null>(null);
+  const modalOpen = Boolean(rescheduleTarget || detailTarget || requestTarget);
 
-  const timezone = useMemo(() => {
-    if (tz) return tz;
-    if (typeof Intl !== "undefined") {
-      return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-    }
-    return "UTC";
-  }, [tz]);
-  const displayName =
-    session?.user?.name || session?.user?.email?.split("@")[0] || "";
+  const timezone = useMemo(() => "Europe/Luxembourg", []);
+  const displayName = "Lux AI Admin";
 
   const bookingColumns = useMemo<MRT_ColumnDef<Booking>[]>(
     () => [
@@ -117,7 +119,12 @@ export default function DashboardClient({ orgId, tz }: Props) {
         Cell: ({ row }) => (
           <div className="min-w-0">
             <div className="truncate font-semibold text-gray-900 dark:text-white">
-              {row.original.meetingTypeKey ?? "Meeting"} · {row.original.mode}
+              {formatKeyLabel(
+                row.original.meetingTypeTitle ??
+                  row.original.meetingTypeKey ??
+                  "Meeting"
+              )}{" "}
+              · {row.original.mode}
             </div>
             {row.original.durationMin && (
               <div className="text-xs text-gray-500">
@@ -155,7 +162,9 @@ export default function DashboardClient({ orgId, tz }: Props) {
         Cell: ({ row }) => {
           const item = row.original;
           const calendarLink = buildGoogleCalendarUrl({
-            title: `${item.meetingTypeKey ?? "Meeting"} · ${item.mode}`,
+            title: `${formatKeyLabel(
+              item.meetingTypeTitle ?? item.meetingTypeKey ?? "Meeting"
+            )} · ${item.mode}`,
             details: [
               `Mode: ${item.mode}`,
               item.meetingLink && item.status === "confirmed"
@@ -292,7 +301,9 @@ export default function DashboardClient({ orgId, tz }: Props) {
         ? detailTarget.endAtUtc.toISOString()
         : new Date(detailTarget.endAtUtc).toISOString();
     return buildGoogleCalendarUrl({
-      title: `${detailTarget.meetingTypeKey ?? "Meeting"} · ${detailTarget.mode}`,
+      title: `${formatKeyLabel(
+        detailTarget.meetingTypeTitle ?? detailTarget.meetingTypeKey ?? "Meeting"
+      )} · ${detailTarget.mode}`,
       details: [
         `Mode: ${detailTarget.mode}`,
         detailTarget.meetingLink && detailTarget.status === "confirmed"
@@ -346,12 +357,13 @@ export default function DashboardClient({ orgId, tz }: Props) {
   }, [orgId, status, page, pageSize]);
 
   useEffect(() => {
-    if (!rescheduleTarget && !requestTarget) return;
+    if (!rescheduleTarget && !requestTarget && !detailTarget) return;
     const handleKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       setRescheduleTarget(null);
       setRescheduleSlot(null);
       setRescheduleError(null);
+      setDetailTarget(null);
       setRequestTarget(null);
       setRequestNote("");
       setRequestError(null);
@@ -360,7 +372,20 @@ export default function DashboardClient({ orgId, tz }: Props) {
     return () => {
       document.removeEventListener("keydown", handleKey);
     };
-  }, [rescheduleTarget, requestTarget]);
+  }, [rescheduleTarget, requestTarget, detailTarget]);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    const html = document.documentElement;
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = html.style.overflow;
+    document.body.style.overflow = "hidden";
+    html.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      html.style.overflow = prevHtmlOverflow;
+    };
+  }, [modalOpen]);
 
   const handleRescheduleConfirm = async () => {
     if (!rescheduleTarget || !rescheduleSlot) return;
@@ -461,33 +486,19 @@ export default function DashboardClient({ orgId, tz }: Props) {
 
   return (
     <div className="space-y-8">
-      <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/85 p-6 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 via-blue-500 to-accent-500" />
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
-            Bookings
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">
-            Your booking history
-          </h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            Times shown in {timezone}.
-          </p>
-          {displayName && (
-            <p className="mt-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
-              Welcome, {displayName}
-            </p>
-          )}
-        </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/scheduling">
-                Book another session
-              </Link>
-            </Button>
-          </div>
-        </div>
+      <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
+          Bookings
+        </p>
+        <h1 className="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">
+          Your booking history
+        </h1>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+          Times shown in Europe/Luxembourg.
+        </p>
+        <p className="mt-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+          Welcome, {displayName}
+        </p>
       </div>
 
       <section className="mt-6 space-y-4">
@@ -537,101 +548,108 @@ export default function DashboardClient({ orgId, tz }: Props) {
       {rescheduleTarget && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 sm:p-6">
           <div className="w-full max-w-5xl max-h-[85vh] overflow-hidden rounded-3xl border border-white/70 bg-white/95 shadow-2xl backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
-            <div className="max-h-[85vh] overflow-y-auto p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500">
-                  Reschedule
-                </p>
-                <h2 className="mt-2 text-2xl font-semibold text-gray-900">
-                  Choose a new time
-                </h2>
-                <p className="mt-1 text-sm text-gray-600">
-                  Pick a new slot for{" "}
-                  {rescheduleTarget.meetingTypeKey ?? "your meeting"}.
-                </p>
+            <div className="flex max-h-[85vh] flex-col">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/70 px-6 py-5 dark:border-slate-700/60">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500">
+                    Reschedule
+                  </p>
+                  <h2 className="mt-2 text-2xl font-semibold text-gray-900">
+                    Choose a new time
+                  </h2>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Pick a new slot for{" "}
+                    {formatKeyLabel(
+                      rescheduleTarget.meetingTypeKey ?? "your meeting"
+                    )}
+                    .
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setRescheduleTarget(null);
+                    setRescheduleSlot(null);
+                    setRescheduleError(null);
+                  }}
+                >
+                  Close
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setRescheduleTarget(null);
-                  setRescheduleSlot(null);
-                  setRescheduleError(null);
-                }}
-              >
-                Close
-              </Button>
-            </div>
 
-            <div className="mt-6">
-              <AvailabilityCalendar
-                orgId={orgId}
-                meetingTypeId={rescheduleTarget.meetingTypeId}
-                staffUserId={rescheduleTarget.staffUserId ?? undefined}
-                tz={timezone}
-                displayTz={timezone}
-                minLeadMinutes={120}
-                initialDate={
-                  rescheduleTarget.startAtUtc instanceof Date
-                    ? rescheduleTarget.startAtUtc.toISOString()
-                    : new Date(rescheduleTarget.startAtUtc).toISOString()
-                }
-                onSelectSlot={(slot) => {
-                  setRescheduleSlot({
-                    startUtc: slot.startUtc,
-                    endUtc: slot.endUtc,
-                  });
-                }}
-              />
-            </div>
+              <div className="flex-1 overflow-y-auto px-6 pb-6 pt-4">
+                <div>
+                  <AvailabilityCalendar
+                    orgId={orgId}
+                    meetingTypeId={rescheduleTarget.meetingTypeId}
+                    staffUserId={rescheduleTarget.staffUserId ?? undefined}
+                    tz={timezone}
+                    displayTz={timezone}
+                    minLeadMinutes={120}
+                    initialDate={
+                      rescheduleTarget.startAtUtc instanceof Date
+                        ? rescheduleTarget.startAtUtc.toISOString()
+                        : new Date(rescheduleTarget.startAtUtc).toISOString()
+                    }
+                    onSelectSlot={(slot) => {
+                      setRescheduleSlot({
+                        startUtc: slot.startUtc,
+                        endUtc: slot.endUtc,
+                      });
+                    }}
+                  />
+                </div>
 
-            {rescheduleError && (
-              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                {rescheduleError}
-              </div>
-            )}
-
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <div className="text-sm text-gray-600">
-                {rescheduleSlot ? (
-                  <>
-                    Selected:{" "}
-                    {DateTime.fromISO(rescheduleSlot.startUtc)
-                      .setZone(timezone)
-                      .toFormat("ccc, LLL dd HH:mm")}{" "}
-                    –{" "}
-                    {DateTime.fromISO(rescheduleSlot.endUtc)
-                      .setZone(timezone)
-                      .toFormat("HH:mm")}
-                  </>
-                ) : (
-                  "Select a slot to continue."
+                {rescheduleError && (
+                  <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    {rescheduleError}
+                  </div>
                 )}
+
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                  <div className="text-sm text-gray-600">
+                    {rescheduleSlot ? (
+                      <>
+                        Selected:{" "}
+                        {DateTime.fromISO(rescheduleSlot.startUtc)
+                          .setZone(timezone)
+                          .toFormat("ccc, LLL dd HH:mm")}{" "}
+                        –{" "}
+                        {DateTime.fromISO(rescheduleSlot.endUtc)
+                          .setZone(timezone)
+                          .toFormat("HH:mm")}
+                      </>
+                    ) : (
+                      "Select a slot to continue."
+                    )}
+                  </div>
+                  <Button
+                    onClick={handleRescheduleConfirm}
+                    disabled={!rescheduleSlot || rescheduleLoading}
+                  >
+                    {rescheduleLoading ? "Rescheduling..." : "Confirm reschedule"}
+                  </Button>
+                </div>
               </div>
-              <Button
-                onClick={handleRescheduleConfirm}
-                disabled={!rescheduleSlot || rescheduleLoading}
-              >
-                {rescheduleLoading ? "Rescheduling..." : "Confirm reschedule"}
-              </Button>
-            </div>
             </div>
           </div>
         </div>
       )}
       {detailTarget && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 sm:p-6">
-          <div className="w-full max-w-4xl overflow-hidden rounded-3xl border border-white/70 bg-white/95 shadow-2xl backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
-            <div className="p-6">
-              <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="w-full max-w-4xl max-h-[85vh] overflow-hidden rounded-3xl border border-white/70 bg-white/95 shadow-2xl backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
+            <div className="flex max-h-[85vh] flex-col">
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-white/70 px-6 py-5 dark:border-slate-700/60">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.3em] text-gray-500">
                     Booking details
                   </p>
                   <h2 className="mt-2 text-2xl font-semibold text-gray-900">
-                    {detailTarget.meetingTypeTitle ??
-                      detailTarget.meetingTypeKey ??
-                      "Meeting"}
+                    {formatKeyLabel(
+                      detailTarget.meetingTypeTitle ??
+                        detailTarget.meetingTypeKey ??
+                        "Meeting"
+                    )}
                   </h2>
                   <p className="mt-1 text-sm text-gray-600">
                     Status: {detailTarget.status}
@@ -645,106 +663,108 @@ export default function DashboardClient({ orgId, tz }: Props) {
                 </Button>
               </div>
 
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <div className="rounded-xl border border-white/70 bg-white/80 p-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
-                  <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
-                    Time
-                  </p>
-                  <p className="mt-2 text-base font-semibold text-gray-900">
-                    {DateTime.fromJSDate(
-                      detailTarget.startAtUtc instanceof Date
-                        ? detailTarget.startAtUtc
-                        : new Date(detailTarget.startAtUtc)
-                    )
-                      .setZone(timezone)
-                      .toFormat("ccc, LLL dd · HH:mm")}
-                    {" – "}
-                    {DateTime.fromJSDate(
-                      detailTarget.endAtUtc instanceof Date
-                        ? detailTarget.endAtUtc
-                        : new Date(detailTarget.endAtUtc)
-                    )
-                      .setZone(timezone)
-                      .toFormat("HH:mm")}
-                  </p>
-                  <p className="mt-1 text-xs text-gray-600">{timezone}</p>
-                  {detailTarget.durationMin && (
-                    <p className="mt-2 text-xs text-gray-500">
-                      Duration: {detailTarget.durationMin} min
+              <div className="flex-1 overflow-y-auto px-6 pb-6 pt-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-xl border border-white/70 bg-white/80 p-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+                    <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
+                      Time
                     </p>
-                  )}
+                    <p className="mt-2 text-base font-semibold text-gray-900">
+                      {DateTime.fromJSDate(
+                        detailTarget.startAtUtc instanceof Date
+                          ? detailTarget.startAtUtc
+                          : new Date(detailTarget.startAtUtc)
+                      )
+                        .setZone(timezone)
+                        .toFormat("ccc, LLL dd · HH:mm")}
+                      {" – "}
+                      {DateTime.fromJSDate(
+                        detailTarget.endAtUtc instanceof Date
+                          ? detailTarget.endAtUtc
+                          : new Date(detailTarget.endAtUtc)
+                      )
+                        .setZone(timezone)
+                        .toFormat("HH:mm")}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-600">{timezone}</p>
+                    {detailTarget.durationMin && (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Duration: {detailTarget.durationMin} min
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl border border-white/70 bg-white/80 p-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+                    <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
+                      Mode
+                    </p>
+                    <p className="mt-2 text-base font-semibold text-gray-900">
+                      {detailTarget.mode}
+                    </p>
+                    {detailTarget.meetingLink &&
+                      detailTarget.status === "confirmed" && (
+                      <a
+                        className="mt-2 inline-flex text-xs font-semibold text-blue-600 hover:underline"
+                        href={detailTarget.meetingLink}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Join meeting link
+                      </a>
+                    )}
+                    {detailTarget.mode === "phone" && detailTarget.phone && (
+                      <a
+                        className="mt-2 inline-flex text-xs font-semibold text-blue-600 hover:underline"
+                        href={`tel:${detailTarget.phone}`}
+                      >
+                        Call {detailTarget.phone}
+                      </a>
+                    )}
+                    {detailCalendarLink && (
+                      <a
+                        className="mt-2 inline-flex text-xs font-semibold text-blue-600 hover:underline"
+                        href={detailCalendarLink}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Add to calendar
+                      </a>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/80 p-4 backdrop-blur">
+                    <p className="text-xs uppercase tracking-[0.25em] text-emerald-700">
+                      Payment
+                    </p>
+                    <p className="mt-2 text-base font-semibold text-emerald-900">
+                      {formatPrice(detailTarget.priceCents ?? null, detailTarget.currency ?? null) ??
+                        "—"}
+                    </p>
+                    <p className="mt-1 text-xs text-emerald-700">
+                      Status: {detailTarget.paymentStatus ?? "n/a"}
+                    </p>
+                    <p className="mt-1 text-xs text-emerald-700">
+                      Policy: {detailTarget.paymentPolicy ?? "n/a"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-white/70 bg-white/80 p-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+                    <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
+                      Notes
+                    </p>
+                    <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
+                      {detailTarget.notes ?? "No notes captured."}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="rounded-xl border border-white/70 bg-white/80 p-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
-                  <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
-                    Mode
-                  </p>
-                  <p className="mt-2 text-base font-semibold text-gray-900">
-                    {detailTarget.mode}
-                  </p>
-                  {detailTarget.meetingLink &&
-                    detailTarget.status === "confirmed" && (
-                    <a
-                      className="mt-2 inline-flex text-xs font-semibold text-blue-600 hover:underline"
-                      href={detailTarget.meetingLink}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Join meeting link
-                    </a>
-                  )}
-                  {detailTarget.mode === "phone" && detailTarget.phone && (
-                    <a
-                      className="mt-2 inline-flex text-xs font-semibold text-blue-600 hover:underline"
-                      href={`tel:${detailTarget.phone}`}
-                    >
-                      Call {detailTarget.phone}
-                    </a>
-                  )}
-                  {detailCalendarLink && (
-                    <a
-                      className="mt-2 inline-flex text-xs font-semibold text-blue-600 hover:underline"
-                      href={detailCalendarLink}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Add to calendar
-                    </a>
-                  )}
+                <div className="mt-6 flex flex-wrap items-center gap-2">
+                  <Button variant="outline" asChild>
+                    <Link href="/scheduling">
+                      Book another session
+                    </Link>
+                  </Button>
                 </div>
-
-                <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/80 p-4 backdrop-blur">
-                  <p className="text-xs uppercase tracking-[0.25em] text-emerald-700">
-                    Payment
-                  </p>
-                  <p className="mt-2 text-base font-semibold text-emerald-900">
-                    {formatPrice(detailTarget.priceCents ?? null, detailTarget.currency ?? null) ??
-                      "—"}
-                  </p>
-                  <p className="mt-1 text-xs text-emerald-700">
-                    Status: {detailTarget.paymentStatus ?? "n/a"}
-                  </p>
-                  <p className="mt-1 text-xs text-emerald-700">
-                    Policy: {detailTarget.paymentPolicy ?? "n/a"}
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-white/70 bg-white/80 p-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
-                  <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
-                    Notes
-                  </p>
-                  <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
-                    {detailTarget.notes ?? "No notes captured."}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-6 flex flex-wrap items-center gap-2">
-                <Button variant="outline" asChild>
-                  <Link href="/scheduling">
-                    Book another session
-                  </Link>
-                </Button>
               </div>
             </div>
           </div>
@@ -752,7 +772,7 @@ export default function DashboardClient({ orgId, tz }: Props) {
       )}
       {requestTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg rounded-3xl border border-white/70 bg-white/95 p-6 shadow-2xl backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
+          <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-3xl border border-white/70 bg-white/95 p-6 shadow-2xl backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
             <div className="text-lg font-semibold text-gray-900">
               Request reschedule
             </div>
@@ -761,7 +781,12 @@ export default function DashboardClient({ orgId, tz }: Props) {
             </p>
             <div className="mt-4 rounded-xl border border-white/70 bg-white/80 px-4 py-3 text-sm text-gray-700 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200">
               <div className="font-semibold text-gray-900">
-                {requestTarget.meetingTypeKey ?? "Meeting"} · {requestTarget.mode}
+                {formatKeyLabel(
+                  requestTarget.meetingTypeTitle ??
+                    requestTarget.meetingTypeKey ??
+                    "Meeting"
+                )}{" "}
+                · {requestTarget.mode}
               </div>
               <div className="mt-1 text-xs text-gray-600">
                 {DateTime.fromJSDate(

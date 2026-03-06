@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { DateTime } from "luxon";
 import { prisma } from "@/lib/prisma";
-import { stripe } from "@/lib/stripe";
+import { getStripeForOrg } from "@/lib/stripe";
 import { requireUserIdFromSession } from "@/lib/scheduling/authz";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import { isBodyTooLarge, isValidTimezone, isValidUuid } from "@/lib/validation";
@@ -170,6 +170,14 @@ export async function POST(req: Request) {
   if (userDaily.length >= maxDailyBookings) {
     return NextResponse.json(
       { error: "Daily booking limit reached. Please choose another day." },
+      { status: 409 }
+    );
+  }
+
+  const stripe = await getStripeForOrg(orgId);
+  if (!stripe) {
+    return NextResponse.json(
+      { error: "Stripe is not configured for this organization." },
       { status: 409 }
     );
   }

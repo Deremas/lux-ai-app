@@ -53,6 +53,14 @@ function titleCase(value: string) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function formatKeyLabel(value: string) {
+  return value
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function resolvePagination(
   updaterOrValue: MRT_PaginationState | ((prev: MRT_PaginationState) => MRT_PaginationState),
   prev: MRT_PaginationState
@@ -228,7 +236,7 @@ export default function NotificationsClient({ orgId, tz }: Props) {
         Cell: ({ row }) => (
           <div className="min-w-0">
             <div className="truncate font-semibold text-gray-900 dark:text-white">
-              {row.original.meetingTypeKey ?? "Meeting"} ·{" "}
+              {formatKeyLabel(row.original.meetingTypeKey ?? "Meeting")} ·{" "}
               {row.original.templateKey ?? "notification"}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -318,7 +326,7 @@ export default function NotificationsClient({ orgId, tz }: Props) {
             Scheduling Admin
           </p>
           <h1 className="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">
-            Notifications
+            Notification logs
           </h1>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
             Email delivery logs and booking alerts. Times shown in {timezone}.
@@ -358,7 +366,7 @@ export default function NotificationsClient({ orgId, tz }: Props) {
       )}
 
       <MrtCardTable
-        title="Notifications"
+        title="Notification logs"
         subtitle={total ? `Showing ${items.length} of ${total}` : "No notifications found."}
         table={{
           columns,
@@ -440,7 +448,7 @@ export default function NotificationsClient({ orgId, tz }: Props) {
                   <>
                     <p>
                       <span className="font-semibold">Meeting:</span>{" "}
-                      {selectedDetail.meetingTypeKey ?? "Meeting"} ·{" "}
+                      {formatKeyLabel(selectedDetail.meetingTypeKey ?? "Meeting")} ·{" "}
                       {selectedDetail.mode ?? "mode"}
                     </p>
                     <p>

@@ -55,7 +55,9 @@ function parseModes(input: unknown): MeetingMode[] {
 }
 
 function isValidKey(value: string) {
-  return /^[a-z0-9_]{3,60}$/.test(value);
+  if (value.length < 3 || value.length > 120) return false;
+  if (/[\r\n]/.test(value)) return false;
+  return true;
 }
 
 function parseLocale(input: unknown): Locale {
@@ -230,7 +232,10 @@ export async function POST(req: Request) {
   });
   if (!authz.ok) return NextResponse.json({ error: authz.error }, { status: 403 });
 
-  const key = cleanString(body.key);
+  const keyInput = cleanString(body.key);
+  const titleInput = cleanString(body.title);
+  const title = titleInput || keyInput;
+  const key = title;
   if (!key || !isValidKey(key)) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
@@ -248,7 +253,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Select at least one mode" }, { status: 400 });
   }
 
-  const title = cleanString(body.title);
   if (!title || title.length < 3 || title.length > 120) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }

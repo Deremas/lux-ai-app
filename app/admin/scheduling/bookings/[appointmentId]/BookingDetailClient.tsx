@@ -68,6 +68,14 @@ function formatMoney(priceCents?: number | null, currency?: string | null) {
   }
 }
 
+function formatKeyLabel(value: string) {
+  return value
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function extractNoteValue(notes: string | null | undefined, key: string) {
   if (!notes) return null;
   const line = notes
@@ -450,7 +458,7 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
                     Meeting
                   </p>
                   <p className="mt-2 text-xl font-semibold text-gray-900 dark:text-white">
-                    {appointment.meetingTypeKey ?? "Meeting"}
+                    {formatKeyLabel(appointment.meetingTypeKey ?? "Meeting")}
                   </p>
                   <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
                     {appointment.mode}

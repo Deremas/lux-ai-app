@@ -23,6 +23,37 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#39;");
 }
 
+function renderTemplateText(
+  template: string,
+  variables: Record<string, string>
+) {
+  if (!template) return "";
+  return template.replace(/\{\{\s*([a-z0-9_]+)\s*\}\}/gi, (_, key) => {
+    const value = variables[key.toLowerCase()];
+    return value ?? "";
+  });
+}
+
+function renderTemplateHtml(text: string) {
+  const escaped = escapeHtml(text || "");
+  return `<div style="font-family:ui-sans-serif,system-ui; white-space:pre-wrap;">${escaped}</div>`;
+}
+
+async function getTemplateOverride(params: {
+  orgId: string;
+  channel: "email" | "whatsapp";
+  key: string;
+}) {
+  return prisma.notificationTemplate.findFirst({
+    where: {
+      orgId: params.orgId,
+      channel: params.channel,
+      key: params.key,
+    },
+    select: { subject: true, body: true },
+  });
+}
+
 function safeRender(
   componentOrFactory: React.ReactElement | (() => React.ReactElement),
   fallbackText: string
@@ -285,6 +316,96 @@ async function getAppointmentEmailContext(appointmentId: string) {
   };
 }
 
+type AppointmentNotifyContext = NonNullable<
+  Awaited<ReturnType<typeof getAppointmentEmailContext>>
+>;
+
+function buildTemplateVars(
+  ctx: AppointmentNotifyContext,
+  args: {
+    startIso: string;
+    endIso: string;
+    meetingLink?: string | null;
+    approvalLink?: string | null;
+    reason?: string | null;
+  }
+) {
+  const customerName = ctx.userFullName ?? ctx.userName ?? "";
+  const meetingTitle = ctx.meetingTitle ?? ctx.meetingKey ?? "Meeting";
+  return {
+    customer_name: customerName,
+    customer_email: ctx.userEmail ?? "",
+    customer_phone: ctx.userPhone ?? "",
+    meeting_title: meetingTitle,
+    meeting_mode: String(ctx.mode ?? ""),
+    meeting_status: String(ctx.status ?? ""),
+    start_time_utc: args.startIso,
+    end_time_utc: args.endIso,
+    meeting_link: args.meetingLink ?? "",
+    admin_link: args.approvalLink ?? "",
+    reason: args.reason ?? "",
+    booking_id: ctx.id ?? "",
+  };
+}
+
+async function resolveEmailTemplate(params: {
+  orgId: string;
+  key: string;
+  variables: Record<string, string>;
+  defaultSubject: string;
+  defaultText: string;
+  defaultHtml: string;
+}) {
+  let override: { subject: string | null; body: string } | null = null;
+  try {
+    override = await getTemplateOverride({
+      orgId: params.orgId,
+      channel: "email",
+      key: params.key,
+    });
+  } catch (err) {
+    console.error("resolveEmailTemplate failed", err);
+  }
+  if (!override) {
+    return {
+      subject: params.defaultSubject,
+      text: params.defaultText,
+      html: params.defaultHtml,
+    };
+  }
+  const subject = override.subject
+    ? renderTemplateText(override.subject, params.variables)
+    : params.defaultSubject;
+  const text = renderTemplateText(override.body, params.variables);
+  return {
+    subject,
+    text,
+    html: renderTemplateHtml(text),
+  };
+}
+
+async function resolveWhatsAppTemplate(params: {
+  orgId: string;
+  key: string;
+  variables: Record<string, string>;
+  defaultBody: string;
+}) {
+  let override: { subject: string | null; body: string } | null = null;
+  try {
+    override = await getTemplateOverride({
+      orgId: params.orgId,
+      channel: "whatsapp",
+      key: params.key,
+    });
+  } catch (err) {
+    console.error("resolveWhatsAppTemplate failed", err);
+  }
+  if (!override) {
+    return params.defaultBody;
+  }
+  return renderTemplateText(override.body, params.variables);
+}
+
 function buildIcsContent(args: {
   title: string;
   description: string;
@@ -537,6 +658,13 @@ export async function sendBookingEmails(params: { appointmentId: string }) {
       calendarLink = null;
     }
 
+    const templateVars = buildTemplateVars(ctx, {
+      startIso,
+      endIso,
+      meetingLink,
+      approvalLink,
+    });
+
     stage = "render-user-email";
     const subject =
       ctx.status === "confirmed" ? "Booking confirmed" : "New booking received";
@@ -555,6 +683,14 @@ export async function sendBookingEmails(params: { appointmentId: string }) {
       }),
       text
     );
+    const userEmailTemplate = await resolveEmailTemplate({
+      orgId: ctx.orgId,
+      key: "booking_created",
+      variables: templateVars,
+      defaultSubject: subject,
+      defaultText: text,
+      defaultHtml: html,
+    });
 
     const calendarDetails = [
       `Mode: ${ctx.mode ?? "tbd"}`,
@@ -579,9 +715,9 @@ export async function sendBookingEmails(params: { appointmentId: string }) {
         await deliverEmail({
           appointmentId: params.appointmentId,
           templateKey: "booking_created",
-          subject,
-          text,
-          html,
+          subject: userEmailTemplate.subject,
+          text: userEmailTemplate.text,
+          html: userEmailTemplate.html,
           to: userRecipients,
           ...(calendarIcs
             ? { attachments: [{ filename: "booking.ics", content: calendarIcs }] }
@@ -643,15 +779,23 @@ export async function sendBookingEmails(params: { appointmentId: string }) {
         }),
         staffText
       );
+      const staffEmailTemplate = await resolveEmailTemplate({
+        orgId: ctx.orgId,
+        key: "booking_created_internal",
+        variables: templateVars,
+        defaultSubject: "New booking received (staff)",
+        defaultText: staffText,
+        defaultHtml: staffHtml,
+      });
 
       try {
         stage = "send-staff-email";
         await deliverEmail({
           appointmentId: params.appointmentId,
           templateKey: "booking_created_internal",
-          subject: "New booking received (staff)",
-          text: staffText,
-          html: staffHtml,
+          subject: staffEmailTemplate.subject,
+          text: staffEmailTemplate.text,
+          html: staffEmailTemplate.html,
           to: staffRecipients,
           ...(calendarIcs
             ? { attachments: [{ filename: "booking.ics", content: calendarIcs }] }
@@ -695,8 +839,20 @@ export async function sendBookingEmails(params: { appointmentId: string }) {
     if (ctx.notifyWhatsappEnabled) {
       const customerPhone = ctx.userPhone ?? null;
       const staffPhones = Array.isArray(ctx.notifyWhatsapp) ? ctx.notifyWhatsapp : [];
-      const customerMessage = `Your booking is ${ctx.status}. ${ctx.meetingTitle ?? ctx.meetingKey ?? "Meeting"} · ${startIso} UTC.`;
-      const staffMessage = `New booking from ${ctx.userFullName ?? ctx.userName ?? "Customer"}. ${ctx.meetingTitle ?? ctx.meetingKey ?? "Meeting"} · ${startIso} UTC.`;
+      const customerMessageDefault = `Your booking is ${ctx.status}. ${ctx.meetingTitle ?? ctx.meetingKey ?? "Meeting"} · ${startIso} UTC.`;
+      const staffMessageDefault = `New booking from ${ctx.userFullName ?? ctx.userName ?? "Customer"}. ${ctx.meetingTitle ?? ctx.meetingKey ?? "Meeting"} · ${startIso} UTC.`;
+      const customerMessage = await resolveWhatsAppTemplate({
+        orgId: ctx.orgId,
+        key: "booking_created_whatsapp",
+        variables: templateVars,
+        defaultBody: customerMessageDefault,
+      });
+      const staffMessage = await resolveWhatsAppTemplate({
+        orgId: ctx.orgId,
+        key: "booking_created_whatsapp_internal",
+        variables: templateVars,
+        defaultBody: staffMessageDefault,
+      });
       if (customerPhone) {
         await sendWhatsAppMessage({
           orgId: ctx.orgId,
@@ -814,6 +970,13 @@ export async function sendStatusEmails(params: {
       console.error("calendar link build failed", message);
       calendarLink = null;
     }
+
+    const templateVars = buildTemplateVars(ctx, {
+      startIso,
+      endIso,
+      meetingLink,
+      reason: params.reason ?? null,
+    });
     stage = "render-user-email";
     const subject =
       params.status === "confirmed"
@@ -839,6 +1002,14 @@ export async function sendStatusEmails(params: {
         }),
       text
     );
+    const userEmailTemplate = await resolveEmailTemplate({
+      orgId: ctx.orgId,
+      key: `booking_${params.status}`,
+      variables: templateVars,
+      defaultSubject: subject,
+      defaultText: text,
+      defaultHtml: html,
+    });
 
     const calendarDetails = [
       `Mode: ${ctx.mode ?? "tbd"}`,
@@ -863,9 +1034,9 @@ export async function sendStatusEmails(params: {
         await deliverEmail({
           appointmentId: params.appointmentId,
           templateKey: `booking_${params.status}`,
-          subject,
-          text,
-          html,
+          subject: userEmailTemplate.subject,
+          text: userEmailTemplate.text,
+          html: userEmailTemplate.html,
           to: userRecipients,
           ...(calendarIcs
             ? { attachments: [{ filename: "booking.ics", content: calendarIcs }] }
@@ -929,14 +1100,22 @@ export async function sendStatusEmails(params: {
           }),
         staffText
       );
+      const staffEmailTemplate = await resolveEmailTemplate({
+        orgId: ctx.orgId,
+        key: `booking_${params.status}_internal`,
+        variables: templateVars,
+        defaultSubject: `Booking ${params.status} (staff)`,
+        defaultText: staffText,
+        defaultHtml: staffHtml,
+      });
       try {
         stage = "send-staff-email";
         await deliverEmail({
           appointmentId: params.appointmentId,
           templateKey: `booking_${params.status}_internal`,
-          subject: `Booking ${params.status} (staff)`,
-          text: staffText,
-          html: staffHtml,
+          subject: staffEmailTemplate.subject,
+          text: staffEmailTemplate.text,
+          html: staffEmailTemplate.html,
           to: staffRecipients,
           ...(calendarIcs
             ? { attachments: [{ filename: "booking.ics", content: calendarIcs }] }
@@ -981,8 +1160,20 @@ export async function sendStatusEmails(params: {
     if (ctx.notifyWhatsappEnabled) {
       const customerPhone = ctx.userPhone ?? null;
       const staffPhones = Array.isArray(ctx.notifyWhatsapp) ? ctx.notifyWhatsapp : [];
-      const customerMessage = `Your booking was ${params.status}. ${ctx.meetingTitle ?? ctx.meetingKey ?? "Meeting"} · ${startIso} UTC.`;
-      const staffMessage = `Booking ${params.status}. ${ctx.meetingTitle ?? ctx.meetingKey ?? "Meeting"} · ${startIso} UTC.`;
+      const customerMessageDefault = `Your booking was ${params.status}. ${ctx.meetingTitle ?? ctx.meetingKey ?? "Meeting"} · ${startIso} UTC.`;
+      const staffMessageDefault = `Booking ${params.status}. ${ctx.meetingTitle ?? ctx.meetingKey ?? "Meeting"} · ${startIso} UTC.`;
+      const customerMessage = await resolveWhatsAppTemplate({
+        orgId: ctx.orgId,
+        key: `booking_${params.status}_whatsapp`,
+        variables: templateVars,
+        defaultBody: customerMessageDefault,
+      });
+      const staffMessage = await resolveWhatsAppTemplate({
+        orgId: ctx.orgId,
+        key: `booking_${params.status}_whatsapp_internal`,
+        variables: templateVars,
+        defaultBody: staffMessageDefault,
+      });
       if (customerPhone) {
         await sendWhatsAppMessage({
           orgId: ctx.orgId,
@@ -1092,14 +1283,29 @@ export async function sendRescheduleRequestEmails(params: {
     }),
     text
   );
+  const templateVars = buildTemplateVars(ctx, {
+    startIso,
+    endIso,
+    meetingLink: null,
+    approvalLink: adminLink,
+    reason: params.reason ?? null,
+  });
+  const staffTemplate = await resolveEmailTemplate({
+    orgId: ctx.orgId,
+    key: "reschedule_request",
+    variables: templateVars,
+    defaultSubject: subject,
+    defaultText: text,
+    defaultHtml: html,
+  });
 
   try {
     await deliverEmail({
       appointmentId: params.appointmentId,
       templateKey: "reschedule_request",
-      subject,
-      text,
-      html,
+      subject: staffTemplate.subject,
+      text: staffTemplate.text,
+      html: staffTemplate.html,
       to: staffRecipients,
     });
     return { ok: true };

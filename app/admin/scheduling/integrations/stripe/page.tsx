@@ -1,4 +1,4 @@
-import NotificationsSettingsClient from "./NotificationsSettingsClient";
+import StripeIntegrationClient from "./StripeIntegrationClient";
 import { getServerSession } from "next-auth/next";
 import ProductShell from "@/components/scheduling/ProductShell";
 
@@ -20,17 +20,17 @@ async function resolveOrgId() {
   return await getFirstOrgContext();
 }
 
-export default async function SchedulingNotificationsPage() {
+export default async function StripeIntegrationPage() {
   const orgContext = await resolveOrgId();
 
   if (orgContext?.orgId) {
-    const returnTo = "/admin/scheduling/notifications";
+    const returnTo = "/admin/scheduling/integrations/stripe";
     await requireAdminOrStaffForOrg(orgContext.orgId, returnTo);
   }
 
   return (
     <ProductShell>
-      <NotificationsSettingsClient orgId={orgContext?.orgId ?? ""} />
+      <StripeIntegrationClient orgId={orgContext?.orgId ?? ""} />
     </ProductShell>
   );
 }
