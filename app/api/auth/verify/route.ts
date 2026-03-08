@@ -9,6 +9,13 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Request too large" }, { status: 413 });
   }
 
+  const baseUrl = (process.env.NEXTAUTH_URL ?? new URL(req.url).origin).replace(
+    /\/+$/,
+    ""
+  );
+  const redirectTo = (path: string) =>
+    NextResponse.redirect(new URL(path, baseUrl));
+
   const limit = await applyRateLimit(req, RATE_LIMIT_RULES.auth, {
     methodGroup: "auth",
   });
@@ -23,7 +30,7 @@ export async function GET(req: Request) {
   const token = url.searchParams.get("token")?.trim() ?? "";
 
   if (!token || !isValidResetToken(token)) {
-    return NextResponse.redirect(new URL("/auth/signin", req.url));
+    return redirectTo("/auth/signin");
   }
 
   const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
@@ -41,7 +48,7 @@ export async function GET(req: Request) {
     },
   });
   if (!pending) {
-    return NextResponse.redirect(new URL("/auth/signin", req.url));
+    return redirectTo("/auth/signin");
   }
 
   const existing = await prisma.appUser.findFirst({
@@ -65,5 +72,5 @@ export async function GET(req: Request) {
     data: { usedAt: new Date() },
   });
 
-  return NextResponse.redirect(new URL("/auth/verified", req.url));
+  return redirectTo("/auth/verified");
 }
