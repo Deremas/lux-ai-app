@@ -21,7 +21,7 @@ type Body = {
   company?: string;
   companyRole?: string;
   timezone: string;
-  notes: string;
+  notes?: string;
 };
 
 function cleanString(value: unknown): string {
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
   const timezone = cleanString(body.timezone);
   const notes = cleanString(body.notes);
 
-  if (!fullName || !phone || !timezone || !notes) {
+  if (!fullName || !phone || !timezone) {
     return NextResponse.json(
       { error: "Missing required profile fields" },
       { status: 400 }
@@ -117,7 +117,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
 
-  if (!isValidNotes(notes)) {
+  if (notes && !isValidNotes(notes, 8, 1000)) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
 
@@ -150,7 +150,7 @@ export async function POST(req: Request) {
       company: company || null,
       companyRole: companyRole || null,
       timezone,
-      notes,
+      notes: notes || "",
       updatedAt: now,
     },
     update: {
@@ -160,7 +160,7 @@ export async function POST(req: Request) {
       company: company || null,
       companyRole: companyRole || null,
       timezone,
-      notes,
+      notes: notes || "",
       updatedAt: now,
     },
   });

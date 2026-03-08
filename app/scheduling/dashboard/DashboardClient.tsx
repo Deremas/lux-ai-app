@@ -744,7 +744,12 @@ export default function DashboardClient({ orgId }: Props) {
                       Status: {detailTarget.paymentStatus ?? "n/a"}
                     </p>
                     <p className="mt-1 text-xs text-emerald-700">
-                      Policy: {detailTarget.paymentPolicy ?? "n/a"}
+                      Payment:{" "}
+                      {detailTarget.paymentPolicy
+                        ? detailTarget.paymentPolicy === "FREE"
+                          ? "Free"
+                          : "Paid"
+                        : "n/a"}
                     </p>
                   </div>
 

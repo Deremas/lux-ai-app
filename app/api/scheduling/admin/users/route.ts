@@ -57,16 +57,22 @@ export async function GET(req: Request) {
   const authz = await requireOrgRole({
     orgId,
     userId: who.userId,
-    allowed: ["admin"],
+    allowed: ["admin", "staff"],
   });
   if (!authz.ok) return NextResponse.json({ error: authz.error }, { status: 403 });
 
   const roleParam = cleanString(url.searchParams.get("role")).toLowerCase();
   const q = cleanString(url.searchParams.get("q"));
-  const roleFilter =
-    roleParam && ALLOWED_ROLES.includes(roleParam as (typeof ALLOWED_ROLES)[number])
-      ? roleParam
-      : "customer";
+  let roleFilter: string | null = null;
+  if (roleParam) {
+    if (roleParam === "all") {
+      roleFilter = null;
+    } else if (ALLOWED_ROLES.includes(roleParam as (typeof ALLOWED_ROLES)[number])) {
+      roleFilter = roleParam;
+    } else {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    }
+  }
   const pageParam = Number(cleanString(url.searchParams.get("page")));
   const pageSizeParam = Number(cleanString(url.searchParams.get("pageSize")));
   const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
@@ -76,7 +82,7 @@ export async function GET(req: Request) {
       : 10;
   const offset = (page - 1) * pageSize;
 
-  const memberWhere: any = { orgId, role: roleFilter };
+  const memberWhere: any = roleFilter ? { orgId, role: roleFilter } : { orgId };
 
   if (q) {
     const [users, profiles] = await Promise.all([

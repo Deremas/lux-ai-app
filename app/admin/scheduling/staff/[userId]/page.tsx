@@ -1,13 +1,12 @@
-import StaffCalendarsClient from "./StaffCalendarsClient";
+import StaffDetailClient from "./StaffDetailClient";
 import { getServerSession } from "next-auth/next";
 import ProductShell from "@/components/scheduling/ProductShell";
 
 import { authOptions } from "@/lib/auth";
-import {
-  getFirstOrgContext,
-  getUserOrgContext,
-} from "@/lib/scheduling/org-context";
+import { getFirstOrgContext, getUserOrgContext } from "@/lib/scheduling/org-context";
 import { requireAdminOrStaffForOrg } from "@/lib/scheduling/admin-guard";
+
+const FALLBACK_TZ = "Europe/Luxembourg";
 
 function pickParam(value: string | string[] | undefined): string {
   if (!value) return "";
@@ -25,21 +24,28 @@ async function resolveOrgId() {
   return await getFirstOrgContext();
 }
 
-export default async function SchedulingStaffPage({
+export default async function SchedulingStaffDetailPage({
+  params,
   searchParams,
 }: {
-  searchParams?: {};
+  params: { userId: string };
+  searchParams?: { tz?: string | string[] };
 }) {
   const orgContext = await resolveOrgId();
+  const tz = pickParam(searchParams?.tz) || orgContext?.defaultTz || FALLBACK_TZ;
 
   if (orgContext?.orgId) {
-    const returnTo = "/admin/scheduling/staff";
+    const returnTo = `/admin/scheduling/staff/${params.userId}`;
     await requireAdminOrStaffForOrg(orgContext.orgId, returnTo);
   }
 
   return (
     <ProductShell>
-      <StaffCalendarsClient orgId={orgContext?.orgId ?? ""} />
+      <StaffDetailClient
+        orgId={orgContext?.orgId ?? ""}
+        userId={params.userId}
+        tz={tz}
+      />
     </ProductShell>
   );
 }

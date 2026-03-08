@@ -7,8 +7,6 @@ import { isBodyTooLarge } from "@/lib/validation";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import VerifyEmail from "@/emails/auth/VerifyEmail";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(req: Request) {
     if (isBodyTooLarge(req, 1024 * 1024)) {
         return NextResponse.json({ error: "Request too large" }, { status: 413 });
@@ -32,10 +30,15 @@ export async function POST(req: Request) {
     }
 
     const { email } = body;
-    const emailTrim = email?.trim();
+    const emailTrim = email?.trim().toLowerCase();
 
     if (!emailTrim || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailTrim)) {
         return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
+    }
+
+    const fromEmail = process.env.CONTACT_FROM_EMAIL?.trim();
+    if (!process.env.RESEND_API_KEY || !fromEmail) {
+        return NextResponse.json({ error: "Email not configured" }, { status: 500 });
     }
 
     // Check if user already exists and is verified
@@ -95,20 +98,33 @@ export async function POST(req: Request) {
     }
 
     // Send verification email
-    const verifyUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/auth/verify?token=${token}`;
+    const baseUrl = (process.env.NEXTAUTH_URL ?? "https://luxaiautomation.com").replace(
+        /\/+$/,
+        ""
+    );
+    const verifyUrl = `${baseUrl}/api/auth/verify?token=${token}`;
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const fromHeader = `"Lux AI Consultancy & Automation" <${fromEmail}>`;
+    const replyTo = "support@luxaiautomation.com";
+    const text = `Hi there,\n\nPlease confirm your email to finish creating your Lux AI account:\n\n${verifyUrl}\n\nThis link expires in 60 minutes.\n\nIf you did not request this account, you can ignore this email.\n\nLux AI Consultancy & Automation\nhttps://luxaiautomation.com`;
 
     try {
-        await resend.emails.send({
-            from: "Lux AI Consultancy & Automation <noreply@luxaiautomation.com>",
-            replyTo: "molla@luxaiautomation.com",
+        const sendResult = await resend.emails.send({
+            from: fromHeader,
+            replyTo,
             to: [emailTrim],
             subject: "Verify your email — Lux AI",
-            react: VerifyEmail({
-                name: null,
-                verifyUrl,
-                expiresInHours: 1,
-            }),
+            text,
+            html: render(VerifyEmail({ name: null, verifyUrl, expiresInHours: 1 })),
         });
+
+        if (sendResult.error) {
+            console.error("Failed to send verification email:", sendResult.error);
+            return NextResponse.json(
+                { error: "Failed to send verification email" },
+                { status: 502 }
+            );
+        }
 
         return NextResponse.json({ success: true });
     } catch (error) {

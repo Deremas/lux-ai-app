@@ -522,7 +522,14 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
             <div className="rounded-xl border border-white/70 bg-white/80 p-5 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
               <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Payment</p>
               <div className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-                <p>Policy: {appointment.paymentPolicy ?? "n/a"}</p>
+                <p>
+                  Payment:{" "}
+                  {appointment.paymentPolicy
+                    ? appointment.paymentPolicy === "FREE"
+                      ? "Free"
+                      : "Paid"
+                    : "n/a"}
+                </p>
                 <p>Status: {paymentStatus}</p>
                 {priceLabel && <p>Price: {priceLabel}</p>}
                 {paymentSession && <p>Session: {paymentSession}</p>}

@@ -22,11 +22,8 @@ type Settings = {
   allowedCurrencies: string | null;
 };
 
-const PAYMENT_OPTIONS: Settings["paymentPolicy"][] = [
-  "FREE",
-  "PAY_BEFORE_CONFIRM",
-  "APPROVE_THEN_PAY",
-];
+const PAYMENT_TIERS = ["FREE", "PAID"] as const;
+type PaymentTier = (typeof PAYMENT_TIERS)[number];
 
 function cleanString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -50,6 +47,8 @@ export default function PaymentsSettingsClient({ orgId }: Props) {
   const [form, setForm] = useState<Settings | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [initialSnapshot, setInitialSnapshot] = useState("");
+  const [lastPaidPolicy, setLastPaidPolicy] =
+    useState<Settings["paymentPolicy"]>("PAY_BEFORE_CONFIRM");
 
   const currencyOptions = useMemo(() => {
     const fromForm = form?.allowedCurrencies
@@ -110,11 +109,22 @@ export default function PaymentsSettingsClient({ orgId }: Props) {
     };
   }, [orgId, status]);
 
+  useEffect(() => {
+    if (form?.paymentPolicy && form.paymentPolicy !== "FREE") {
+      setLastPaidPolicy(form.paymentPolicy);
+    }
+  }, [form?.paymentPolicy]);
+
   const snapshot = useMemo(
     () => (form ? snapshotFrom(form, paymentAmount) : ""),
     [form, paymentAmount]
   );
   const isDirty = Boolean(form && snapshot !== initialSnapshot);
+  const paymentTier: PaymentTier | null = form
+    ? form.paymentPolicy === "FREE"
+      ? "FREE"
+      : "PAID"
+    : null;
 
   useUnsavedChangesPrompt(isDirty);
 
@@ -243,28 +253,33 @@ export default function PaymentsSettingsClient({ orgId }: Props) {
                   </label>
                   <select
                     className="mt-2 flex h-10 w-full rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm text-gray-900 shadow-sm backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-100"
-                    value={form.paymentPolicy}
+                    value={paymentTier ?? "FREE"}
                     onChange={(e) =>
                       setForm((prev) =>
                         prev
                           ? {
                               ...prev,
-                              paymentPolicy: e.target.value as Settings["paymentPolicy"],
+                              paymentPolicy:
+                                (e.target.value as PaymentTier) === "FREE"
+                                  ? "FREE"
+                                  : prev.paymentPolicy !== "FREE"
+                                  ? prev.paymentPolicy
+                                  : lastPaidPolicy,
                             }
                           : prev
                       )
                     }
                   >
-                    {PAYMENT_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt === "FREE"
-                          ? "Free booking"
-                          : opt === "PAY_BEFORE_CONFIRM"
-                          ? "Pay before confirm"
-                          : "Approve then pay"}
+                    {PAYMENT_TIERS.map((tier) => (
+                      <option key={tier} value={tier}>
+                        {tier === "FREE" ? "Free booking" : "Paid booking"}
                       </option>
                     ))}
                   </select>
+                  <p className="mt-2 text-xs text-gray-500">
+                    Paid bookings require payment. Existing timing rules are
+                    preserved.
+                  </p>
                 </div>
               </div>
             </SectionCard>
@@ -335,6 +350,17 @@ export default function PaymentsSettingsClient({ orgId }: Props) {
                 </div>
               </div>
             </SectionCard>
+          </div>
+
+          <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-xs text-gray-600 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-300">
+            <p className="font-semibold text-gray-700 dark:text-gray-200">
+              About defaults
+            </p>
+            <p className="mt-1">
+              Applying payment defaults fills in missing price or currency on
+              meeting types. It does not overwrite meeting types that already
+              have a price and currency set.
+            </p>
           </div>
 
           <SettingsFormActions

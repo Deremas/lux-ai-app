@@ -87,7 +87,8 @@ export async function POST(req: Request) {
     );
   }
 
-  if (!process.env.RESEND_API_KEY || !process.env.CONTACT_FROM_EMAIL) {
+  const fromEmail = process.env.CONTACT_FROM_EMAIL?.trim();
+  if (!process.env.RESEND_API_KEY || !fromEmail) {
     return NextResponse.json({ error: "Email not configured" }, { status: 500 });
   }
 
@@ -121,13 +122,12 @@ export async function POST(req: Request) {
   );
   const verifyUrl = `${baseUrl}/api/auth/verify?token=${token}`;
   const resend = new Resend(process.env.RESEND_API_KEY);
-  const fromEmail = process.env.CONTACT_FROM_EMAIL;
   const fromHeader = `"Lux AI Consultancy & Automation" <${fromEmail}>`;
   const replyTo = "support@luxaiautomation.com";
   const subject = "Verify your email — Lux AI";
   const text = `Hi ${name ?? "there"},\n\nPlease confirm your email to finish creating your Lux AI account:\n\n${verifyUrl}\n\nThis link expires in 60 minutes.\n\nIf you did not request this account, you can ignore this email.\n\nLux AI Consultancy & Automation\nhttps://luxaiautomation.com`;
 
-  await sendWithTimeout(
+  const sendResult = await sendWithTimeout(
     resend.emails.send({
       from: fromHeader,
       replyTo,
@@ -136,8 +136,24 @@ export async function POST(req: Request) {
       text,
       html: render(VerifyEmail({ name, verifyUrl, expiresInHours: 1 })),
     }),
-    3000
+    8000
   );
+
+  if (!sendResult) {
+    console.error("verify email send timeout", { email });
+    return NextResponse.json(
+      { error: "Email delivery timed out" },
+      { status: 504 }
+    );
+  }
+
+  if ("error" in sendResult && sendResult.error) {
+    console.error("verify email send failed", sendResult.error);
+    return NextResponse.json(
+      { error: "Failed to send verification email" },
+      { status: 502 }
+    );
+  }
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }

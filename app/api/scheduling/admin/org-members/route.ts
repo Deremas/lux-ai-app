@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import {

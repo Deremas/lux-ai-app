@@ -74,6 +74,9 @@ export default function SignUpPage() {
               return "Password must be at least 8 characters.";
             case "Email not configured":
               return "Email service is unavailable. Try again later.";
+            case "Email delivery timed out":
+            case "Failed to send verification email":
+              return "We couldn’t send the verification email. Please try again.";
             case "Email already registered":
               return "This email is already registered. Sign in instead.";
             case "Invalid input":

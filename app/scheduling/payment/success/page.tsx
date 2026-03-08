@@ -20,6 +20,7 @@ type PendingBooking = {
   meetingTitle?: string;
   durationMin?: number;
   displayTz?: string;
+  notes?: string;
 };
 
 type BookingResponse = {
@@ -131,6 +132,7 @@ export default function PaymentSuccessPage() {
       const pendingRaw = sessionStorage.getItem("pendingBooking");
       const parsed = pendingRaw ? (JSON.parse(pendingRaw) as PendingBooking) : null;
       if (parsed) setPending(parsed);
+      const pendingNotes = parsed?.notes?.trim();
 
       const verifyRes = await fetch("/api/scheduling/payment/verify", {
         method: "POST",
@@ -198,6 +200,7 @@ export default function PaymentSuccessPage() {
           startLocal: metaStartLocal,
           tz: metaTz || undefined,
           staffUserId: metaStaffUserId || undefined,
+          notes: pendingNotes || undefined,
           paymentConfirmed: true,
           paymentSessionId: sessionId,
         }),
@@ -244,6 +247,7 @@ export default function PaymentSuccessPage() {
         booking?.meetingLink && booking?.appointment?.status === "confirmed"
           ? `Meeting link: ${booking.meetingLink}`
           : "",
+        pending?.notes ? `Notes: ${pending.notes}` : "",
         "Lux AI booking confirmation",
       ]
         .filter(Boolean)

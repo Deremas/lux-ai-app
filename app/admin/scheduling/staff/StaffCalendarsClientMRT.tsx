@@ -11,6 +11,7 @@ import FilterBar from "@/components/scheduling/FilterBar";
 import Badge, { BookingStatus } from "@/components/scheduling/Badge";
 import ProductHero from "@/components/scheduling/ProductHero";
 import CompactSectionNav from "@/components/scheduling/CompactSectionNav";
+import SearchablePhoneInput from "@/components/PhoneInputField";
 import type { MRT_ColumnDef, MRT_PaginationState } from "material-react-table";
 
 type Props = {
@@ -37,6 +38,26 @@ const ROLE_OPTIONS = [
     { value: "customer", label: "Customer" },
 ] as const;
 
+type UserForm = {
+    name: string;
+    email: string;
+    phone: string;
+    timezone: string;
+    role: "admin" | "staff" | "customer";
+    password: string;
+};
+
+function emptyUserForm(): UserForm {
+    return {
+        name: "",
+        email: "",
+        phone: "",
+        timezone: "Europe/Luxembourg",
+        role: "staff",
+        password: "",
+    };
+}
+
 function resolvePagination(
     updaterOrValue: MRT_PaginationState | ((prev: MRT_PaginationState) => MRT_PaginationState),
     prev: MRT_PaginationState
@@ -56,7 +77,12 @@ export default function StaffCalendarsClient({ orgId, tz }: Props) {
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [total, setTotal] = useState(0);
+    const [reloadKey, setReloadKey] = useState(0);
     const [timezone, setTimezone] = useState(tz || "UTC");
+    const [form, setForm] = useState<UserForm>(emptyUserForm());
+    const [creating, setCreating] = useState(false);
+    const [actionError, setActionError] = useState<string | null>(null);
+    const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
     const timezoneDisplay = useMemo(() => {
         if (tz) return tz;
@@ -65,6 +91,31 @@ export default function StaffCalendarsClient({ orgId, tz }: Props) {
         }
         return "UTC";
     }, [tz]);
+
+    const timezones = useMemo<string[]>(() => {
+        const fallback = [
+            "UTC",
+            "Europe/Luxembourg",
+            "Europe/Paris",
+            "Africa/Nairobi",
+            "Africa/Addis_Ababa",
+            "America/New_York",
+            "Asia/Dubai",
+            "Asia/Singapore",
+        ];
+        const anyIntl = Intl as unknown as {
+            supportedValuesOf?: (k: string) => string[];
+        };
+        if (typeof anyIntl?.supportedValuesOf === "function") {
+            try {
+                const list = anyIntl.supportedValuesOf("timeZone");
+                return list.length ? list : fallback;
+            } catch {
+                return fallback;
+            }
+        }
+        return fallback;
+    }, []);
 
     useEffect(() => {
         if (status !== "authenticated") return;
@@ -76,13 +127,13 @@ export default function StaffCalendarsClient({ orgId, tz }: Props) {
 
         const params = new URLSearchParams({
             orgId,
-            role: roleFilter === "all" ? "" : roleFilter,
-            query: debouncedQuery,
             page: String(page),
             pageSize: String(pageSize),
         });
+        if (roleFilter !== "all") params.set("role", roleFilter);
+        if (debouncedQuery) params.set("q", debouncedQuery);
 
-        fetch(`/api/scheduling/admin/staff-users?${params}`, {
+        fetch(`/api/scheduling/admin/users?${params}`, {
             cache: "no-store",
         })
             .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
@@ -105,7 +156,7 @@ export default function StaffCalendarsClient({ orgId, tz }: Props) {
         return () => {
             cancelled = true;
         };
-    }, [orgId, roleFilter, debouncedQuery, page, pageSize, status]);
+    }, [orgId, roleFilter, debouncedQuery, page, pageSize, status, reloadKey]);
 
     useEffect(() => {
         const timer = setTimeout(() => setDebouncedQuery(query), 300);
@@ -210,6 +261,53 @@ export default function StaffCalendarsClient({ orgId, tz }: Props) {
         },
     ], [timezoneDisplay]);
 
+    async function handleCreateUser() {
+        if (!orgId) return;
+        setActionError(null);
+        setActionSuccess(null);
+
+        const email = form.email.trim().toLowerCase();
+        const password = form.password.trim();
+        if (!email) {
+            setActionError("Email is required.");
+            return;
+        }
+        if (!password || password.length < 8) {
+            setActionError("Temporary password must be at least 8 characters.");
+            return;
+        }
+
+        setCreating(true);
+        try {
+            const res = await fetch("/api/scheduling/admin/users", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({
+                    orgId,
+                    email,
+                    name: form.name.trim(),
+                    phone: form.phone.trim(),
+                    timezone: form.timezone.trim(),
+                    role: form.role,
+                    password,
+                }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                setActionError(data?.error ?? "Failed to add user");
+                return;
+            }
+            setActionSuccess("User created.");
+            setForm(emptyUserForm());
+            setPage(1);
+            setReloadKey((k) => k + 1);
+        } catch {
+            setActionError("Failed to add user");
+        } finally {
+            setCreating(false);
+        }
+    }
+
     return (
         <div className="space-y-8">
             <ProductHero
@@ -266,56 +364,176 @@ export default function StaffCalendarsClient({ orgId, tz }: Props) {
                 />
             </FilterBar>
 
-            {loading && (
-                <div className="mt-6 text-sm text-gray-600 dark:text-gray-300">
-                    Loading staff users...
-                </div>
-            )}
-
-            {success && (
-                <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                    {success}
-                </div>
-            )}
-
-            {error && (
-                <div className="mt-6 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                    {error}
-                </div>
-            )}
-
-            <MrtCardTable
-                title="Staff Users"
-                subtitle={`${filtered.length} of ${total} users`}
-                table={{
-                    columns,
-                    data: filtered,
-                    enablePagination: true,
-                    enableSorting: true,
-                    enableFilters: true,
-                    manualPagination: true,
-                    rowCount: total,
-                    state: {
-                        isLoading: loading,
-                        pagination,
-                    },
-                    onPaginationChange: (updaterOrValue) => {
-                        const next = resolvePagination(updaterOrValue, pagination);
-                        if (next.pageSize !== pageSize) {
-                            setPageSize(next.pageSize);
-                            setPage(1);
-                        }
-                        if (next.pageIndex !== pagination.pageIndex) {
-                            setPage(next.pageIndex + 1);
-                        }
-                    },
-                    renderEmptyRowsFallback: () => (
-                        <div className="p-4 text-sm text-gray-600">
-                            No staff users found.
+            <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+                <div className="space-y-4">
+                    {loading && (
+                        <div className="mt-6 text-sm text-gray-600 dark:text-gray-300">
+                            Loading staff users...
                         </div>
-                    ),
-                }}
-            />
+                    )}
+
+                    {success && (
+                        <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                            {success}
+                        </div>
+                    )}
+
+                    {error && (
+                        <div className="mt-6 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                            {error}
+                        </div>
+                    )}
+
+                    <MrtCardTable
+                        title="Staff Users"
+                        subtitle={`${filtered.length} of ${total} users`}
+                        table={{
+                            columns,
+                            data: filtered,
+                            enablePagination: true,
+                            enableSorting: true,
+                            enableFilters: true,
+                            manualPagination: true,
+                            rowCount: total,
+                            state: {
+                                isLoading: loading,
+                                pagination,
+                            },
+                            onPaginationChange: (updaterOrValue) => {
+                                const next = resolvePagination(updaterOrValue, pagination);
+                                if (next.pageSize !== pageSize) {
+                                    setPageSize(next.pageSize);
+                                    setPage(1);
+                                }
+                                if (next.pageIndex !== pagination.pageIndex) {
+                                    setPage(next.pageIndex + 1);
+                                }
+                            },
+                            renderEmptyRowsFallback: () => (
+                                <div className="p-4 text-sm text-gray-600">
+                                    No staff users found.
+                                </div>
+                            ),
+                        }}
+                    />
+                </div>
+
+                <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Add user
+                    </h2>
+                    <p className="mt-1 text-xs text-gray-500">
+                        Create admin, staff, or customer accounts.
+                    </p>
+                    <div className="mt-4 space-y-3 text-sm">
+                        <div>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                Full name
+                            </label>
+                            <Input
+                                value={form.name}
+                                onChange={(e) =>
+                                    setForm((prev) => ({ ...prev, name: e.target.value }))
+                                }
+                                placeholder="Full name"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                Email
+                            </label>
+                            <Input
+                                value={form.email}
+                                onChange={(e) =>
+                                    setForm((prev) => ({ ...prev, email: e.target.value }))
+                                }
+                                placeholder="name@company.com"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                Phone
+                            </label>
+                            <SearchablePhoneInput
+                                value={form.phone}
+                                onChange={(value) =>
+                                    setForm((prev) => ({ ...prev, phone: value }))
+                                }
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                Timezone
+                            </label>
+                            <select
+                                className="mt-1 h-10 w-full rounded-md border border-input bg-white px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                value={form.timezone}
+                                onChange={(e) =>
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        timezone: e.target.value,
+                                    }))
+                                }
+                            >
+                                {timezones.map((zone) => (
+                                    <option key={zone} value={zone}>
+                                        {zone}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                Role
+                            </label>
+                            <select
+                                className="mt-1 h-10 w-full rounded-md border border-input bg-white px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                value={form.role}
+                                onChange={(e) =>
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        role: e.target.value as UserForm["role"],
+                                    }))
+                                }
+                            >
+                                <option value="admin">admin</option>
+                                <option value="staff">staff</option>
+                                <option value="customer">customer</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                Temporary password
+                            </label>
+                            <Input
+                                type="password"
+                                value={form.password}
+                                onChange={(e) =>
+                                    setForm((prev) => ({ ...prev, password: e.target.value }))
+                                }
+                                placeholder="Min 8 characters"
+                            />
+                        </div>
+
+                        {actionError && (
+                            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                                {actionError}
+                            </div>
+                        )}
+                        {actionSuccess && (
+                            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                                {actionSuccess}
+                            </div>
+                        )}
+
+                        <div className="flex items-center justify-end">
+                            <Button type="button" onClick={handleCreateUser} disabled={creating}>
+                                {creating ? "Creating..." : "Add user"}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

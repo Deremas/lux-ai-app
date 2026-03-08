@@ -20,6 +20,7 @@ type Props = {
   displayTz?: string;
   canBook?: boolean;
   onSelectSlot?: (slot: AvailabilitySlot) => void;
+  selectedSlot?: AvailabilitySlot | null;
   minLeadMinutes?: number;
   initialDate?: string;
 };
@@ -76,6 +77,7 @@ export default function AvailabilityCalendar({
   displayTz: displayTzProp,
   canBook = true,
   onSelectSlot,
+  selectedSlot,
   minLeadMinutes = 180,
   initialDate,
 }: Props) {
@@ -259,6 +261,9 @@ export default function AvailabilityCalendar({
       typeof session?.user?.email === "string"
         ? session.user.email.toLowerCase()
         : "";
+    const selectedKey = selectedSlot
+      ? `${selectedSlot.startUtc}-${selectedSlot.endUtc}-${selectedSlot.staffUserId ?? "org"}`
+      : "";
 
     // Busy events as background blocks (hide past)
     const busy: EventInput[] = busyEvents
@@ -288,14 +293,21 @@ export default function AvailabilityCalendar({
       }));
 
     // Availability slots as normal clickable events
-    const slotEvents: EventInput[] = slots.map((s, index) => ({
-      id: `slot:${s.startUtc}-${s.endUtc}-${s.staffUserId ?? "org"}-${index}`,
-      title: "Available",
-      start: DateTime.fromISO(s.startUtc).setZone(displayTz).toISO()!,
-      end: DateTime.fromISO(s.endUtc).setZone(displayTz).toISO()!,
-      classNames: ["fc-slot-chip"],
-      extendedProps: { kind: "slot", slot: s },
-    }));
+    const slotEvents: EventInput[] = slots.map((s, index) => {
+      const slotKey = `${s.startUtc}-${s.endUtc}-${s.staffUserId ?? "org"}`;
+      const isSelected = selectedKey && slotKey === selectedKey;
+      return {
+        id: `slot:${s.startUtc}-${s.endUtc}-${s.staffUserId ?? "org"}-${index}`,
+        title: "Available",
+        start: DateTime.fromISO(s.startUtc).setZone(displayTz).toISO()!,
+        end: DateTime.fromISO(s.endUtc).setZone(displayTz).toISO()!,
+        classNames: [
+          "fc-slot-chip",
+          ...(isSelected ? ["fc-slot-selected"] : []),
+        ],
+        extendedProps: { kind: "slot", slot: s },
+      };
+    });
 
     const leadBlock: EventInput[] = [];
     if (range) {
@@ -315,7 +327,15 @@ export default function AvailabilityCalendar({
     }
 
     return [...busy, ...leadBlock, ...slotEvents];
-  }, [busyEvents, slots, displayTz, range, minBookableDate, session?.user?.email]);
+  }, [
+    busyEvents,
+    slots,
+    displayTz,
+    range,
+    minBookableDate,
+    session?.user?.email,
+    selectedSlot,
+  ]);
 
   const onDatesSet = useCallback(
     (arg: DatesSetArg) => {

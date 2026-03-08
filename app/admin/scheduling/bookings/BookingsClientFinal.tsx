@@ -390,7 +390,7 @@ export default function BookingsClient({ orgId, tz }: Props) {
                         </div>
                         {row.original.paymentPolicy && (
                             <div className="text-[11px] text-gray-500 dark:text-gray-400">
-                                Policy: {formatKeyLabel(row.original.paymentPolicy)}
+                                Payment: {row.original.paymentPolicy === "FREE" ? "Free" : "Paid"}
                             </div>
                         )}
                     </div>

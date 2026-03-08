@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -471,10 +472,11 @@ export default function StaffCalendarsClient({ orgId }: Props) {
     }
   }
 
-  const staffOptions = useMemo(
+  const staffMembers = useMemo(
     () => members.filter((m) => ["admin", "staff"].includes(m.role)),
     [members]
   );
+  const staffOptions = staffMembers;
 
   const staffLabel = (member: OrgMember) => {
     const name = member.name?.trim();
@@ -485,11 +487,11 @@ export default function StaffCalendarsClient({ orgId }: Props) {
   };
 
   const staffNameById = useMemo(() => {
-    return members.reduce<Record<string, string>>((acc, member) => {
+    return staffMembers.reduce<Record<string, string>>((acc, member) => {
       acc[member.userId] = staffLabel(member);
       return acc;
     }, {});
-  }, [members]);
+  }, [staffMembers]);
 
   const calendarColumns = useMemo<MRT_ColumnDef<StaffCalendar>[]>(
     () => [
@@ -559,6 +561,11 @@ export default function StaffCalendarsClient({ orgId }: Props) {
         header: "Actions",
         Cell: ({ row }) => (
           <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" asChild>
+              <Link href={`/admin/scheduling/staff/${row.original.userId}`}>
+                View
+              </Link>
+            </Button>
             <Button size="sm" variant="outline" onClick={() => loadMemberForEdit(row.original)}>
               Edit
             </Button>
@@ -748,6 +755,10 @@ export default function StaffCalendarsClient({ orgId }: Props) {
                   {saving ? "Saving..." : editingId ? "Update" : "Create"}
                 </Button>
               </div>
+              <p className="text-xs text-gray-500">
+                Applying org defaults replaces every staff calendar with the org
+                working hours.
+              </p>
               {orgDefaultsError && (
                 <p className="text-xs text-red-600">{orgDefaultsError}</p>
               )}
@@ -785,10 +796,14 @@ export default function StaffCalendarsClient({ orgId }: Props) {
 
             <MrtCardTable
               title="Staff users"
-              subtitle={members.length ? `${members.length} users` : "No staff users yet."}
+              subtitle={
+                staffMembers.length
+                  ? `${staffMembers.length} users`
+                  : "No staff users yet."
+              }
               table={{
                 columns: memberColumns,
-                data: members,
+                data: staffMembers,
                 enablePagination: false,
                 enableSorting: false,
                 enableColumnActions: false,

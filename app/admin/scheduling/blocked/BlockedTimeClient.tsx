@@ -237,6 +237,7 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
 
   async function handleDelete(id: string) {
     if (!orgId) return;
+    if (!confirm("Delete this blocked time entry?")) return;
     setSaving(true);
     setError(null);
     setSuccess(null);

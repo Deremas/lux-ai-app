@@ -30,7 +30,7 @@ type BookingProfile = {
   company: string | null;
   companyRole: string | null;
   timezone: string;
-  notes: string;
+  notes?: string | null;
 };
 
 type FormState = {
@@ -39,7 +39,6 @@ type FormState = {
   company: string;
   companyRole: string;
   timezone: string;
-  notes: string;
 };
 
 type MeetingMode = "google_meet" | "zoom" | "phone" | "in_person";
@@ -93,6 +92,15 @@ function cleanString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function normalizeStaffUserId(value?: string | null): string | null {
+  const cleaned = cleanString(value);
+  if (!cleaned) return null;
+  return UUID_REGEX.test(cleaned) ? cleaned : null;
+}
+
 function asErrorMessage(err: unknown): string {
   if (err instanceof Error) return err.message;
   if (typeof err === "string") return err;
@@ -106,6 +114,15 @@ function isPhoneValid(value: string): boolean {
   const len = digits.length;
   if (len < 8 || len > 15) return false;
   return parsed.isValid() && parsed.isPossible();
+}
+
+function validateMeetingNotes(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return "Meeting notes are required.";
+  if (trimmed.length < 8 || trimmed.length > 1000) {
+    return "Notes must be 8–1000 characters.";
+  }
+  return null;
 }
 
 function resolveBrowserTz() {
@@ -404,15 +421,24 @@ export default function SchedulingClient(props: Props) {
     company: "",
     companyRole: "",
     timezone: initialTz,
-    notes: "",
   });
   const [fieldErrors, setFieldErrors] = useState<Partial<FormState>>({});
+  const [meetingNotes, setMeetingNotes] = useState("");
+  const [meetingNotesTouched, setMeetingNotesTouched] = useState(false);
+
+  const meetingNotesError = useMemo(
+    () => (meetingNotesTouched ? validateMeetingNotes(meetingNotes) : null),
+    [meetingNotes, meetingNotesTouched]
+  );
+  const meetingNotesValid = useMemo(
+    () => !validateMeetingNotes(meetingNotes),
+    [meetingNotes]
+  );
 
   const isProfileIncomplete = Boolean(
     !cleanString(form.fullName) ||
       !isPhoneValid(cleanString(form.phone)) ||
       !cleanString(form.timezone) ||
-      !cleanString(form.notes) ||
       (cleanString(form.company) && !cleanString(form.companyRole))
   );
   const canProceedToMode = Boolean(selectedMeetingTypeId);
@@ -467,24 +493,14 @@ export default function SchedulingClient(props: Props) {
     effectivePaymentPolicy === "PAY_BEFORE_CONFIRM" && requiresPaymentNow;
   const missingPaymentConfig =
     requiresPaymentNow && !meetingHasPaymentConfig;
-  const stepStatus = useMemo(
-    () => ({
-      step1: Boolean(selectedMeetingTypeId),
-      step2: Boolean(selectedMeetingTypeId && selectedMode),
-      step3: Boolean(profile) && !showForm && confirmed,
-      step4: Boolean(selectedSlot) || Boolean(bookingSummary),
-      step5: Boolean(bookingSummary),
-    }),
-    [
-      selectedMeetingTypeId,
-      selectedMode,
-      profile,
-      showForm,
-      confirmed,
-      selectedSlot,
-      bookingSummary,
-    ]
-  );
+  const selectedSlotLabel = useMemo(() => {
+    if (!selectedSlot) return null;
+    const start = DateTime.fromISO(selectedSlot.startUtc).setZone(displayTz);
+    const end = DateTime.fromISO(selectedSlot.endUtc).setZone(displayTz);
+    if (!start.isValid || !end.isValid) return null;
+    return `${start.toFormat("ccc, LLL dd · HH:mm")} – ${end.toFormat("HH:mm")}`;
+  }, [selectedSlot, displayTz]);
+  const hasSelectedSlot = Boolean(selectedSlot);
   const [activeStep, setActiveStep] = useState(1);
   const canAdvanceStep = useMemo(
     () => ({
@@ -529,6 +545,11 @@ export default function SchedulingClient(props: Props) {
     setSelectedSlot(null);
     setBookingError(null);
   }, [selectedMeetingTypeId, selectedMode, showForm, confirmed]);
+
+  useEffect(() => {
+    setMeetingNotes("");
+    setMeetingNotesTouched(false);
+  }, [selectedMeetingTypeId, selectedMode]);
 
   useEffect(() => {
     if (!selectedMeetingType) {
@@ -736,7 +757,6 @@ export default function SchedulingClient(props: Props) {
             company: nextProfile.company ?? "",
             companyRole: nextProfile.companyRole ?? "",
             timezone: nextProfile.timezone,
-            notes: nextProfile.notes,
           });
           if (!displayTzLocked) {
             setDisplayTz(nextProfile.timezone || resolveBrowserTz());
@@ -774,7 +794,6 @@ export default function SchedulingClient(props: Props) {
     const company = cleanString(form.company);
     const companyRole = cleanString(form.companyRole);
     const timezone = cleanString(form.timezone);
-    const notes = cleanString(form.notes);
 
     const errors: Partial<FormState> = {};
 
@@ -802,10 +821,6 @@ export default function SchedulingClient(props: Props) {
       errors.companyRole = "Role is too long.";
     }
 
-    if (!notes || notes.length < 8 || notes.length > 1000) {
-      errors.notes = "Notes must be 8–1000 characters.";
-    }
-
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       return;
@@ -824,7 +839,6 @@ export default function SchedulingClient(props: Props) {
           company: company || undefined,
           companyRole: companyRole || undefined,
           timezone,
-          notes,
         }),
       });
 
@@ -852,6 +866,13 @@ export default function SchedulingClient(props: Props) {
     if (!selectedSlot || !selectedMeetingTypeId || !profile || !selectedMode)
       return;
     if (bookingSubmitting) return;
+    const notesError = validateMeetingNotes(meetingNotes);
+    if (notesError) {
+      setMeetingNotesTouched(true);
+      setBookingError(notesError);
+      toast.error(notesError);
+      return;
+    }
     if (!isAuthed) {
       const message = "Please sign in to book and complete payment.";
       setBookingError(message);
@@ -872,13 +893,26 @@ export default function SchedulingClient(props: Props) {
     setBookingError(null);
 
     try {
+      const resolvedStaffUserId =
+        normalizeStaffUserId(selectedSlot.staffUserId) ??
+        normalizeStaffUserId(staffUserId);
+      const staffPayload = resolvedStaffUserId
+        ? { staffUserId: resolvedStaffUserId }
+        : {};
+      const notes = meetingNotes.trim();
+      const resolvedTz =
+        cleanString(selectedSlot.timezone) ||
+        cleanString(profile.timezone) ||
+        resolveBrowserTz();
+
       if (mustPayBeforeConfirm) {
         const payload = {
           orgId,
           meetingTypeId: selectedMeetingTypeId,
           mode: selectedMode,
           startLocal: selectedSlot.startLocal,
-          tz: selectedSlot.timezone || profile.timezone,
+          tz: resolvedTz,
+          notes,
           meetingTitle: normalizeMeetingTitle(
             selectedMeetingType?.title ??
               selectedMeetingType?.key ??
@@ -887,11 +921,7 @@ export default function SchedulingClient(props: Props) {
           ),
           durationMin: selectedMeetingType?.durationMin ?? 60,
           displayTz,
-          ...(selectedSlot.staffUserId
-            ? { staffUserId: selectedSlot.staffUserId }
-            : staffUserId
-            ? { staffUserId }
-            : {}),
+          ...staffPayload,
         };
         const res = await fetch("/api/scheduling/payment/checkout", {
           method: "POST",
@@ -908,7 +938,10 @@ export default function SchedulingClient(props: Props) {
         if (typeof window !== "undefined") {
           sessionStorage.setItem(
             "pendingBooking",
-            JSON.stringify({ ...payload, paymentSessionId: json.sessionId })
+            JSON.stringify({
+              ...payload,
+              paymentSessionId: json.sessionId,
+            })
           );
         }
         if (json?.url) {
@@ -926,12 +959,9 @@ export default function SchedulingClient(props: Props) {
           meetingTypeId: selectedMeetingTypeId,
           mode: selectedMode,
           startLocal: selectedSlot.startLocal,
-          tz: selectedSlot.timezone || profile.timezone,
-          ...(selectedSlot.staffUserId
-            ? { staffUserId: selectedSlot.staffUserId }
-            : staffUserId
-            ? { staffUserId }
-            : {}),
+          tz: resolvedTz,
+          notes,
+          ...staffPayload,
         }),
       });
 
@@ -1002,31 +1032,26 @@ export default function SchedulingClient(props: Props) {
             {
               id: "1",
               label: "Type",
-              isCompleted: stepStatus.step1,
               isActive: activeStep === 1,
             },
             {
               id: "2",
               label: "Mode",
-              isCompleted: stepStatus.step2,
               isActive: activeStep === 2,
             },
             {
               id: "3",
               label: "Profile",
-              isCompleted: stepStatus.step3,
               isActive: activeStep === 3,
             },
             {
               id: "4",
               label: "Time",
-              isCompleted: stepStatus.step4,
               isActive: activeStep === 4,
             },
             {
               id: "5",
               label: "Confirm",
-              isCompleted: stepStatus.step5,
               isActive: activeStep === 5,
             },
           ]}
@@ -1479,38 +1504,6 @@ export default function SchedulingClient(props: Props) {
                     )}
                   </div>
 
-                  <div className="sm:col-span-2">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                      Meeting concept notes *
-                    </label>
-                    <Textarea
-                      value={form.notes}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setForm((prev) => ({ ...prev, notes: value }));
-                        setFieldErrors((prev) =>
-                          prev.notes ? { ...prev, notes: undefined } : prev
-                        );
-                      }}
-                      className="min-h-[140px]"
-                      style={{
-                        columnCount:
-                          form.notes.length > 600
-                            ? 3
-                            : form.notes.length > 300
-                            ? 2
-                            : 1,
-                        columnGap: "1.5rem",
-                      }}
-                      required
-                    />
-                    {fieldErrors.notes && (
-                      <p className="mt-1 text-xs text-red-600">
-                        {fieldErrors.notes}
-                      </p>
-                    )}
-                  </div>
-
                   <div className="sm:col-span-2 grid items-center gap-3 sm:grid-cols-[1fr_auto]">
                     {isProfileIncomplete ? (
                       <p className="text-sm text-gray-500">
@@ -1569,7 +1562,7 @@ export default function SchedulingClient(props: Props) {
                         {profile.timezone}
                       </p>
                       <p className="mt-1 text-gray-600 dark:text-gray-300">
-                        {profile.notes}
+                        Used to keep your booking times consistent.
                       </p>
                     </div>
                   </div>
@@ -1712,7 +1705,7 @@ export default function SchedulingClient(props: Props) {
                     Notes
                   </p>
                   <p className="mt-2 text-sm text-emerald-900">
-                    {profile?.notes ?? "—"}
+                    {meetingNotes.trim() || "—"}
                   </p>
                   <p className="mt-2 text-xs text-emerald-700">
                     Preferred timezone: {profile?.timezone ?? "—"}
@@ -1742,14 +1735,7 @@ export default function SchedulingClient(props: Props) {
                           ≈ {convertedPriceLabel} (display only)
                         </p>
                       )}
-                      <p className="text-xs text-emerald-700">
-                        Policy:{" "}
-                        {effectivePaymentPolicy === "PAY_BEFORE_CONFIRM"
-                          ? "Pay before confirmation"
-                          : effectivePaymentPolicy === "APPROVE_THEN_PAY"
-                          ? "Approve then pay"
-                          : "Free"}
-                      </p>
+                      <p className="text-xs text-emerald-700">Payment: Paid</p>
 
                       {!bookingSummary && mustPayBeforeConfirm && (
                         <div className="mt-3 space-y-2">
@@ -1801,7 +1787,8 @@ export default function SchedulingClient(props: Props) {
                       !selectedSlot ||
                       bookingSubmitting ||
                       missingPaymentConfig ||
-                      !isAuthed
+                      !isAuthed ||
+                      !meetingNotesValid
                     }
                   >
                     {bookingSubmitting
@@ -1824,7 +1811,9 @@ export default function SchedulingClient(props: Props) {
                           selectedMeetingType?.durationMin ?? 60
                         );
                         const details = `Meeting with Lux AI${
-                          profile?.notes ? `\n\nNotes: ${profile.notes}` : ""
+                          meetingNotes.trim()
+                            ? `\n\nNotes: ${meetingNotes.trim()}`
+                            : ""
                         }`;
                         const ics = buildIcsContent({
                           title,
@@ -1862,8 +1851,8 @@ export default function SchedulingClient(props: Props) {
                               : selectedMode === "phone"
                               ? `Phone: ${profile?.phone ?? "n/a"}`
                               : "",
-                            profile?.notes
-                              ? `Notes: ${profile.notes}`
+                            meetingNotes.trim()
+                              ? `Notes: ${meetingNotes.trim()}`
                               : "Meeting with Lux AI",
                           ]
                             .filter(Boolean)
@@ -1885,6 +1874,8 @@ export default function SchedulingClient(props: Props) {
                   onClick={() => {
                     setBookingSummary(null);
                     setSelectedSlot(null);
+                    setMeetingNotes("");
+                    setMeetingNotesTouched(false);
                     setActiveStep(4);
                   }}
                 >
@@ -1994,17 +1985,109 @@ export default function SchedulingClient(props: Props) {
                   tz={profile?.timezone}
                   displayTz={displayTz}
                   canBook={confirmed}
-                  onSelectSlot={(slot) =>
-                    setSelectedSlot({
+                  selectedSlot={selectedSlot}
+                  onSelectSlot={(slot) => {
+                    const next = {
                       startUtc: slot.startUtc,
                       endUtc: slot.endUtc,
                       startLocal: slot.startLocal,
                       endLocal: slot.endLocal,
                       timezone: slot.timezone,
                       staffUserId: slot.staffUserId ?? null,
-                    })
-                  }
+                    };
+                    setSelectedSlot((prev) => {
+                      if (
+                        prev &&
+                        prev.startUtc === next.startUtc &&
+                        prev.endUtc === next.endUtc &&
+                        (prev.staffUserId ?? null) === (next.staffUserId ?? null) &&
+                        prev.timezone === next.timezone
+                      ) {
+                        return null;
+                      }
+                      return next;
+                    });
+                  }}
                 />
+              )}
+
+              {canProceedToTime && (
+                <div className="mt-4 grid gap-4">
+                  <button
+                    type="button"
+                    disabled={!hasSelectedSlot}
+                    onClick={() => {
+                      if (!hasSelectedSlot) return;
+                      setSelectedSlot(null);
+                    }}
+                    className={[
+                      "rounded-2xl border px-4 py-3 text-left text-sm shadow-sm backdrop-blur transition",
+                      hasSelectedSlot
+                        ? "border-emerald-200/70 bg-emerald-50/80 text-emerald-900 hover:bg-emerald-100/80 cursor-pointer"
+                        : "border-slate-200/80 bg-slate-50/70 text-slate-600 cursor-default",
+                    ].join(" ")}
+                    aria-disabled={!hasSelectedSlot}
+                  >
+                    <p
+                      className={[
+                        "text-xs font-semibold uppercase tracking-[0.25em]",
+                        hasSelectedSlot ? "text-emerald-600" : "text-slate-500",
+                      ].join(" ")}
+                    >
+                      Selected time
+                    </p>
+                    <p
+                      className={[
+                        "mt-2 text-base font-semibold",
+                        hasSelectedSlot ? "text-emerald-900" : "text-slate-600",
+                      ].join(" ")}
+                    >
+                      {hasSelectedSlot
+                        ? selectedSlotLabel ?? "Time selected"
+                        : "No time selected yet"}
+                    </p>
+                    <p
+                      className={[
+                        "text-xs",
+                        hasSelectedSlot ? "text-emerald-700" : "text-slate-500",
+                      ].join(" ")}
+                    >
+                      {hasSelectedSlot
+                        ? displayTz
+                        : `Pick a slot to preview in ${displayTz}.`}
+                    </p>
+                    {hasSelectedSlot && (
+                      <p className="mt-1 text-xs text-emerald-700">
+                        Click to clear selection.
+                      </p>
+                    )}
+                  </button>
+
+                  <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-4 text-sm text-gray-700 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                      Meeting concept notes *
+                    </label>
+                    <Textarea
+                      value={meetingNotes}
+                      onChange={(e) => {
+                        setMeetingNotes(e.target.value);
+                        if (!meetingNotesTouched) {
+                          setMeetingNotesTouched(true);
+                        }
+                      }}
+                      onBlur={() => setMeetingNotesTouched(true)}
+                      className="mt-2 min-h-[140px]"
+                      placeholder="Share what you want to cover in this session."
+                    />
+                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400">
+                      <span>Used only for this booking.</span>
+                      <span>{meetingNotes.trim().length}/1000</span>
+                    </div>
+                    {meetingNotesError && (
+                      <p className="mt-2 text-xs text-red-600">{meetingNotesError}</p>
+                    )}
+                  </div>
+                </div>
               )}
               <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
                 <Button type="button" variant="outline" onClick={() => setActiveStep(3)}>
@@ -2012,7 +2095,11 @@ export default function SchedulingClient(props: Props) {
                 </Button>
                 <Button
                   type="button"
-                  onClick={() => setActiveStep(5)}
+                  onClick={() => {
+                    setMeetingNotesTouched(true);
+                    if (!meetingNotesValid) return;
+                    setActiveStep(5);
+                  }}
                   disabled={!canAdvanceStep[4]}
                 >
                   Next

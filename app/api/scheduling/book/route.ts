@@ -545,7 +545,7 @@ export async function POST(req: Request) {
               profile.timezone && profile.timezone !== resolvedTz
                 ? `profile_tz=${profile.timezone}`
                 : null,
-              `booker_notes=${profile.notes}`,
+              profile.notes ? `booker_notes=${profile.notes}` : null,
             )
             .filter(Boolean)
             .join("\n") || null,

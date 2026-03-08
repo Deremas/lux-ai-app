@@ -43,8 +43,10 @@ const PAYMENT_POLICIES = [
   "PAY_BEFORE_CONFIRM",
   "APPROVE_THEN_PAY",
 ] as const;
+const PAYMENT_TIERS = ["FREE", "PAID"] as const;
 
 type PaymentPolicy = (typeof PAYMENT_POLICIES)[number];
+type PaymentTier = (typeof PAYMENT_TIERS)[number];
 type ModeDetails = {
   label?: string;
   description?: string;
@@ -95,8 +97,7 @@ function formatMoney(priceCents?: number | null, currency?: string | null) {
 function formatPaymentPolicy(policy: PaymentPolicy | null) {
   if (!policy) return "Org default";
   if (policy === "FREE") return "Free";
-  if (policy === "PAY_BEFORE_CONFIRM") return "Pay before confirm";
-  return "Pay after confirm";
+  return "Paid";
 }
 
 function formatModeLabel(mode: string) {
@@ -122,6 +123,8 @@ export default function MeetingTypesClient({ orgId }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm());
+  const [lastPaidPolicy, setLastPaidPolicy] =
+    useState<PaymentPolicy>("PAY_BEFORE_CONFIRM");
   const [editorOpen, setEditorOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<MeetingType | null>(null);
   const modalOpen = editorOpen || Boolean(deleteTarget);
@@ -214,6 +217,12 @@ export default function MeetingTypesClient({ orgId }: Props) {
       cancelled = true;
     };
   }, [orgId, status, locale]);
+
+  useEffect(() => {
+    if (form.paymentPolicy !== "FREE") {
+      setLastPaidPolicy(form.paymentPolicy);
+    }
+  }, [form.paymentPolicy]);
 
   const isEditing = Boolean(form.id);
 
@@ -668,24 +677,28 @@ export default function MeetingTypesClient({ orgId }: Props) {
                     </label>
                     <select
                       className="mt-1 h-9 w-full rounded-lg border border-white/70 bg-white/80 px-3 text-sm text-gray-900 shadow-sm backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-100"
-                      value={form.paymentPolicy}
+                      value={form.paymentPolicy === "FREE" ? "FREE" : "PAID"}
                       onChange={(e) =>
                         setForm((prev) => ({
                           ...prev,
-                          paymentPolicy: e.target.value as FormState["paymentPolicy"],
+                          paymentPolicy:
+                            (e.target.value as PaymentTier) === "FREE"
+                              ? "FREE"
+                              : prev.paymentPolicy !== "FREE"
+                              ? prev.paymentPolicy
+                              : lastPaidPolicy,
                         }))
                       }
                     >
-                      {PAYMENT_POLICIES.map((policy) => (
-                        <option key={policy} value={policy}>
-                          {policy === "FREE"
-                            ? "Free"
-                            : policy === "PAY_BEFORE_CONFIRM"
-                            ? "Pay before confirm"
-                            : "Pay after confirm"}
+                      {PAYMENT_TIERS.map((tier) => (
+                        <option key={tier} value={tier}>
+                          {tier === "FREE" ? "Free" : "Paid"}
                         </option>
                       ))}
                     </select>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Paid bookings follow your org payment timing rules.
+                    </p>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div>
