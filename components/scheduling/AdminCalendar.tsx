@@ -610,6 +610,11 @@ export function AdminCalendar({
         }
         .fc .appointment {
           opacity: 1;
+          cursor: pointer;
+        }
+        .fc .appointment .fc-event-main,
+        .fc .appointment .fc-event-title-container {
+          cursor: pointer;
         }
         .fc .fc-timegrid-event .fc-event-main {
           display: flex;

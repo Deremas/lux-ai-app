@@ -45,8 +45,7 @@ enum ApprovalPolicy {
 
 enum PaymentPolicy {
   FREE
-  PAY_BEFORE_CONFIRM
-  APPROVE_THEN_PAY
+  PAID
 
   @@map("payment_policy")
 }

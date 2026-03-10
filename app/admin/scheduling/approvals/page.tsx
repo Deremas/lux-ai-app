@@ -1,4 +1,4 @@
-import StaffUsersClient from "./StaffUsersClient";
+import BookingsClient from "../bookings/BookingsClientFinal";
 import { getServerSession } from "next-auth/next";
 import ProductShell from "@/components/scheduling/ProductShell";
 
@@ -8,6 +8,8 @@ import {
   getUserOrgContext,
 } from "@/lib/scheduling/org-context";
 import { requireAdminOrStaffForOrg } from "@/lib/scheduling/admin-guard";
+
+const FALLBACK_TZ = "Europe/Luxembourg";
 
 function pickParam(value: string | string[] | undefined): string {
   if (!value) return "";
@@ -25,21 +27,22 @@ async function resolveOrgId() {
   return await getFirstOrgContext();
 }
 
-export default async function SchedulingStaffPage({
+export default async function SchedulingApprovalsPage({
   searchParams,
 }: {
-  searchParams?: {};
+  searchParams?: { tz?: string | string[] };
 }) {
   const orgContext = await resolveOrgId();
+  const tz = pickParam(searchParams?.tz) || orgContext?.defaultTz || FALLBACK_TZ;
 
   if (orgContext?.orgId) {
-    const returnTo = "/admin/scheduling/staff";
+    const returnTo = "/admin/scheduling/approvals";
     await requireAdminOrStaffForOrg(orgContext.orgId, returnTo);
   }
 
   return (
     <ProductShell>
-      <StaffUsersClient orgId={orgContext?.orgId ?? ""} />
+      <BookingsClient orgId={orgContext?.orgId ?? ""} tz={tz} view="approvals" />
     </ProductShell>
   );
 }

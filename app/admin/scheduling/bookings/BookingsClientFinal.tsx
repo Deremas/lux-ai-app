@@ -2,10 +2,18 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { DateTime } from "luxon";
-import { signIn, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import MrtCardTable from "@/components/scheduling/MrtCardTable";
 import FilterBar from "@/components/scheduling/FilterBar";
@@ -16,6 +24,7 @@ import type { MRT_ColumnDef, MRT_PaginationState } from "material-react-table";
 type Props = {
     orgId: string;
     tz?: string;
+    view?: "all" | "approvals";
 };
 
 type Booking = {
@@ -53,6 +62,8 @@ type StaffOption = {
     email: string;
 };
 
+type ApprovalAction = "approve" | "decline";
+
 const STATUS_OPTIONS = [
     "all",
     "pending",
@@ -61,6 +72,9 @@ const STATUS_OPTIONS = [
     "canceled",
     "completed",
 ] as const;
+
+const filterControlClassName =
+    "mt-1 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-slate-100";
 
 function formatMoney(priceCents?: number | null, currency?: string | null) {
     if (!priceCents || !currency) return null;
@@ -97,6 +111,11 @@ function formatModeLabel(mode: string) {
     }
 }
 
+function formatPaymentPolicyLabel(policy: string | null | undefined) {
+  if (!policy || policy === "FREE") return "Free";
+  return "Paid";
+}
+
 function normalizePaymentStatus(
     status: string | null | undefined,
     requiresPayment: boolean | null | undefined
@@ -114,15 +133,20 @@ function resolvePagination(
     return typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue;
 }
 
-export default function BookingsClient({ orgId, tz }: Props) {
+export default function BookingsClient({ orgId, tz, view = "all" }: Props) {
     const { status } = useSession();
+    const isApprovalsView = view === "approvals";
+    const defaultStatusFilter: (typeof STATUS_OPTIONS)[number] = isApprovalsView
+        ? "pending"
+        : "all";
     const [items, setItems] = useState<Booking[]>([]);
     const [meetingTypes, setMeetingTypes] = useState<MeetingTypeOption[]>([]);
     const [staffUsers, setStaffUsers] = useState<StaffOption[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [notice, setNotice] = useState<string | null>(null);
-    const [statusFilter, setStatusFilter] = useState<(typeof STATUS_OPTIONS)[number]>("pending");
+    const [statusFilter, setStatusFilter] = useState<(typeof STATUS_OPTIONS)[number]>(
+        defaultStatusFilter
+    );
     const [modeFilter, setModeFilter] = useState<string>("all");
     const [meetingTypeFilter, setMeetingTypeFilter] = useState<string>("all");
     const [staffFilter, setStaffFilter] = useState<string>("all");
@@ -133,7 +157,13 @@ export default function BookingsClient({ orgId, tz }: Props) {
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [total, setTotal] = useState(0);
-    const [timezone, setTimezone] = useState(tz || "UTC");
+    const [refreshKey, setRefreshKey] = useState(0);
+    const [notice, setNotice] = useState<string | null>(null);
+    const [approvalTarget, setApprovalTarget] = useState<Booking | null>(null);
+    const [approvalAction, setApprovalAction] = useState<ApprovalAction>("approve");
+    const [approvalNote, setApprovalNote] = useState("");
+    const [approvalError, setApprovalError] = useState<string | null>(null);
+    const [approvalSubmitting, setApprovalSubmitting] = useState(false);
 
     const timezoneDisplay = useMemo(() => {
         if (tz) return tz;
@@ -142,6 +172,13 @@ export default function BookingsClient({ orgId, tz }: Props) {
         }
         return "UTC";
     }, [tz]);
+
+    const approvalDialogOpen = Boolean(approvalTarget);
+
+    useEffect(() => {
+        setStatusFilter(defaultStatusFilter);
+        setPage(1);
+    }, [defaultStatusFilter]);
 
     useEffect(() => {
         if (status !== "authenticated") return;
@@ -186,7 +223,7 @@ export default function BookingsClient({ orgId, tz }: Props) {
         return () => {
             cancelled = true;
         };
-    }, [orgId, statusFilter, modeFilter, meetingTypeFilter, staffFilter, startDate, endDate, debouncedQuery, page, pageSize, status]);
+    }, [orgId, statusFilter, modeFilter, meetingTypeFilter, staffFilter, startDate, endDate, debouncedQuery, page, pageSize, refreshKey, status]);
 
     useEffect(() => {
         if (status !== "authenticated") return;
@@ -244,6 +281,69 @@ export default function BookingsClient({ orgId, tz }: Props) {
         const timer = setTimeout(() => setDebouncedQuery(query), 300);
         return () => clearTimeout(timer);
     }, [query]);
+
+    function handleApprovalDialogOpenChange(nextOpen: boolean) {
+        if (nextOpen) return;
+        if (approvalSubmitting) return;
+        setApprovalTarget(null);
+        setApprovalNote("");
+        setApprovalError(null);
+    }
+
+    function openApprovalDialog(item: Booking, action: ApprovalAction) {
+        setApprovalTarget(item);
+        setApprovalAction(action);
+        setApprovalNote("");
+        setApprovalError(null);
+    }
+
+    async function submitApprovalAction() {
+        if (!approvalTarget || !orgId) return;
+        setApprovalSubmitting(true);
+        setApprovalError(null);
+        setNotice(null);
+
+        try {
+            const res = await fetch(
+                `/api/scheduling/admin/appointments/${approvalTarget.id}/${approvalAction}?orgId=${orgId}`,
+                {
+                    method: "POST",
+                    headers: { "content-type": "application/json" },
+                    body: JSON.stringify({
+                        reason: approvalNote.trim() || undefined,
+                    }),
+                }
+            );
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                setApprovalError(data?.error ?? "Action failed");
+                return;
+            }
+
+            setNotice(
+                data?.emailError
+                    ? `${approvalAction === "approve" ? "Approved" : "Declined"}; email failed: ${data.emailError}`
+                    : approvalAction === "approve"
+                    ? "Booking approved."
+                    : "Booking declined."
+            );
+
+            const shouldGoBackPage = items.length === 1 && page > 1;
+            setApprovalTarget(null);
+            setApprovalNote("");
+            setApprovalError(null);
+
+            if (shouldGoBackPage) {
+                setPage((prev) => Math.max(1, prev - 1));
+            } else {
+                setRefreshKey((prev) => prev + 1);
+            }
+        } catch {
+            setApprovalError("Action failed");
+        } finally {
+            setApprovalSubmitting(false);
+        }
+    }
 
     const filtered = useMemo(() => {
         return items.filter((item) => {
@@ -410,21 +510,78 @@ export default function BookingsClient({ orgId, tz }: Props) {
             accessorKey: "actions",
             header: "Actions",
             Cell: ({ row }) => (
-                <Button size="sm" variant="outline" asChild>
-                    <Link href={`/admin/scheduling/bookings/${row.original.id}`}>
-                        View details
-                    </Link>
-                </Button>
+                isApprovalsView ? (
+                    <div className="flex flex-wrap gap-2">
+                        <Button
+                            size="sm"
+                            onClick={() => openApprovalDialog(row.original, "approve")}
+                        >
+                            Approve
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => openApprovalDialog(row.original, "decline")}
+                        >
+                            Decline
+                        </Button>
+                        <Button size="sm" variant="outline" asChild>
+                            <Link href={`/admin/scheduling/bookings/${row.original.id}`}>
+                                View details
+                            </Link>
+                        </Button>
+                    </div>
+                ) : (
+                    <Button size="sm" variant="outline" asChild>
+                        <Link href={`/admin/scheduling/bookings/${row.original.id}`}>
+                            View details
+                        </Link>
+                    </Button>
+                )
             ),
         },
-    ], [timezoneDisplay, meetingTypeLookup, staffLookup]);
+    ], [isApprovalsView, meetingTypeLookup, staffLookup, timezoneDisplay]);
+
+    const activeFilterCount = [
+        !isApprovalsView && statusFilter !== "all",
+        modeFilter !== "all",
+        meetingTypeFilter !== "all",
+        staffFilter !== "all",
+        Boolean(startDate),
+        Boolean(endDate),
+        Boolean(query.trim()),
+    ].filter(Boolean).length;
+
+    const heroTitle = isApprovalsView ? "Booking approvals" : "Bookings";
+    const heroSubtitle = isApprovalsView
+        ? "Review booking requests that are waiting for approval."
+        : "Review, filter, and manage bookings across all statuses.";
+    const filterSubtitle = isApprovalsView
+        ? "Review pending requests by meeting type, staff, date range, or customer search."
+        : "Narrow the booking list by status, meeting type, staff, date range, or customer search.";
+    const tableTitle = isApprovalsView ? "Pending approvals" : "All bookings";
+    const tableSubtitle = isApprovalsView
+        ? `Showing ${filtered.length} of ${total} pending booking requests`
+        : `Showing ${filtered.length} of ${total} matching bookings`;
+
+    function resetFilters() {
+        setStatusFilter(defaultStatusFilter);
+        setModeFilter("all");
+        setMeetingTypeFilter("all");
+        setStaffFilter("all");
+        setStartDate("");
+        setEndDate("");
+        setQuery("");
+        setDebouncedQuery("");
+        setPage(1);
+    }
 
     return (
         <div className="space-y-8">
             <ProductHero
                 eyebrow="Bookings"
-                title="Booking approvals"
-                subtitle="Review and approve pending booking requests"
+                title={heroTitle}
+                subtitle={heroSubtitle}
                 chips={
                     <span className="text-xs text-gray-500">
                         Times shown in {timezoneDisplay}.
@@ -432,83 +589,175 @@ export default function BookingsClient({ orgId, tz }: Props) {
                 }
             />
 
-            <FilterBar>
-                <select
-                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as any)}
-                >
-                    <option value="all">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="declined">Declined</option>
-                    <option value="canceled">Canceled</option>
-                    <option value="completed">Completed</option>
-                </select>
-                <select
-                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
-                    value={modeFilter}
-                    onChange={(e) => setModeFilter(e.target.value)}
-                >
-                    <option value="all">All Modes</option>
-                    <option value="google_meet">Google Meet</option>
-                    <option value="zoom">Zoom</option>
-                    <option value="phone">Phone</option>
-                    <option value="in_person">In Person</option>
-                </select>
-                <select
-                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
-                    value={meetingTypeFilter}
-                    onChange={(e) => setMeetingTypeFilter(e.target.value)}
-                >
-                    <option value="all">All Types</option>
-                    {meetingTypes.map((type) => (
-                        <option key={type.id} value={type.id}>
-                            {type.title}
-                        </option>
-                    ))}
-                </select>
-                <select
-                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
-                    value={staffFilter}
-                    onChange={(e) => setStaffFilter(e.target.value)}
-                >
-                    <option value="all">All Staff</option>
-                    {staffUsers.map((staff) => (
-                        <option key={staff.id} value={staff.id}>
-                            {staff.name || staff.email}
-                        </option>
-                    ))}
-                </select>
-                <Input
-                    type="date"
-                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                />
-                <Input
-                    type="date"
-                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                />
-                <Input
-                    className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search name, email, phone..."
-                />
+            <FilterBar className="grid gap-4 lg:grid-cols-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 lg:col-span-4">
+                    <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400">
+                            Filters
+                        </p>
+                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                            {filterSubtitle}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                            {activeFilterCount} active
+                        </span>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={resetFilters}
+                            disabled={activeFilterCount === 0}
+                        >
+                            Reset
+                        </Button>
+                    </div>
+                </div>
+
+                {isApprovalsView ? (
+                    <div>
+                        <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                            Status
+                        </label>
+                        <div className={`${filterControlClassName} flex items-center font-medium`}>
+                            Pending approval only
+                        </div>
+                    </div>
+                ) : (
+                    <div>
+                        <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                            Status
+                        </label>
+                        <select
+                            className={filterControlClassName}
+                            value={statusFilter}
+                            onChange={(e) => {
+                                setStatusFilter(e.target.value as (typeof STATUS_OPTIONS)[number]);
+                                setPage(1);
+                            }}
+                        >
+                            <option value="all">All statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="declined">Declined</option>
+                            <option value="canceled">Canceled</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                )}
+
+                <div>
+                    <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Mode
+                    </label>
+                    <select
+                        className={filterControlClassName}
+                        value={modeFilter}
+                        onChange={(e) => {
+                            setModeFilter(e.target.value);
+                            setPage(1);
+                        }}
+                    >
+                        <option value="all">All modes</option>
+                        <option value="google_meet">Google Meet</option>
+                        <option value="zoom">Zoom</option>
+                        <option value="phone">Phone</option>
+                        <option value="in_person">In person</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Meeting type
+                    </label>
+                    <select
+                        className={filterControlClassName}
+                        value={meetingTypeFilter}
+                        onChange={(e) => {
+                            setMeetingTypeFilter(e.target.value);
+                            setPage(1);
+                        }}
+                    >
+                        <option value="all">All meeting types</option>
+                        {meetingTypes.map((type) => (
+                            <option key={type.id} value={type.id}>
+                                {type.title}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div>
+                    <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Staff
+                    </label>
+                    <select
+                        className={filterControlClassName}
+                        value={staffFilter}
+                        onChange={(e) => {
+                            setStaffFilter(e.target.value);
+                            setPage(1);
+                        }}
+                    >
+                        <option value="all">All staff</option>
+                        {staffUsers.map((staff) => (
+                            <option key={staff.id} value={staff.id}>
+                                {staff.name || staff.email}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div>
+                    <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        From
+                    </label>
+                    <Input
+                        type="date"
+                        className={filterControlClassName}
+                        value={startDate}
+                        onChange={(e) => {
+                            setStartDate(e.target.value);
+                            setPage(1);
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        To
+                    </label>
+                    <Input
+                        type="date"
+                        className={filterControlClassName}
+                        value={endDate}
+                        onChange={(e) => {
+                            setEndDate(e.target.value);
+                            setPage(1);
+                        }}
+                    />
+                </div>
+
+                <div className="lg:col-span-2">
+                    <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Search
+                    </label>
+                    <Input
+                        className={filterControlClassName}
+                        value={query}
+                        onChange={(e) => {
+                            setQuery(e.target.value);
+                            setPage(1);
+                        }}
+                        placeholder="Search customer name, email, phone, or meeting type..."
+                    />
+                </div>
             </FilterBar>
 
             {loading && (
                 <div className="mt-6 text-sm text-gray-600 dark:text-gray-300">
                     Loading bookings...
-                </div>
-            )}
-
-            {notice && (
-                <div className="mt-6 rounded-lg border border-emerald-200/70 bg-emerald-50/80 px-3 py-2 text-sm text-emerald-700 backdrop-blur">
-                    {notice}
                 </div>
             )}
 
@@ -518,15 +767,26 @@ export default function BookingsClient({ orgId, tz }: Props) {
                 </div>
             )}
 
+            {notice && (
+                <div className="mt-6 rounded-lg border border-emerald-200/70 bg-emerald-50/80 px-3 py-2 text-sm text-emerald-700">
+                    {notice}
+                </div>
+            )}
+
             <MrtCardTable
-                title="Bookings"
-                subtitle={`${filtered.length} of ${total} bookings`}
+                title={tableTitle}
+                subtitle={tableSubtitle}
                 table={{
                     columns,
                     data: filtered,
                     enablePagination: true,
                     enableSorting: true,
-                    enableFilters: true,
+                    enableFilters: false,
+                    enableColumnActions: false,
+                    enableGlobalFilter: false,
+                    enableDensityToggle: false,
+                    enableFullScreenToggle: false,
+                    enableTopToolbar: false,
                     manualPagination: true,
                     rowCount: total,
                     state: {
@@ -550,6 +810,158 @@ export default function BookingsClient({ orgId, tz }: Props) {
                     ),
                 }}
             />
+
+            {isApprovalsView && approvalTarget && (
+                <Dialog open={approvalDialogOpen} onOpenChange={handleApprovalDialogOpenChange}>
+                    <DialogContent className="w-[min(720px,94vw)] max-w-2xl top-[calc(var(--site-header-height)+1rem)] max-h-[calc(100dvh-var(--site-header-height)-2rem)] translate-y-0 overflow-y-auto overscroll-contain rounded-2xl border border-white/70 bg-white/95 p-0 shadow-2xl backdrop-blur data-[state=closed]:slide-out-to-top-4 data-[state=open]:slide-in-from-top-4 dark:border-slate-700/60 dark:bg-slate-900/90">
+                        <DialogHeader className="sticky top-0 z-10 space-y-2 border-b border-white/70 bg-white/95 px-6 pb-4 pt-5 pr-14 text-left backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/95">
+                            <DialogTitle>
+                                {approvalAction === "approve" ? "Approve booking" : "Decline booking"}
+                            </DialogTitle>
+                            <DialogDescription>
+                                Confirm the decision for this pending booking request.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="space-y-5 px-6 py-5">
+                            <div className="grid gap-4 rounded-2xl border border-white/70 bg-white/80 p-4 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div>
+                                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                                            Meeting
+                                        </p>
+                                        <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">
+                                            {meetingTypeLookup.get(approvalTarget.meetingTypeId) ??
+                                                formatKeyLabel(approvalTarget.meetingTypeKey ?? "Meeting")}
+                                        </p>
+                                        <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                                            {formatModeLabel(approvalTarget.mode)}
+                                            {approvalTarget.durationMin ? ` · ${approvalTarget.durationMin} min` : ""}
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                                            Customer
+                                        </p>
+                                        <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">
+                                            {approvalTarget.userFullName || approvalTarget.userName || "Booking user"}
+                                        </p>
+                                        <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                                            {approvalTarget.userEmail || "No email"}
+                                            {approvalTarget.userPhone ? ` · ${approvalTarget.userPhone}` : ""}
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                                            Time
+                                        </p>
+                                        <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">
+                                            {DateTime.fromJSDate(
+                                                approvalTarget.startAtUtc instanceof Date
+                                                    ? approvalTarget.startAtUtc
+                                                    : new Date(approvalTarget.startAtUtc)
+                                            )
+                                                .setZone(timezoneDisplay)
+                                                .toFormat("ccc, LLL dd · HH:mm")}
+                                            {" - "}
+                                            {DateTime.fromJSDate(
+                                                approvalTarget.endAtUtc instanceof Date
+                                                    ? approvalTarget.endAtUtc
+                                                    : new Date(approvalTarget.endAtUtc)
+                                            )
+                                                .setZone(timezoneDisplay)
+                                                .toFormat("HH:mm")}
+                                        </p>
+                                        <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                                            {timezoneDisplay}
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                                            Payment
+                                        </p>
+                                        <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">
+                                            {getStatusDisplay(
+                                                normalizePaymentStatus(
+                                                    approvalTarget.paymentStatus ?? null,
+                                                    approvalTarget.requiresPayment
+                                                )
+                                            )}
+                                            {formatMoney(
+                                                approvalTarget.priceCents,
+                                                approvalTarget.currency
+                                            )
+                                                ? ` · ${formatMoney(
+                                                      approvalTarget.priceCents,
+                                                      approvalTarget.currency
+                                                  )}`
+                                                : ""}
+                                        </p>
+                                        <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                                            Policy: {formatPaymentPolicyLabel(approvalTarget.paymentPolicy)}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {approvalAction === "approve" &&
+                                    approvalTarget.paymentPolicy !== "FREE" &&
+                                    approvalTarget.paymentStatus !== "paid" && (
+                                        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                                            This paid booking cannot be approved until payment is marked as paid.
+                                        </div>
+                                    )}
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                                    Internal note
+                                </label>
+                                <Input
+                                    className={filterControlClassName}
+                                    value={approvalNote}
+                                    onChange={(event) => setApprovalNote(event.target.value)}
+                                    placeholder="Optional approval note"
+                                    maxLength={300}
+                                />
+                            </div>
+
+                            {approvalError && (
+                                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                                    {approvalError}
+                                </div>
+                            )}
+                        </div>
+
+                        <DialogFooter className="sticky bottom-0 border-t border-white/70 bg-white/95 px-6 py-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/95">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => handleApprovalDialogOpenChange(false)}
+                                disabled={approvalSubmitting}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                variant={approvalAction === "approve" ? "default" : "destructive"}
+                                onClick={submitApprovalAction}
+                                disabled={approvalSubmitting}
+                            >
+                                {approvalSubmitting
+                                    ? approvalAction === "approve"
+                                        ? "Approving..."
+                                        : "Declining..."
+                                    : approvalAction === "approve"
+                                    ? "Approve booking"
+                                    : "Decline booking"}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     );
 }

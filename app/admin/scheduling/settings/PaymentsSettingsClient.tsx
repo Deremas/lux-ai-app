@@ -16,7 +16,7 @@ type Props = {
 };
 
 type Settings = {
-  paymentPolicy: "FREE" | "PAY_BEFORE_CONFIRM" | "APPROVE_THEN_PAY";
+  paymentPolicy: "FREE" | "PAID";
   defaultPaymentCents: number | null;
   defaultCurrency: string | null;
   allowedCurrencies: string | null;
@@ -38,6 +38,18 @@ function snapshotFrom(settings: Settings, paymentAmount: string) {
   });
 }
 
+function formatMoney(priceCents: number | null, currency: string | null) {
+  if (priceCents === null || priceCents === undefined || !currency) return null;
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+    }).format(priceCents / 100);
+  } catch {
+    return `${(priceCents / 100).toFixed(2)} ${currency}`;
+  }
+}
+
 export default function PaymentsSettingsClient({ orgId }: Props) {
   const { status } = useSession();
   const [loading, setLoading] = useState(false);
@@ -47,8 +59,6 @@ export default function PaymentsSettingsClient({ orgId }: Props) {
   const [form, setForm] = useState<Settings | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [initialSnapshot, setInitialSnapshot] = useState("");
-  const [lastPaidPolicy, setLastPaidPolicy] =
-    useState<Settings["paymentPolicy"]>("PAY_BEFORE_CONFIRM");
 
   const currencyOptions = useMemo(() => {
     const fromForm = form?.allowedCurrencies
@@ -109,22 +119,28 @@ export default function PaymentsSettingsClient({ orgId }: Props) {
     };
   }, [orgId, status]);
 
-  useEffect(() => {
-    if (form?.paymentPolicy && form.paymentPolicy !== "FREE") {
-      setLastPaidPolicy(form.paymentPolicy);
-    }
-  }, [form?.paymentPolicy]);
-
   const snapshot = useMemo(
     () => (form ? snapshotFrom(form, paymentAmount) : ""),
     [form, paymentAmount]
   );
   const isDirty = Boolean(form && snapshot !== initialSnapshot);
-  const paymentTier: PaymentTier | null = form
-    ? form.paymentPolicy === "FREE"
-      ? "FREE"
-      : "PAID"
-    : null;
+  const paymentTier: PaymentTier | null = form ? form.paymentPolicy : null;
+  const configuredAllowedCurrencies = useMemo(() => {
+    if (!form?.allowedCurrencies) return [];
+    return form.allowedCurrencies
+      .split(",")
+      .map((item) => item.trim().toUpperCase())
+      .filter(Boolean);
+  }, [form?.allowedCurrencies]);
+  const parsedDefaultCents = useMemo(() => {
+    if (!paymentAmount.trim()) return null;
+    const value = Number(paymentAmount);
+    return Number.isFinite(value) ? Math.round(value * 100) : null;
+  }, [paymentAmount]);
+  const defaultPaymentLabel = useMemo(
+    () => formatMoney(parsedDefaultCents, cleanString(form?.defaultCurrency ?? "" ) || null),
+    [parsedDefaultCents, form?.defaultCurrency]
+  );
 
   useUnsavedChangesPrompt(isDirty);
 
@@ -259,12 +275,7 @@ export default function PaymentsSettingsClient({ orgId }: Props) {
                         prev
                           ? {
                               ...prev,
-                              paymentPolicy:
-                                (e.target.value as PaymentTier) === "FREE"
-                                  ? "FREE"
-                                  : prev.paymentPolicy !== "FREE"
-                                  ? prev.paymentPolicy
-                                  : lastPaidPolicy,
+                              paymentPolicy: e.target.value as PaymentTier,
                             }
                           : prev
                       )
@@ -277,8 +288,8 @@ export default function PaymentsSettingsClient({ orgId }: Props) {
                     ))}
                   </select>
                   <p className="mt-2 text-xs text-gray-500">
-                    Paid bookings require payment. Existing timing rules are
-                    preserved.
+                    This sets the default payment mode for new meeting types.
+                    Individual meeting types can still be free or paid on their own.
                   </p>
                 </div>
               </div>
@@ -348,19 +359,85 @@ export default function PaymentsSettingsClient({ orgId }: Props) {
                     Comma-separated ISO currency codes shown in meeting types.
                   </p>
                 </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 text-sm text-slate-700 dark:border-slate-700/60 dark:bg-slate-900/50 dark:text-slate-200">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                    Current default payment setup
+                  </p>
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Org payment mode
+                      </p>
+                      <p className="mt-1 font-medium">
+                        {paymentTier === "FREE" ? "Free by default" : "Paid by default"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Default amount
+                      </p>
+                      <p className="mt-1 font-medium">
+                        {defaultPaymentLabel ?? "Not set"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Default currency
+                      </p>
+                      <p className="mt-1 font-medium">
+                        {cleanString(form.defaultCurrency ?? "") || "Not set"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Allowed currencies
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {configuredAllowedCurrencies.length > 0 ? (
+                          configuredAllowedCurrencies.map((currency) => (
+                            <span
+                              key={currency}
+                              className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-300"
+                            >
+                              {currency}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-sm text-slate-500 dark:text-slate-400">
+                            No custom list yet
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </SectionCard>
           </div>
 
-          <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-xs text-gray-600 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-300">
+          <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-4 text-sm text-gray-600 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-300">
             <p className="font-semibold text-gray-700 dark:text-gray-200">
-              About defaults
+              How defaults apply safely
             </p>
-            <p className="mt-1">
-              Applying payment defaults fills in missing price or currency on
-              meeting types. It does not overwrite meeting types that already
-              have a price and currency set.
-            </p>
+            <ul className="mt-2 space-y-2">
+              <li>
+                New paid meeting types start from these org defaults in the editor,
+                then you can override the amount or currency for that one meeting type.
+              </li>
+              <li>
+                Paid meetings always go through payment first. If approval is required,
+                payment is still collected before the booking can be confirmed.
+              </li>
+              <li>
+                <span className="font-medium">Apply payment defaults</span> only
+                backfills missing price or currency on paid meeting types. It does
+                not overwrite a complete meeting-type price.
+              </li>
+              <li>
+                Free meeting types are excluded. They keep no price and no currency.
+              </li>
+            </ul>
           </div>
 
           <SettingsFormActions
@@ -374,7 +451,7 @@ export default function PaymentsSettingsClient({ orgId }: Props) {
                 onClick={handleApplyDefaults}
                 disabled={applyLoading}
               >
-                {applyLoading ? "Applying..." : "Apply payment defaults"}
+                {applyLoading ? "Applying..." : "Backfill missing paid meeting types"}
               </Button>
             }
           />

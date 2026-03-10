@@ -2,9 +2,20 @@
 import { prisma } from "@/lib/prisma";
 
 export type ApprovalPolicy = "AUTO_APPROVE" | "REQUIRES_APPROVAL";
-export type PaymentPolicy = "FREE" | "PAY_BEFORE_CONFIRM" | "APPROVE_THEN_PAY";
+export type PaymentPolicy = "FREE" | "PAID";
 
-export async function getOrgPolicies(orgId: string) {
+type OrgPolicies = {
+  approvalPolicy: ApprovalPolicy;
+  paymentPolicy: PaymentPolicy;
+  notifyEmails: string[] | null;
+  defaultTz: string;
+  defaultLocale: string;
+  defaultPaymentCents: number | null;
+  defaultCurrency: string | null;
+  maxDailyBookings: number;
+};
+
+export async function getOrgPolicies(orgId: string): Promise<OrgPolicies> {
   const fallbackPaymentCents = Number(
     process.env.DEFAULT_PAYMENT_CENTS ?? "15000"
   );
@@ -29,7 +40,8 @@ export async function getOrgPolicies(orgId: string) {
   return {
     approvalPolicy: (row?.approvalPolicy ??
       "REQUIRES_APPROVAL") as ApprovalPolicy,
-    paymentPolicy: (row?.paymentPolicy ?? "FREE") as PaymentPolicy,
+    paymentPolicy:
+      row?.paymentPolicy === "FREE" ? "FREE" : "PAID",
     notifyEmails: row?.notifyEmails ?? null,
     defaultTz: row?.defaultTz ?? "Europe/Luxembourg",
     defaultLocale: row?.defaultLocale ?? "en",

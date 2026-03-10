@@ -86,7 +86,7 @@ type BookingSummary = {
   } | null;
 };
 
-type PaymentPolicy = "FREE" | "PAY_BEFORE_CONFIRM" | "APPROVE_THEN_PAY";
+type PaymentPolicy = "FREE" | "PAID";
 
 function cleanString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -488,11 +488,9 @@ export default function SchedulingClient(props: Props) {
   const meetingHasPaymentConfig =
     Boolean(selectedMeetingType?.priceCents) &&
     Boolean(selectedMeetingType?.currency);
-  const requiresPaymentNow = paymentRequiredByPolicy;
-  const mustPayBeforeConfirm =
-    effectivePaymentPolicy === "PAY_BEFORE_CONFIRM" && requiresPaymentNow;
   const missingPaymentConfig =
-    requiresPaymentNow && !meetingHasPaymentConfig;
+    paymentRequiredByPolicy && !meetingHasPaymentConfig;
+  const requiresCheckout = paymentRequiredByPolicy;
   const selectedSlotLabel = useMemo(() => {
     if (!selectedSlot) return null;
     const start = DateTime.fromISO(selectedSlot.startUtc).setZone(displayTz);
@@ -884,7 +882,7 @@ export default function SchedulingClient(props: Props) {
     }
     if (missingPaymentConfig) {
       const message =
-        "Payment is required by policy, but this meeting type is missing price or currency.";
+        "This paid meeting type is missing a price or currency.";
       setBookingError(message);
       toast.error(message);
       return;
@@ -905,7 +903,7 @@ export default function SchedulingClient(props: Props) {
         cleanString(profile.timezone) ||
         resolveBrowserTz();
 
-      if (mustPayBeforeConfirm) {
+      if (requiresCheckout) {
         const payload = {
           orgId,
           meetingTypeId: selectedMeetingTypeId,
@@ -979,24 +977,30 @@ export default function SchedulingClient(props: Props) {
         toast.message(json.timezoneNotice);
       }
 
-        setBookingSummary({
-          slot: selectedSlot,
-          meetingTypeId: selectedMeetingTypeId,
-          displayTz,
-          mode: (json?.appointment?.mode as MeetingMode) ?? selectedMode,
-          status: String(json?.appointment?.status ?? "pending"),
-          meetingLink: json?.meetingLink ?? null,
-          payment: json?.payment
-            ? {
-                status: json.payment.status,
-                priceCents: json.payment.priceCents ?? null,
-                currency: json.payment.currency ?? null,
-                policy: json?.policies?.paymentPolicy ?? effectivePaymentPolicy,
-              }
-            : null,
-        });
+      const bookingStatus = String(json?.appointment?.status ?? "pending");
+
+      setBookingSummary({
+        slot: selectedSlot,
+        meetingTypeId: selectedMeetingTypeId,
+        displayTz,
+        mode: (json?.appointment?.mode as MeetingMode) ?? selectedMode,
+        status: bookingStatus,
+        meetingLink: json?.meetingLink ?? null,
+        payment: json?.payment
+          ? {
+              status: json.payment.status,
+              priceCents: json.payment.priceCents ?? null,
+              currency: json.payment.currency ?? null,
+              policy: json?.policies?.paymentPolicy ?? effectivePaymentPolicy,
+            }
+          : null,
+      });
       setSelectedSlot(null);
-      toast.success("Booking confirmed.");
+      toast.success(
+        bookingStatus === "pending"
+          ? "Booking request submitted."
+          : "Booking confirmed."
+      );
     } catch {
       setBookingError("Booking failed.");
       toast.error("Booking failed.");
@@ -1720,8 +1724,8 @@ export default function SchedulingClient(props: Props) {
                   </p>
                   {missingPaymentConfig ? (
                     <div className="mt-2 rounded-lg border border-amber-200/70 bg-amber-50/80 px-3 py-2 text-amber-900 backdrop-blur">
-                      Payment is required by policy, but this meeting type is
-                      missing a price or currency. Please contact the admin.
+                      This paid meeting type is missing a price or currency.
+                      Please contact the admin.
                     </div>
                   ) : (
                     <>
@@ -1737,11 +1741,15 @@ export default function SchedulingClient(props: Props) {
                       )}
                       <p className="text-xs text-emerald-700">Payment: Paid</p>
 
-                      {!bookingSummary && mustPayBeforeConfirm && (
+                      {!bookingSummary && requiresCheckout && (
                         <div className="mt-3 space-y-2">
                           <p className="text-xs text-emerald-700">
-                            Click “Proceed to payment” to complete your booking
-                            in Stripe.
+                            Click “Proceed to payment” to pay in Stripe before
+                            this booking can be confirmed.
+                          </p>
+                          <p className="text-xs text-emerald-700">
+                            If approval is required, your request will stay
+                            pending after payment until the team approves it.
                           </p>
                           {paymentUrl && (
                             <p className="text-xs text-emerald-700">
@@ -1751,13 +1759,6 @@ export default function SchedulingClient(props: Props) {
                           )}
                         </div>
                       )}
-                      {!bookingSummary &&
-                        effectivePaymentPolicy === "APPROVE_THEN_PAY" && (
-                          <p className="mt-3 text-xs text-emerald-700">
-                            You can confirm now. We’ll send payment
-                            instructions after approval.
-                          </p>
-                        )}
                       {bookingSummary?.payment && (
                         <p className="mt-3 text-xs text-emerald-700">
                           Payment status: {bookingSummary.payment.status}
@@ -1795,7 +1796,7 @@ export default function SchedulingClient(props: Props) {
                       ? "Booking..."
                       : !isAuthed
                       ? "Sign in to book"
-                      : mustPayBeforeConfirm
+                      : requiresCheckout
                       ? "Proceed to payment"
                       : "Confirm booking"}
                   </Button>

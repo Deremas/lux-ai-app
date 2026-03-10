@@ -114,11 +114,17 @@ export async function POST(req: Request) {
       { status: 409 }
     );
   }
-
-  const effectivePaymentPolicy = mt.paymentPolicy ?? settings?.paymentPolicy ?? "FREE";
-  if (effectivePaymentPolicy !== "PAY_BEFORE_CONFIRM") {
+  const effectivePaymentPolicy =
+    mt.paymentPolicy === "FREE"
+      ? "FREE"
+      : mt.paymentPolicy
+      ? "PAID"
+      : settings?.paymentPolicy === "FREE"
+      ? "FREE"
+      : "PAID";
+  if (effectivePaymentPolicy === "FREE") {
     return NextResponse.json(
-      { error: "Payment is not required before confirmation." },
+      { error: "This meeting type does not require payment." },
       { status: 409 }
     );
   }

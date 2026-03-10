@@ -5,8 +5,24 @@ import { DateTime } from "luxon";
 import { signIn, useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import MrtCardTable from "@/components/scheduling/MrtCardTable";
 import type { MRT_ColumnDef } from "material-react-table";
 
@@ -64,12 +80,14 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
   );
   const [form, setForm] = useState<FormState>(() => emptyForm(inputTz));
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Blocked | null>(null);
   const [tzQuery, setTzQuery] = useState("");
   const [tzOpen, setTzOpen] = useState(false);
   const [tzHighlight, setTzHighlight] = useState(0);
   const tzRef = useRef<HTMLDivElement | null>(null);
   const tzListRef = useRef<HTMLDivElement | null>(null);
-  const formRef = useRef<HTMLDivElement | null>(null);
+  const modalOpen = editorOpen || Boolean(deleteTarget);
 
   useEffect(() => {
     if (defaultTz && defaultTz !== inputTz) {
@@ -82,6 +100,18 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultTz]);
+  useEffect(() => {
+    if (!modalOpen) return;
+    const html = document.documentElement;
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = html.style.overflow;
+    document.body.style.overflow = "hidden";
+    html.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      html.style.overflow = prevHtmlOverflow;
+    };
+  }, [modalOpen]);
   const timezones = useMemo(() => {
     const fallback = [
       "UTC",
@@ -103,6 +133,7 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
     }
     return fallback;
   }, []);
+  const isEditing = Boolean(editingId);
   const filteredTimezones = useMemo(() => {
     const query = tzQuery.trim().toLowerCase();
     if (!query) return timezones;
@@ -205,13 +236,16 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
     };
   }, [orgId, status]);
 
-  function resetForm() {
+  function resetForm(options?: { clearFeedback?: boolean }) {
+    const shouldClear = options?.clearFeedback ?? true;
     setForm(emptyForm(inputTz));
     setEditingId(null);
-  }
-
-  function scrollToForm() {
-    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setTzQuery("");
+    setTzOpen(false);
+    if (shouldClear) {
+      setError(null);
+      setSuccess(null);
+    }
   }
 
   function loadForEdit(item: Blocked) {
@@ -235,16 +269,43 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
     setEditingId(item.id);
   }
 
-  async function handleDelete(id: string) {
-    if (!orgId) return;
-    if (!confirm("Delete this blocked time entry?")) return;
+  function openCreateEditor() {
+    resetForm();
+    setEditorOpen(true);
+  }
+
+  function openEditEditor(item: Blocked) {
+    setError(null);
+    setSuccess(null);
+    loadForEdit(item);
+    setEditorOpen(true);
+  }
+
+  function handleEditorOpenChange(open: boolean) {
+    setEditorOpen(open);
+    if (!open) {
+      resetForm();
+    }
+  }
+
+  function openDeleteDialog(item: Blocked) {
+    setDeleteTarget(item);
+  }
+
+  function closeDeleteDialog() {
+    setDeleteTarget(null);
+  }
+
+  async function handleDeleteConfirmed() {
+    if (!orgId || !deleteTarget) return;
+    const item = deleteTarget;
     setSaving(true);
     setError(null);
     setSuccess(null);
 
     try {
       const res = await fetch(
-        `/api/scheduling/admin/blocked/${id}?orgId=${orgId}`,
+        `/api/scheduling/admin/blocked/${item.id}?orgId=${orgId}`,
         { method: "DELETE" }
       );
       const data = await res.json().catch(() => ({}));
@@ -253,8 +314,12 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
         return;
       }
       setSuccess("Blocked time deleted.");
-      setItems((prev) => prev.filter((item) => item.id !== id));
-      if (editingId === id) resetForm();
+      setItems((prev) => prev.filter((entry) => entry.id !== item.id));
+      if (editingId === item.id) {
+        resetForm({ clearFeedback: false });
+        setEditorOpen(false);
+      }
+      setDeleteTarget(null);
     } catch {
       setError("Failed to delete blocked time");
     } finally {
@@ -297,7 +362,8 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
         return;
       }
       setSuccess(editingId ? "Blocked time updated." : "Blocked time created.");
-      resetForm();
+      resetForm({ clearFeedback: false });
+      setEditorOpen(false);
       const refetch = await fetch(
         `/api/scheduling/admin/blocked?orgId=${orgId}`,
         { cache: "no-store" }
@@ -309,6 +375,16 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
     } finally {
       setSaving(false);
     }
+  }
+
+  function formatBlockedWindow(item: Blocked, timezone: string) {
+    const start = DateTime.fromJSDate(
+      item.startAtUtc instanceof Date ? item.startAtUtc : new Date(item.startAtUtc)
+    ).setZone(timezone);
+    const end = DateTime.fromJSDate(
+      item.endAtUtc instanceof Date ? item.endAtUtc : new Date(item.endAtUtc)
+    ).setZone(timezone);
+    return `${start.toFormat("LLL dd, HH:mm")} -> ${end.toFormat("LLL dd, HH:mm")} ${timezone}`;
   }
 
   const columns = useMemo<MRT_ColumnDef<Blocked>[]>(
@@ -334,23 +410,11 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
       {
         id: "window",
         header: "Window",
-        Cell: ({ row }) => {
-          const start = DateTime.fromJSDate(
-            row.original.startAtUtc instanceof Date
-              ? row.original.startAtUtc
-              : new Date(row.original.startAtUtc)
-          ).setZone(inputTz);
-          const end = DateTime.fromJSDate(
-            row.original.endAtUtc instanceof Date
-              ? row.original.endAtUtc
-              : new Date(row.original.endAtUtc)
-          ).setZone(inputTz);
-          return (
-            <span className="text-xs text-gray-600 dark:text-gray-300">
-              {start.toFormat("LLL dd, HH:mm")} → {end.toFormat("LLL dd, HH:mm")} {inputTz}
-            </span>
-          );
-        },
+        Cell: ({ row }) => (
+          <span className="text-xs text-gray-600 dark:text-gray-300">
+            {formatBlockedWindow(row.original, inputTz)}
+          </span>
+        ),
       },
       {
         accessorKey: "reason",
@@ -366,13 +430,17 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
         header: "Actions",
         Cell: ({ row }) => (
           <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => loadForEdit(row.original)}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => openEditEditor(row.original)}
+            >
               Edit
             </Button>
             <Button
               size="sm"
               variant="outline"
-              onClick={() => handleDelete(row.original.id)}
+              onClick={() => openDeleteDialog(row.original)}
               disabled={saving}
             >
               Delete
@@ -383,6 +451,13 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
     ],
     [inputTz, saving]
   );
+  const startValue = DateTime.fromISO(form.startAt, { zone: inputTz });
+  const endValue = DateTime.fromISO(form.endAt, { zone: inputTz });
+  const saveDisabled =
+    saving ||
+    !startValue.isValid ||
+    !endValue.isValid ||
+    endValue.toMillis() <= startValue.toMillis();
 
   if (status !== "authenticated") {
     return (
@@ -435,18 +510,12 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
           </div>
         )}
 
-        <div className="mt-8 grid gap-8 md:grid-cols-[1fr_360px]">
+        <div className="mt-8">
           <MrtCardTable
             title="Blocked time"
             subtitle={items.length ? `${items.length} entries` : "No blocked time entries yet."}
             headerRight={
-              <Button
-                size="sm"
-                onClick={() => {
-                  resetForm();
-                  scrollToForm();
-                }}
-              >
+              <Button size="sm" onClick={openCreateEditor}>
                 New blocked time
               </Button>
             }
@@ -468,147 +537,207 @@ export default function BlockedTimeClient({ orgId, defaultTz }: Props) {
               ),
             }}
           />
+        </div>
 
-          <div
-            ref={formRef}
-            className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 md:sticky md:top-24 self-start"
-          >
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {editingId ? "Edit blocked time" : "Add blocked time"}
-            </h2>
-            <div className="mt-4 space-y-3 text-sm">
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                  Input timezone
-                </label>
-                <div className="relative mt-1" ref={tzRef}>
-                  <button
-                    type="button"
-                    className="flex h-9 w-full items-center justify-between gap-3 rounded-md border border-input bg-white px-3 text-sm leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    onClick={() => setTzOpen((prev) => !prev)}
-                    onKeyDown={handleTzKeyDown}
-                    aria-haspopup="listbox"
-                    aria-expanded={tzOpen}
-                  >
-                    <span className="truncate">{inputTz}</span>
-                    <span aria-hidden>▾</span>
-                  </button>
-                  {tzOpen && (
-                    <div className="absolute z-20 mt-2 w-full rounded-xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
-                      <input
-                        className="h-9 w-full rounded-md border border-white/70 bg-white/90 px-3 text-sm text-gray-900 leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/80 dark:text-gray-100"
-                        value={tzQuery}
-                        onChange={(e) => setTzQuery(e.target.value)}
-                        placeholder="Search timezone"
-                        autoFocus
-                        onKeyDown={handleTzKeyDown}
-                      />
-                      <div
-                        ref={tzListRef}
-                        className="mt-2 max-h-60 overflow-auto rounded-md border border-gray-100"
-                      >
-                        {filteredTimezones.length === 0 ? (
-                          <div className="px-3 py-2 text-sm text-gray-500">
-                            No matches
-                          </div>
-                        ) : (
-                          filteredTimezones.map((zone, index) => (
-                            <button
-                              key={zone}
-                              type="button"
-                              data-tz-index={index}
-                              className={[
-                                "w-full px-3 py-2 text-left text-sm hover:bg-gray-100",
-                                zone === inputTz ? "font-semibold" : "",
-                                index === tzHighlight ? "bg-gray-100" : "",
-                              ].join(" ")}
-                              onClick={() => {
-                                setInputTz(zone);
-                                setTzQuery("");
-                                setTzOpen(false);
-                              }}
-                            >
-                              {zone}
-                            </button>
-                          ))
-                        )}
+        <Dialog open={editorOpen} onOpenChange={handleEditorOpenChange}>
+          <DialogContent className="w-[min(760px,94vw)] max-w-2xl top-[calc(var(--site-header-height)+1rem)] max-h-[calc(100dvh-var(--site-header-height)-2rem)] translate-y-0 overflow-y-auto overscroll-contain rounded-2xl border border-white/70 bg-white/95 p-0 shadow-2xl backdrop-blur data-[state=closed]:slide-out-to-top-4 data-[state=open]:slide-in-from-top-4 dark:border-slate-700/60 dark:bg-slate-900/90">
+            <DialogHeader className="sticky top-0 z-10 space-y-2 border-b border-white/70 bg-white/95 px-6 pb-4 pt-5 pr-14 text-left backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/95">
+              <DialogTitle>
+                {isEditing ? "Edit blocked time" : "Add blocked time"}
+              </DialogTitle>
+              <DialogDescription>
+                Block time across the whole org or for a specific staff member.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="px-6 pb-6 pt-4">
+              <div className="space-y-4 text-sm">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                    Input timezone
+                  </label>
+                  <div className="relative mt-1" ref={tzRef}>
+                    <button
+                      type="button"
+                      className="flex h-9 w-full items-center justify-between gap-3 rounded-md border border-input bg-white px-3 text-sm leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      onClick={() => setTzOpen((prev) => !prev)}
+                      onKeyDown={handleTzKeyDown}
+                      aria-haspopup="listbox"
+                      aria-expanded={tzOpen}
+                    >
+                      <span className="truncate">{inputTz}</span>
+                      <span aria-hidden>▾</span>
+                    </button>
+                    {tzOpen && (
+                      <div className="absolute z-20 mt-2 w-full rounded-xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
+                        <input
+                          className="h-9 w-full rounded-md border border-white/70 bg-white/90 px-3 text-sm text-gray-900 leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/80 dark:text-gray-100"
+                          value={tzQuery}
+                          onChange={(e) => setTzQuery(e.target.value)}
+                          placeholder="Search timezone"
+                          autoFocus
+                          onKeyDown={handleTzKeyDown}
+                        />
+                        <div
+                          ref={tzListRef}
+                          className="mt-2 max-h-60 overflow-auto rounded-md border border-gray-100"
+                        >
+                          {filteredTimezones.length === 0 ? (
+                            <div className="px-3 py-2 text-sm text-gray-500">
+                              No matches
+                            </div>
+                          ) : (
+                            filteredTimezones.map((zone, index) => (
+                              <button
+                                key={zone}
+                                type="button"
+                                data-tz-index={index}
+                                className={[
+                                  "w-full px-3 py-2 text-left text-sm hover:bg-gray-100",
+                                  zone === inputTz ? "font-semibold" : "",
+                                  index === tzHighlight ? "bg-gray-100" : "",
+                                ].join(" ")}
+                                onClick={() => {
+                                  setInputTz(zone);
+                                  setTzQuery("");
+                                  setTzOpen(false);
+                                }}
+                              >
+                                {zone}
+                              </button>
+                            ))
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                  Staff user ID (optional)
-                </label>
-                <Input
-                  value={form.staffUserId}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      staffUserId: e.target.value,
-                    }))
-                  }
-                  placeholder="UUID"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                  Start ({inputTz})
-                </label>
-                <Input
-                  type="datetime-local"
-                  value={form.startAt}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      startAt: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                  End ({inputTz})
-                </label>
-                <Input
-                  type="datetime-local"
-                  value={form.endAt}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      endAt: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                  Reason
-                </label>
-                <Textarea
-                  value={form.reason}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      reason: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-end gap-2">
-                {editingId && (
-                  <Button type="button" variant="outline" onClick={resetForm}>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                    Staff user ID (optional)
+                  </label>
+                  <Input
+                    value={form.staffUserId}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        staffUserId: e.target.value,
+                      }))
+                    }
+                    placeholder="UUID"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Leave blank to block time for the whole organization.
+                  </p>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                      Start ({inputTz})
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      value={form.startAt}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          startAt: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                      End ({inputTz})
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      value={form.endAt}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          endAt: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+
+                {endValue.isValid &&
+                  startValue.isValid &&
+                  endValue.toMillis() <= startValue.toMillis() && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                    End time must be later than the start time.
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                    Reason
+                  </label>
+                  <Textarea
+                    value={form.reason}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        reason: e.target.value,
+                      }))
+                    }
+                    placeholder="Optional note shown to admins."
+                  />
+                </div>
+
+                <div className="sticky bottom-0 -mx-6 flex items-center justify-end gap-2 border-t border-white/70 bg-white/95 px-6 py-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/95">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleEditorOpenChange(false)}
+                  >
                     Cancel
                   </Button>
-                )}
-                <Button type="button" onClick={handleSave} disabled={saving}>
-                  {saving ? "Saving..." : editingId ? "Update" : "Create"}
-                </Button>
+                  <Button type="button" onClick={handleSave} disabled={saveDisabled}>
+                    {saving ? "Saving..." : isEditing ? "Update" : "Create"}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
+
+        <AlertDialog
+          open={Boolean(deleteTarget)}
+          onOpenChange={(open) => {
+            if (!open) closeDeleteDialog();
+          }}
+        >
+          <AlertDialogContent className="rounded-2xl border border-white/70 bg-white/95 shadow-2xl backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete blocked time</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently remove the blocked time entry.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
+              <p className="font-semibold">
+                {deleteTarget?.staffUserId ? "Staff-specific block" : "Org-wide block"}
+              </p>
+              {deleteTarget && <p className="mt-1">{formatBlockedWindow(deleteTarget, inputTz)}</p>}
+              {deleteTarget?.reason && <p className="mt-1">Reason: {deleteTarget.reason}</p>}
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={saving}>Cancel</AlertDialogCancel>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDeleteConfirmed}
+                disabled={saving}
+              >
+                {saving ? "Deleting..." : "Delete"}
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

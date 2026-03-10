@@ -5,6 +5,7 @@ export type AdminSectionNavItem = {
 
 export const ADMIN_SECTION_NAV: AdminSectionNavItem[] = [
   { label: "Bookings", href: "/admin/scheduling/bookings" },
+  { label: "Booking approvals", href: "/admin/scheduling/approvals" },
   { label: "Calendar", href: "/admin/scheduling/calendar" },
   { label: "Analytics", href: "/admin/scheduling/analytics" },
   { label: "Settings", href: "/admin/scheduling/settings" },

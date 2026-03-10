@@ -65,18 +65,24 @@ export default function MrtCardTable<T extends MRT_RowData>({
       <div className="p-4 sm:p-6">
         <MaterialReactTable
           {...table}
+          enableTopToolbar={table.enableTopToolbar ?? false}
+          enableColumnActions={table.enableColumnActions ?? false}
+          enableGlobalFilter={table.enableGlobalFilter ?? false}
+          enableDensityToggle={table.enableDensityToggle ?? false}
+          enableFullScreenToggle={table.enableFullScreenToggle ?? false}
           // Keep wrapper styling subtle and theme-friendly:
           muiTablePaperProps={{
             elevation: 0,
             sx: (theme) => ({
               backgroundColor: "transparent",
               boxShadow: "none",
+              borderRadius: 0,
               color: theme.palette.text.primary,
             }),
           }}
           muiTableContainerProps={{
             sx: (theme) => ({
-              borderRadius: 14,
+              borderRadius: 0,
               border: `1px solid ${theme.palette.divider}`,
               overflow: "auto",
             }),

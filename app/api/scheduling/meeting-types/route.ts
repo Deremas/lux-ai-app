@@ -14,6 +14,10 @@ function normalizeLocale(input: string | null): Locale {
   return "en";
 }
 
+function normalizePaymentPolicy(value: string | null | undefined) {
+  return value === "FREE" ? "FREE" : "PAID";
+}
+
 export async function GET(req: Request) {
   const limit = await applyRateLimit(req, RATE_LIMIT_RULES.scheduling);
   if (!limit.ok) {
@@ -51,7 +55,7 @@ export async function GET(req: Request) {
   });
 
   const orgDefaultLocale = (settings?.defaultLocale ?? "en") as Locale;
-  const orgPaymentPolicy = settings?.paymentPolicy ?? "FREE";
+  const orgPaymentPolicy = normalizePaymentPolicy(settings?.paymentPolicy);
   const fallbackPaymentCents = Number(
     process.env.DEFAULT_PAYMENT_CENTS ?? "15000"
   );
@@ -100,7 +104,9 @@ export async function GET(req: Request) {
     const pickedLocale = localeOrder.find((loc) => byLocale.has(loc)) ?? null;
     const picked = pickedLocale ? byLocale.get(pickedLocale)! : null;
 
-    const effectivePaymentPolicy = t.paymentPolicy ?? orgPaymentPolicy;
+    const effectivePaymentPolicy = normalizePaymentPolicy(
+      t.paymentPolicy ?? orgPaymentPolicy
+    );
     const resolvedPriceCents =
       effectivePaymentPolicy === "FREE"
         ? null

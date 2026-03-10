@@ -20,7 +20,7 @@ import { writeAudit } from "@/lib/scheduling/audit";
 
 const LOCALES = ["en", "fr", "de", "lb"] as const;
 const APPROVAL_POLICIES = ["AUTO_APPROVE", "REQUIRES_APPROVAL"] as const;
-const PAYMENT_POLICIES = ["FREE", "PAY_BEFORE_CONFIRM", "APPROVE_THEN_PAY"] as const;
+const PAYMENT_POLICIES = ["FREE", "PAID"] as const;
 
 type Body = {
   orgId?: string;
@@ -49,6 +49,10 @@ type Body = {
 
 function cleanString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizePaymentPolicy(value: string | null | undefined) {
+  return value === "FREE" ? "FREE" : "PAID";
 }
 
 async function ensureSettingsArrays(orgId: string) {
@@ -239,6 +243,7 @@ export async function GET(req: Request) {
     {
       settings: {
         ...row,
+        paymentPolicy: normalizePaymentPolicy(row.paymentPolicy),
         notifyEmails: toNotifyString(row.notifyEmails),
         notifyWhatsapp: toNotifyString(row.notifyWhatsapp),
         allowedCurrencies: toNotifyString(row.allowedCurrencies),
@@ -549,6 +554,7 @@ export async function POST(req: Request) {
       settings: row
         ? {
             ...row,
+            paymentPolicy: normalizePaymentPolicy(row.paymentPolicy),
             notifyEmails: toNotifyString(row.notifyEmails),
             notifyWhatsapp: toNotifyString(row.notifyWhatsapp),
             allowedCurrencies: toNotifyString(row.allowedCurrencies),

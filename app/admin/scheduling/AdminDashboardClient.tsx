@@ -530,7 +530,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
                 {notifOpen && (
                   <div
                     ref={notifPanelRef}
-                    className="fixed left-4 right-4 z-50 mt-2 w-auto rounded-2xl border border-white/70 bg-white/95 p-4 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90 sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-96"
+                    className="fixed inset-x-4 z-50 mt-2 w-auto rounded-2xl border border-white/70 bg-white/95 p-4 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96"
                   >
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-semibold text-gray-900 dark:text-white">

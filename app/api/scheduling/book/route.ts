@@ -21,6 +21,7 @@ import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 
 type MeetingMode = "google_meet" | "zoom" | "phone" | "in_person";
 type Status = "pending" | "confirmed" | "declined" | "canceled" | "completed";
+type PaymentPolicy = "FREE" | "PAID";
 
 const BUSY_STATUSES: Status[] = ["pending", "confirmed", "completed"];
 const MIN_LEAD_MIN = 180;
@@ -263,14 +264,16 @@ export async function POST(req: Request) {
 
   const durationMin = Math.max(15, Math.min(240, mt.durationMin || 60));
 
-  const effectivePaymentPolicy = mt.paymentPolicy ?? policies.paymentPolicy;
-  const paymentConfirmed =
-    effectivePaymentPolicy === "PAY_BEFORE_CONFIRM"
-      ? paymentSessionPaid
-      : false;
+  const effectivePaymentPolicy: PaymentPolicy =
+    mt.paymentPolicy === "FREE"
+      ? "FREE"
+      : mt.paymentPolicy
+      ? "PAID"
+      : policies.paymentPolicy;
+  const paymentRequiredByPolicy = effectivePaymentPolicy !== "FREE";
+  const paymentConfirmed = paymentRequiredByPolicy ? paymentSessionPaid : false;
 
   // Enforce payment policy at booking time
-  const paymentRequiredByPolicy = effectivePaymentPolicy !== "FREE";
   const resolvedPriceCents =
     mt.priceCents ?? policies.defaultPaymentCents ?? null;
   const resolvedCurrency = mt.currency ?? policies.defaultCurrency ?? null;
@@ -285,24 +288,15 @@ export async function POST(req: Request) {
       );
     }
     paymentStatus = paymentConfirmed ? "paid" : "unpaid";
-    if (effectivePaymentPolicy === "PAY_BEFORE_CONFIRM" && !paymentConfirmed) {
+    if (!paymentSessionId) {
       return NextResponse.json(
-        { error: "Payment required before confirmation." },
+        { error: "Missing payment session for this paid booking." },
         { status: 409 },
       );
     }
-    if (effectivePaymentPolicy === "PAY_BEFORE_CONFIRM" && !paymentSessionId) {
+    if (!paymentConfirmed) {
       return NextResponse.json(
-        { error: "Missing payment session for confirmation." },
-        { status: 409 },
-      );
-    }
-    if (
-      effectivePaymentPolicy === "PAY_BEFORE_CONFIRM" &&
-      !paymentSessionPaid
-    ) {
-      return NextResponse.json(
-        { error: "Payment not confirmed." },
+        { error: "Payment is required before this booking can be submitted." },
         { status: 409 },
       );
     }

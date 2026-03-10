@@ -1,4 +1,4 @@
-import StaffUsersClient from "./StaffUsersClient";
+import StaffCalendarsClient from "../staff/StaffCalendarsClient";
 import { getServerSession } from "next-auth/next";
 import ProductShell from "@/components/scheduling/ProductShell";
 
@@ -8,11 +8,6 @@ import {
   getUserOrgContext,
 } from "@/lib/scheduling/org-context";
 import { requireAdminOrStaffForOrg } from "@/lib/scheduling/admin-guard";
-
-function pickParam(value: string | string[] | undefined): string {
-  if (!value) return "";
-  return Array.isArray(value) ? value[0] ?? "" : value;
-}
 
 async function resolveOrgId() {
   const session = await getServerSession(authOptions);
@@ -25,21 +20,17 @@ async function resolveOrgId() {
   return await getFirstOrgContext();
 }
 
-export default async function SchedulingStaffPage({
-  searchParams,
-}: {
-  searchParams?: {};
-}) {
+export default async function SchedulingStaffCalendarsPage() {
   const orgContext = await resolveOrgId();
 
   if (orgContext?.orgId) {
-    const returnTo = "/admin/scheduling/staff";
+    const returnTo = "/admin/scheduling/staff-calendars";
     await requireAdminOrStaffForOrg(orgContext.orgId, returnTo);
   }
 
   return (
     <ProductShell>
-      <StaffUsersClient orgId={orgContext?.orgId ?? ""} />
+      <StaffCalendarsClient orgId={orgContext?.orgId ?? ""} />
     </ProductShell>
   );
 }

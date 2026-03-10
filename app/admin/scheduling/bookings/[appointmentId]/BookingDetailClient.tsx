@@ -102,12 +102,13 @@ const mrtSurfaceProps = {
     sx: (theme: any) => ({
       backgroundColor: "transparent",
       boxShadow: "none",
+      borderRadius: 0,
       color: theme.palette.text.primary,
     }),
   },
   muiTableContainerProps: {
     sx: (theme: any) => ({
-      borderRadius: 10,
+      borderRadius: 0,
       border: `1px solid ${theme.palette.divider}`,
       overflow: "auto",
     }),

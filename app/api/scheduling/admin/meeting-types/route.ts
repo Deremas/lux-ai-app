@@ -12,11 +12,7 @@ import { isBodyTooLarge, isValidUuid } from "@/lib/validation";
 
 const MODES = ["google_meet", "zoom", "phone", "in_person"] as const;
 const LOCALES = ["en", "fr", "de", "lb"] as const;
-const PAYMENT_POLICIES = [
-  "FREE",
-  "PAY_BEFORE_CONFIRM",
-  "APPROVE_THEN_PAY",
-] as const;
+const PAYMENT_POLICIES = ["FREE", "PAID"] as const;
 
 type MeetingMode = (typeof MODES)[number];
 type Locale = (typeof LOCALES)[number];
@@ -90,6 +86,10 @@ function parsePaymentPolicy(input: unknown): PaymentPolicy | null {
   return null;
 }
 
+function normalizePaymentPolicy(value: string | null | undefined): PaymentPolicy {
+  return value === "FREE" ? "FREE" : "PAID";
+}
+
 function parseModeDetails(
   input: unknown
 ): Partial<Record<MeetingMode, ModeDetails>> {
@@ -157,6 +157,7 @@ export async function GET(req: Request) {
   const requestedLocale = parseLocaleOptional(url.searchParams.get("locale"));
   const orgLocale = (settings?.defaultLocale ?? "en") as Locale;
   const locale = requestedLocale ?? orgLocale;
+  const orgPaymentPolicy = normalizePaymentPolicy(settings?.paymentPolicy);
 
   const types = await prisma.meetingType.findMany({
     where: { orgId },
@@ -169,28 +170,34 @@ export async function GET(req: Request) {
     },
   });
 
-  const items = types.map((t) => ({
-    id: t.id,
-    orgId: t.orgId,
-    key: t.key,
-    durationMin: t.durationMin,
-    priceCents: t.priceCents,
-    currency: t.currency,
-    paymentPolicy: t.paymentPolicy ?? null,
-    isActive: t.isActive,
-    createdAt: t.createdAt,
-    updatedAt: t.updatedAt,
-    modes: t.modes.map((m) => m.mode as MeetingMode),
-    modeDetails: Object.fromEntries(
-      t.modes
-        .map((m) => [m.mode, m.details] as const)
-        .filter(([, details]) => details)
-    ),
-    title: t.translations[0]?.title ?? t.key,
-    subtitle: t.translations[0]?.subtitle ?? null,
-    description: t.translations[0]?.description ?? null,
-    locale,
-  }));
+  const items = types.map((t) => {
+    const effectivePaymentPolicy = normalizePaymentPolicy(
+      t.paymentPolicy ?? orgPaymentPolicy
+    );
+
+    return {
+      id: t.id,
+      orgId: t.orgId,
+      key: t.key,
+      durationMin: t.durationMin,
+      priceCents: effectivePaymentPolicy === "FREE" ? null : t.priceCents,
+      currency: effectivePaymentPolicy === "FREE" ? null : t.currency,
+      paymentPolicy: effectivePaymentPolicy,
+      isActive: t.isActive,
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+      modes: t.modes.map((m) => m.mode as MeetingMode),
+      modeDetails: Object.fromEntries(
+        t.modes
+          .map((m) => [m.mode, m.details] as const)
+          .filter(([, details]) => details)
+      ),
+      title: t.translations[0]?.title ?? t.key,
+      subtitle: t.translations[0]?.subtitle ?? null,
+      description: t.translations[0]?.description ?? null,
+      locale,
+    };
+  });
 
   return NextResponse.json({ orgId, locale, items });
 }
@@ -275,19 +282,23 @@ export async function POST(req: Request) {
       defaultCurrency: true,
     },
   });
-  const orgPaymentPolicy = settings?.paymentPolicy ?? "FREE";
+  const orgPaymentPolicy = normalizePaymentPolicy(settings?.paymentPolicy);
   const paymentPolicy = parsePaymentPolicy(body.paymentPolicy);
   if (body.paymentPolicy !== undefined && body.paymentPolicy !== null && !paymentPolicy) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
   const effectivePaymentPolicy = paymentPolicy ?? orgPaymentPolicy;
   const requiresPayment = effectivePaymentPolicy !== "FREE";
-  const priceCents = body.priceCents ?? settings?.defaultPaymentCents ?? null;
-  const currency = cleanString(body.currency) || settings?.defaultCurrency || null;
+  const priceCents = requiresPayment
+    ? body.priceCents ?? settings?.defaultPaymentCents ?? null
+    : null;
+  const currency = requiresPayment
+    ? cleanString(body.currency) || settings?.defaultCurrency || null
+    : null;
 
   if (requiresPayment && (!priceCents || !currency)) {
     return NextResponse.json(
-      { error: "Price and currency required when payment is enabled" },
+      { error: "Price and currency required for paid meeting types" },
       { status: 400 }
     );
   }

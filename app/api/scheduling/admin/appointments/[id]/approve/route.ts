@@ -76,7 +76,7 @@ export async function POST(
   }
 
   const paymentPolicy = appt.paymentPolicy ?? settings?.paymentPolicy ?? "FREE";
-  if (paymentPolicy === "PAY_BEFORE_CONFIRM" && appt.paymentStatus !== "paid") {
+  if (paymentPolicy !== "FREE" && appt.paymentStatus !== "paid") {
     return NextResponse.json(
       { error: "Payment is required before confirmation." },
       { status: 409 }

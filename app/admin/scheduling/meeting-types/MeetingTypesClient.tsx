@@ -38,11 +38,7 @@ type MeetingType = {
 
 const MODES = ["google_meet", "zoom", "phone", "in_person"] as const;
 const DURATION_OPTIONS = [30, 45, 60, 90, 120] as const;
-const PAYMENT_POLICIES = [
-  "FREE",
-  "PAY_BEFORE_CONFIRM",
-  "APPROVE_THEN_PAY",
-] as const;
+const PAYMENT_POLICIES = ["FREE", "PAID"] as const;
 const PAYMENT_TIERS = ["FREE", "PAID"] as const;
 
 type PaymentPolicy = (typeof PAYMENT_POLICIES)[number];
@@ -67,15 +63,15 @@ type FormState = {
   isActive: boolean;
 };
 
-function emptyForm(): FormState {
+function emptyForm(options?: { priceAmount?: string; currency?: string }): FormState {
   return {
     title: "",
     subtitle: "",
     description: "",
     durationMin: 60,
     paymentPolicy: "FREE",
-    priceAmount: "",
-    currency: "EUR",
+    priceAmount: options?.priceAmount ?? "",
+    currency: options?.currency ?? "EUR",
     modes: ["google_meet"],
     modeDetails: {},
     isActive: true,
@@ -123,8 +119,8 @@ export default function MeetingTypesClient({ orgId }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm());
-  const [lastPaidPolicy, setLastPaidPolicy] =
-    useState<PaymentPolicy>("PAY_BEFORE_CONFIRM");
+  const [orgDefaultPaymentCents, setOrgDefaultPaymentCents] = useState<number | null>(null);
+  const [orgDefaultCurrency, setOrgDefaultCurrency] = useState("EUR");
   const [editorOpen, setEditorOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<MeetingType | null>(null);
   const modalOpen = editorOpen || Boolean(deleteTarget);
@@ -145,6 +141,8 @@ export default function MeetingTypesClient({ orgId }: Props) {
     "CAD",
     "AUD",
   ]);
+  const orgDefaultPriceAmount =
+    orgDefaultPaymentCents === null ? "" : String(orgDefaultPaymentCents / 100);
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -194,16 +192,29 @@ export default function MeetingTypesClient({ orgId }: Props) {
         const list = (typesRes.data?.items ?? []) as MeetingType[];
         setItems(list);
         if (settingsRes.ok) {
-          const raw = settingsRes.data?.settings?.allowedCurrencies ?? "";
+          const settings = settingsRes.data?.settings;
+          const raw = settings?.allowedCurrencies ?? "";
           const parsed = typeof raw === "string"
             ? raw
                 .split(",")
                 .map((item: string) => item.trim().toUpperCase())
                 .filter(Boolean)
             : [];
-          if (parsed.length > 0) {
-            setCurrencyOptions((prev) => Array.from(new Set([...parsed, ...prev])));
-          }
+          const nextDefaultCurrency =
+            typeof settings?.defaultCurrency === "string" &&
+            settings.defaultCurrency.trim()
+              ? settings.defaultCurrency.trim().toUpperCase()
+              : "EUR";
+          const nextDefaultPaymentCents =
+            typeof settings?.defaultPaymentCents === "number"
+              ? settings.defaultPaymentCents
+              : null;
+
+          setOrgDefaultCurrency(nextDefaultCurrency);
+          setOrgDefaultPaymentCents(nextDefaultPaymentCents);
+          setCurrencyOptions((prev) =>
+            Array.from(new Set([nextDefaultCurrency, ...parsed, ...prev]))
+          );
         }
       })
       .catch(() => {
@@ -218,17 +229,32 @@ export default function MeetingTypesClient({ orgId }: Props) {
     };
   }, [orgId, status, locale]);
 
-  useEffect(() => {
-    if (form.paymentPolicy !== "FREE") {
-      setLastPaidPolicy(form.paymentPolicy);
-    }
-  }, [form.paymentPolicy]);
-
   const isEditing = Boolean(form.id);
+  const requiresPayment = form.paymentPolicy !== "FREE";
+  const orgDefaultPriceLabel =
+    orgDefaultPaymentCents === null
+      ? null
+      : formatMoney(orgDefaultPaymentCents, orgDefaultCurrency);
+
+  function buildEmptyForm() {
+    return emptyForm({
+      priceAmount: orgDefaultPriceAmount,
+      currency: orgDefaultCurrency,
+    });
+  }
+
+  function withPaidDefaults(next: FormState): FormState {
+    if (next.paymentPolicy === "FREE") return next;
+    return {
+      ...next,
+      priceAmount: next.priceAmount.trim() ? next.priceAmount : orgDefaultPriceAmount,
+      currency: next.currency.trim() ? next.currency : orgDefaultCurrency,
+    };
+  }
 
   function resetForm(options?: { clearFeedback?: boolean }) {
     const shouldClear = options?.clearFeedback ?? true;
-    setForm(emptyForm());
+    setForm(buildEmptyForm());
     if (shouldClear) {
       setSuccess(null);
       setError(null);
@@ -236,7 +262,7 @@ export default function MeetingTypesClient({ orgId }: Props) {
   }
 
   function loadForEdit(item: MeetingType) {
-    setForm({
+    setForm(withPaidDefaults({
       id: item.id,
       title: item.title,
       subtitle: item.subtitle ?? "",
@@ -244,11 +270,11 @@ export default function MeetingTypesClient({ orgId }: Props) {
       durationMin: item.durationMin,
       paymentPolicy: item.paymentPolicy ?? "FREE",
       priceAmount: item.priceCents ? String(item.priceCents / 100) : "",
-      currency: item.currency ?? "EUR",
+      currency: item.currency ?? orgDefaultCurrency,
       modes: item.modes ?? [],
       modeDetails: item.modeDetails ?? {},
       isActive: item.isActive,
-    });
+    }));
   }
 
   function openCreateEditor() {
@@ -383,8 +409,8 @@ export default function MeetingTypesClient({ orgId }: Props) {
       description: form.description.trim() || null,
       durationMin: form.durationMin,
       paymentPolicy: form.paymentPolicy,
-      priceCents,
-      currency: form.currency.trim() || null,
+      priceCents: requiresPayment ? priceCents : null,
+      currency: requiresPayment ? form.currency.trim() || null : null,
       modes: form.modes,
       modeDetails: form.modeDetails,
       isActive: form.isActive,
@@ -456,8 +482,7 @@ export default function MeetingTypesClient({ orgId }: Props) {
     form.durationMin < 15 ||
     form.durationMin > 240 ||
     form.durationMin % 15 !== 0 ||
-    (form.paymentPolicy !== "FREE" &&
-      (!form.priceAmount.trim() || !form.currency.trim()));
+    (requiresPayment && (!form.priceAmount.trim() || !form.currency.trim()));
 
   return (
     <div className="space-y-8">
@@ -515,7 +540,9 @@ export default function MeetingTypesClient({ orgId }: Props) {
                     const policyLabel = formatPaymentPolicy(item.paymentPolicy);
                     const priceLabel = formatMoney(item.priceCents, item.currency);
                     const showPrice =
-                      item.priceCents !== null && item.currency !== null;
+                      item.paymentPolicy !== "FREE" &&
+                      item.priceCents !== null &&
+                      item.currency !== null;
                     return (
                       <div
                         key={item.id}
@@ -597,18 +624,17 @@ export default function MeetingTypesClient({ orgId }: Props) {
         </div>
 
         <Dialog open={editorOpen} onOpenChange={handleEditorOpenChange}>
-          <DialogContent className="w-[min(980px,94vw)] max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl border border-white/70 bg-white/95 p-0 shadow-2xl backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
-            <div className="flex max-h-[85vh] flex-col">
-              <DialogHeader className="space-y-2 border-b border-white/70 px-6 pb-4 pt-5 pr-14 text-left dark:border-slate-700/60">
-                <DialogTitle>
-                  {isEditing ? "Edit meeting type" : "Create meeting type"}
-                </DialogTitle>
-                <DialogDescription>
-                  Define how customers can book this session.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-6 pt-4">
-                <div className="space-y-3 text-sm">
+          <DialogContent className="w-[min(980px,94vw)] max-w-3xl top-[calc(var(--site-header-height)+1rem)] max-h-[calc(100dvh-var(--site-header-height)-2rem)] translate-y-0 overflow-y-auto overscroll-contain rounded-2xl border border-white/70 bg-white/95 p-0 shadow-2xl backdrop-blur data-[state=closed]:slide-out-to-top-4 data-[state=open]:slide-in-from-top-4 dark:border-slate-700/60 dark:bg-slate-900/90">
+            <DialogHeader className="sticky top-0 z-10 space-y-2 border-b border-white/70 bg-white/95 px-6 pb-4 pt-5 pr-14 text-left backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/95">
+              <DialogTitle>
+                {isEditing ? "Edit meeting type" : "Create meeting type"}
+              </DialogTitle>
+              <DialogDescription>
+                Define how customers can book this session.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="px-6 pb-6 pt-4">
+              <div className="space-y-3 text-sm">
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
                       Title
@@ -679,15 +705,12 @@ export default function MeetingTypesClient({ orgId }: Props) {
                       className="mt-1 h-9 w-full rounded-lg border border-white/70 bg-white/80 px-3 text-sm text-gray-900 shadow-sm backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-100"
                       value={form.paymentPolicy === "FREE" ? "FREE" : "PAID"}
                       onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          paymentPolicy:
-                            (e.target.value as PaymentTier) === "FREE"
-                              ? "FREE"
-                              : prev.paymentPolicy !== "FREE"
-                              ? prev.paymentPolicy
-                              : lastPaidPolicy,
-                        }))
+                        setForm((prev) =>
+                          withPaidDefaults({
+                            ...prev,
+                            paymentPolicy: e.target.value as PaymentTier,
+                          })
+                        )
                       }
                     >
                       {PAYMENT_TIERS.map((tier) => (
@@ -697,58 +720,69 @@ export default function MeetingTypesClient({ orgId }: Props) {
                       ))}
                     </select>
                     <p className="mt-1 text-xs text-gray-500">
-                      Paid bookings follow your org payment timing rules.
+                      Free meeting types skip pricing. Paid meeting types collect
+                      payment first and start from your org defaults unless you override them.
                     </p>
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                        Price
-                      </label>
-                      <Input
-                        type="number"
-                        min={0}
-                        step="0.01"
-                        value={form.priceAmount}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            priceAmount: e.target.value,
-                          }))
-                        }
-                        placeholder="150.00"
-                      />
-                      <p className="mt-1 text-xs text-gray-500">
-                        Amount in currency units (e.g. 150.00).
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                        Currency
-                      </label>
-                      <Input
-                        list="meeting-currency-options"
-                        value={form.currency}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            currency: e.target.value,
-                          }))
-                        }
-                        placeholder="EUR"
-                      />
-                      <datalist id="meeting-currency-options">
-                        {currencyOptions.map((currency) => (
-                          <option key={currency} value={currency} />
-                        ))}
-                      </datalist>
-                      {form.paymentPolicy === "FREE" && (
+                  {requiresPayment ? (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                          Price
+                        </label>
+                        <Input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          value={form.priceAmount}
+                          onChange={(e) =>
+                            setForm((prev) => ({
+                              ...prev,
+                              priceAmount: e.target.value,
+                            }))
+                          }
+                          placeholder="150.00"
+                        />
                         <p className="mt-1 text-xs text-gray-500">
-                          Saved for later if payments are currently disabled.
+                          Amount in currency units (e.g. 150.00).
                         </p>
-                      )}
+                        {orgDefaultPriceLabel && (
+                          <p className="mt-1 text-xs text-gray-500">
+                            Org default: {orgDefaultPriceLabel}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                          Currency
+                        </label>
+                        <Input
+                          list="meeting-currency-options"
+                          value={form.currency}
+                          onChange={(e) =>
+                            setForm((prev) => ({
+                              ...prev,
+                              currency: e.target.value,
+                            }))
+                          }
+                          placeholder="EUR"
+                        />
+                        <datalist id="meeting-currency-options">
+                          {currencyOptions.map((currency) => (
+                            <option key={currency} value={currency} />
+                          ))}
+                        </datalist>
+                        <p className="mt-1 text-xs text-gray-500">
+                          Default currency: {orgDefaultCurrency}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-600 dark:border-slate-700/60 dark:bg-slate-900/50 dark:text-slate-300">
+                      No price or currency is needed while this meeting type is
+                      free.
+                    </div>
+                  )}
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
                       Modes
@@ -878,7 +912,7 @@ export default function MeetingTypesClient({ orgId }: Props) {
                       Active
                     </span>
                   </div>
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="sticky bottom-0 -mx-6 flex items-center justify-end gap-2 border-t border-white/70 bg-white/95 px-6 py-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/95">
                     <Button
                       type="button"
                       variant="outline"
@@ -890,7 +924,6 @@ export default function MeetingTypesClient({ orgId }: Props) {
                       {saving ? "Saving..." : isEditing ? "Update" : "Create"}
                     </Button>
                   </div>
-                </div>
               </div>
             </div>
           </DialogContent>

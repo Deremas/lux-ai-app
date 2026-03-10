@@ -56,10 +56,25 @@ export async function POST(req: Request) {
     );
   }
 
+  const orgPaymentPolicy = settings.paymentPolicy === "FREE" ? "FREE" : "PAID";
+
+  const paidMeetingTypesWhere =
+    orgPaymentPolicy === "FREE"
+      ? { paymentPolicy: { not: "FREE" as const } }
+      : {
+          OR: [
+            { paymentPolicy: null },
+            { paymentPolicy: { not: "FREE" as const } },
+          ],
+        };
+
   const updated = await prisma.meetingType.updateMany({
     where: {
       orgId,
-      OR: [{ priceCents: null }, { currency: null }],
+      AND: [
+        paidMeetingTypesWhere,
+        { OR: [{ priceCents: null }, { currency: null }] },
+      ],
     },
     data: {
       priceCents: settings.defaultPaymentCents,

@@ -12,11 +12,7 @@ import { isBodyTooLarge, isValidUuid } from "@/lib/validation";
 
 const MODES = ["google_meet", "zoom", "phone", "in_person"] as const;
 const LOCALES = ["en", "fr", "de", "lb"] as const;
-const PAYMENT_POLICIES = [
-  "FREE",
-  "PAY_BEFORE_CONFIRM",
-  "APPROVE_THEN_PAY",
-] as const;
+const PAYMENT_POLICIES = ["FREE", "PAID"] as const;
 
 type MeetingMode = (typeof MODES)[number];
 type Locale = (typeof LOCALES)[number];
@@ -71,6 +67,10 @@ function parsePaymentPolicy(input: unknown): PaymentPolicy | null {
   const v = cleanString(input).toUpperCase();
   if (PAYMENT_POLICIES.includes(v as PaymentPolicy)) return v as PaymentPolicy;
   return null;
+}
+
+function normalizePaymentPolicy(value: string | null | undefined): PaymentPolicy {
+  return value === "FREE" ? "FREE" : "PAID";
 }
 
 function parseDurationMin(input: unknown): number | null {
@@ -172,7 +172,7 @@ export async function PUT(
     return NextResponse.json({ error: "Meeting type not found" }, { status: 404 });
   }
 
-  const orgPaymentPolicy = settings?.paymentPolicy ?? "FREE";
+  const orgPaymentPolicy = normalizePaymentPolicy(settings?.paymentPolicy);
   const defaultPaymentCents =
     typeof settings?.defaultPaymentCents === "number"
       ? settings.defaultPaymentCents
@@ -240,37 +240,39 @@ export async function PUT(
     patch.paymentPolicy = nextPaymentPolicy ?? null;
   }
 
-  const effectivePaymentPolicy =
-    (patch.paymentPolicy ?? existing.paymentPolicy ?? orgPaymentPolicy) as PaymentPolicy;
+  const effectivePaymentPolicy = normalizePaymentPolicy(
+    nextPaymentPolicy !== undefined
+      ? nextPaymentPolicy
+      : existing.paymentPolicy ?? orgPaymentPolicy
+  );
 
-  if (body.priceCents !== undefined) {
-    if (body.priceCents === null) {
-      if (effectivePaymentPolicy !== "FREE") {
+  if (effectivePaymentPolicy === "FREE") {
+    patch.priceCents = null;
+    if (!isStaff) {
+      patch.currency = null;
+    }
+  } else {
+    if (body.priceCents !== undefined) {
+      if (body.priceCents === null) {
         return NextResponse.json(
-          { error: "Price is required by org policy." },
+          { error: "Price is required for paid meeting types." },
           { status: 409 }
         );
       }
+      patch.priceCents = body.priceCents;
     }
-    patch.priceCents = body.priceCents;
-  }
 
-  if (!isStaff && body.currency !== undefined) {
-    const cleanedCurrency = cleanString(body.currency);
-    if (!cleanedCurrency && effectivePaymentPolicy !== "FREE") {
-      return NextResponse.json(
-        { error: "Currency is required by org policy." },
-        { status: 409 }
-      );
+    if (!isStaff && body.currency !== undefined) {
+      const cleanedCurrency = cleanString(body.currency);
+      if (!cleanedCurrency) {
+        return NextResponse.json(
+          { error: "Currency is required for paid meeting types." },
+          { status: 409 }
+        );
+      }
+      patch.currency = cleanedCurrency || null;
     }
-    patch.currency = cleanedCurrency || null;
-  }
 
-  if (!isStaff && body.isActive !== undefined) {
-    patch.isActive = Boolean(body.isActive);
-  }
-
-  if (effectivePaymentPolicy !== "FREE") {
     if (
       patch.priceCents === undefined &&
       existing?.priceCents == null &&
@@ -286,6 +288,10 @@ export async function PUT(
     ) {
       patch.currency = defaultCurrency;
     }
+  }
+
+  if (!isStaff && body.isActive !== undefined) {
+    patch.isActive = Boolean(body.isActive);
   }
 
   if (!isStaff) {

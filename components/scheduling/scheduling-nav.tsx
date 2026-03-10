@@ -52,6 +52,11 @@ export const ADMIN_SCHEDULING_NAV: SchedulingNavSection[] = [
         icon: ClipboardList,
       },
       {
+        label: "Booking approvals",
+        href: "/admin/scheduling/approvals",
+        icon: Bell,
+      },
+      {
         label: "Calendar",
         href: "/admin/scheduling/calendar",
         icon: CalendarDays,
@@ -75,6 +80,11 @@ export const ADMIN_SCHEDULING_NAV: SchedulingNavSection[] = [
         label: "Staff",
         href: "/admin/scheduling/staff",
         icon: Users,
+      },
+      {
+        label: "Staff calendars",
+        href: "/admin/scheduling/staff-calendars",
+        icon: CalendarDays,
       },
       {
         label: "Customers",

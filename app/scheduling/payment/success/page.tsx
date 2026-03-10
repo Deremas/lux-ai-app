@@ -217,7 +217,11 @@ export default function PaymentSuccessPage() {
       sessionStorage.removeItem("pendingBooking");
       setBooking(bookingJson);
       setStatus("done");
-      setMessage("Payment received. Your booking is confirmed.");
+      setMessage(
+        bookingJson?.appointment?.status === "pending"
+          ? "Payment received. Your booking request is pending approval."
+          : "Payment received. Your booking is confirmed."
+      );
     };
 
     void run();
@@ -238,6 +242,15 @@ export default function PaymentSuccessPage() {
     booking?.payment?.priceCents ?? null,
     booking?.payment?.currency ?? null
   );
+  const appointmentStatus = booking?.appointment?.status ?? null;
+  const completionBadgeLabel =
+    status === "done"
+      ? appointmentStatus === "pending"
+        ? "Pending approval"
+        : "Confirmed"
+      : status === "error"
+      ? "Needs attention"
+      : "Processing";
 
   const calendarLinks = useMemo(() => {
     if (!startUtc || !endUtc) return null;
@@ -292,11 +305,7 @@ export default function PaymentSuccessPage() {
               <p className="mt-2 text-sm text-gray-600">{message}</p>
             </div>
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              {status === "done"
-                ? "Confirmed"
-                : status === "error"
-                ? "Needs attention"
-                : "Processing"}
+              {completionBadgeLabel}
             </span>
           </div>
 
@@ -353,8 +362,9 @@ export default function PaymentSuccessPage() {
                     Notifications
                   </p>
                   <p className="mt-2 text-sm text-emerald-900">
-                    Confirmation sent in-app and by email to you. Admin/staff
-                    were also notified.
+                    {appointmentStatus === "pending"
+                      ? "Payment was received and the booking request was sent to admin/staff for approval. You will be notified once they make a decision."
+                      : "Confirmation sent in-app and by email to you. Admin/staff were also notified."}
                   </p>
                 </div>
               </div>
