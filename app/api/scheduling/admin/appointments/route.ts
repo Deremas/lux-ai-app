@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { Prisma, AppointmentStatus, MeetingMode } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { normalizeAppointmentPayment } from "@/lib/scheduling/appointment-payment";
 import { requireUserIdFromSession, requireOrgRole } from "@/lib/scheduling/authz";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import { resolveOrgIdForRequest } from "@/lib/scheduling/org-resolver";
@@ -232,6 +233,13 @@ export async function GET(req: Request) {
     const mt = mtMap.get(row.meetingTypeId);
     const user = userMap.get(row.userId);
     const profile = profileMap.get(row.userId);
+    const payment = normalizeAppointmentPayment({
+      paymentPolicy: row.paymentPolicy ?? null,
+      paymentStatus: row.paymentStatus ?? null,
+      requiresPayment: row.requiresPayment ?? null,
+      priceCents: row.priceCents ?? null,
+      currency: row.currency ?? null,
+    });
 
     return {
       id: row.id,
@@ -246,11 +254,11 @@ export async function GET(req: Request) {
       status: row.status,
       mode: row.mode,
 
-      paymentPolicy: row.paymentPolicy ?? null,
-      paymentStatus: row.paymentStatus ?? null,
-      requiresPayment: row.requiresPayment ?? null,
-      priceCents: row.priceCents ?? null,
-      currency: row.currency ?? null,
+      paymentPolicy: payment.paymentPolicy,
+      paymentStatus: payment.paymentStatus,
+      requiresPayment: payment.requiresPayment,
+      priceCents: payment.priceCents,
+      currency: payment.currency,
 
       startAtUtc: row.startAtUtc,
       endAtUtc: row.endAtUtc,

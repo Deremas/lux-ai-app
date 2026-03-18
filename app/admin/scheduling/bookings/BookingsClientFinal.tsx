@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import MrtCardTable from "@/components/scheduling/MrtCardTable";
-import FilterBar from "@/components/scheduling/FilterBar";
+import FilterBar, { FilterField } from "@/components/scheduling/FilterBar";
 import Badge, { BookingStatus, PaymentStatus, getStatusDisplay } from "@/components/scheduling/Badge";
 import ProductHero from "@/components/scheduling/ProductHero";
 import type { MRT_ColumnDef, MRT_PaginationState } from "material-react-table";
@@ -74,7 +74,7 @@ const STATUS_OPTIONS = [
 ] as const;
 
 const filterControlClassName =
-    "mt-1 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-slate-100";
+    "h-11 w-full rounded-2xl border border-slate-200/90 bg-white/95 px-3 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 dark:border-slate-700/60 dark:bg-slate-900/75 dark:text-slate-100";
 
 function formatMoney(priceCents?: number | null, currency?: string | null) {
     if (!priceCents || !currency) return null;
@@ -475,7 +475,12 @@ export default function BookingsClient({ orgId, tz, view = "all" }: Props) {
             accessorKey: "paymentStatus",
             header: "Payment",
             Cell: ({ row }) => {
-                const priceLabel = formatMoney(row.original.priceCents, row.original.currency);
+                const paymentRequired =
+                    row.original.paymentPolicy !== "FREE" &&
+                    Boolean(row.original.requiresPayment);
+                const priceLabel = paymentRequired
+                    ? formatMoney(row.original.priceCents, row.original.currency)
+                    : null;
                 const paymentStatus = normalizePaymentStatus(
                     row.original.paymentStatus ?? null,
                     row.original.requiresPayment
@@ -485,9 +490,11 @@ export default function BookingsClient({ orgId, tz, view = "all" }: Props) {
                         <Badge variant={paymentStatus}>
                             {getStatusDisplay(paymentStatus)}
                         </Badge>
-                        <div className="text-xs text-gray-600 dark:text-gray-300">
-                            {priceLabel ? priceLabel : "—"}
-                        </div>
+                        {priceLabel && (
+                            <div className="text-xs text-gray-600 dark:text-gray-300">
+                                {priceLabel}
+                            </div>
+                        )}
                         {row.original.paymentPolicy && (
                             <div className="text-[11px] text-gray-500 dark:text-gray-400">
                                 Payment: {row.original.paymentPolicy === "FREE" ? "Free" : "Paid"}
@@ -589,46 +596,21 @@ export default function BookingsClient({ orgId, tz, view = "all" }: Props) {
                 }
             />
 
-            <FilterBar className="grid gap-4 lg:grid-cols-4">
-                <div className="flex flex-wrap items-center justify-between gap-3 lg:col-span-4">
-                    <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400">
-                            Filters
-                        </p>
-                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                            {filterSubtitle}
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
-                            {activeFilterCount} active
-                        </span>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={resetFilters}
-                            disabled={activeFilterCount === 0}
-                        >
-                            Reset
-                        </Button>
-                    </div>
-                </div>
-
+            <FilterBar
+                title="Filters"
+                description={filterSubtitle}
+                activeCount={activeFilterCount}
+                onReset={resetFilters}
+                contentClassName="xl:grid-cols-4"
+            >
                 {isApprovalsView ? (
-                    <div>
-                        <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                            Status
-                        </label>
+                    <FilterField label="Status">
                         <div className={`${filterControlClassName} flex items-center font-medium`}>
                             Pending approval only
                         </div>
-                    </div>
+                    </FilterField>
                 ) : (
-                    <div>
-                        <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                            Status
-                        </label>
+                    <FilterField label="Status">
                         <select
                             className={filterControlClassName}
                             value={statusFilter}
@@ -644,13 +626,10 @@ export default function BookingsClient({ orgId, tz, view = "all" }: Props) {
                             <option value="canceled">Canceled</option>
                             <option value="completed">Completed</option>
                         </select>
-                    </div>
+                    </FilterField>
                 )}
 
-                <div>
-                    <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                        Mode
-                    </label>
+                <FilterField label="Mode">
                     <select
                         className={filterControlClassName}
                         value={modeFilter}
@@ -665,12 +644,9 @@ export default function BookingsClient({ orgId, tz, view = "all" }: Props) {
                         <option value="phone">Phone</option>
                         <option value="in_person">In person</option>
                     </select>
-                </div>
+                </FilterField>
 
-                <div>
-                    <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                        Meeting type
-                    </label>
+                <FilterField label="Meeting type">
                     <select
                         className={filterControlClassName}
                         value={meetingTypeFilter}
@@ -686,12 +662,9 @@ export default function BookingsClient({ orgId, tz, view = "all" }: Props) {
                             </option>
                         ))}
                     </select>
-                </div>
+                </FilterField>
 
-                <div>
-                    <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                        Staff
-                    </label>
+                <FilterField label="Staff">
                     <select
                         className={filterControlClassName}
                         value={staffFilter}
@@ -707,42 +680,40 @@ export default function BookingsClient({ orgId, tz, view = "all" }: Props) {
                             </option>
                         ))}
                     </select>
-                </div>
+                </FilterField>
 
-                <div>
-                    <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                        From
-                    </label>
-                    <Input
-                        type="date"
-                        className={filterControlClassName}
-                        value={startDate}
-                        onChange={(e) => {
-                            setStartDate(e.target.value);
-                            setPage(1);
-                        }}
-                    />
-                </div>
+                <FilterField
+                    label="Date range"
+                    className="xl:col-span-2"
+                    hint="Leave either side empty to keep the range open."
+                >
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <Input
+                            type="date"
+                            className={filterControlClassName}
+                            value={startDate}
+                            onChange={(e) => {
+                                setStartDate(e.target.value);
+                                setPage(1);
+                            }}
+                        />
+                        <Input
+                            type="date"
+                            className={filterControlClassName}
+                            value={endDate}
+                            onChange={(e) => {
+                                setEndDate(e.target.value);
+                                setPage(1);
+                            }}
+                        />
+                    </div>
+                </FilterField>
 
-                <div>
-                    <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                        To
-                    </label>
-                    <Input
-                        type="date"
-                        className={filterControlClassName}
-                        value={endDate}
-                        onChange={(e) => {
-                            setEndDate(e.target.value);
-                            setPage(1);
-                        }}
-                    />
-                </div>
-
-                <div className="lg:col-span-2">
-                    <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                        Search
-                    </label>
+                <FilterField
+                    label="Search"
+                    className="xl:col-span-2"
+                    hint="Customer name, email, phone, or meeting type."
+                >
                     <Input
                         className={filterControlClassName}
                         value={query}
@@ -750,9 +721,9 @@ export default function BookingsClient({ orgId, tz, view = "all" }: Props) {
                             setQuery(e.target.value);
                             setPage(1);
                         }}
-                        placeholder="Search customer name, email, phone, or meeting type..."
+                        placeholder="Search bookings..."
                     />
-                </div>
+                </FilterField>
             </FilterBar>
 
             {loading && (
@@ -782,11 +753,12 @@ export default function BookingsClient({ orgId, tz, view = "all" }: Props) {
                     enablePagination: true,
                     enableSorting: true,
                     enableFilters: false,
-                    enableColumnActions: false,
+                    enableColumnActions: true,
                     enableGlobalFilter: false,
-                    enableDensityToggle: false,
-                    enableFullScreenToggle: false,
-                    enableTopToolbar: false,
+                    enableDensityToggle: true,
+                    enableFullScreenToggle: true,
+                    enableTopToolbar: true,
+                    enableHiding: true,
                     manualPagination: true,
                     rowCount: total,
                     state: {
@@ -890,7 +862,8 @@ export default function BookingsClient({ orgId, tz, view = "all" }: Props) {
                                                     approvalTarget.requiresPayment
                                                 )
                                             )}
-                                            {formatMoney(
+                                            {approvalTarget.paymentPolicy !== "FREE" &&
+                                            formatMoney(
                                                 approvalTarget.priceCents,
                                                 approvalTarget.currency
                                             )

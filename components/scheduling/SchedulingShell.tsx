@@ -301,12 +301,12 @@ export default function SchedulingShell({
         )}
         <div className="flex items-center justify-between text-xs font-medium text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">
           <Link href="/contact" className="hover:text-sidebar-foreground">
-            Support
-            </Link>
-            <Link href="/" className="hover:text-sidebar-foreground">
-              Back to main site
-            </Link>
-          </div>
+            Contact / audit
+          </Link>
+          <Link href="/" className="hover:text-sidebar-foreground">
+            Back to main site
+          </Link>
+        </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button

@@ -5,6 +5,7 @@ import { getStripeForOrg } from "@/lib/stripe";
 import { requireUserIdFromSession } from "@/lib/scheduling/authz";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import { isBodyTooLarge, isValidTimezone, isValidUuid } from "@/lib/validation";
+import { getPublicBaseUrl } from "@/lib/public-url";
 
 type MeetingMode = "google_meet" | "zoom" | "phone" | "in_person";
 const BUSY_STATUSES = ["pending", "confirmed", "completed"] as const;
@@ -188,7 +189,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const origin = new URL(req.url).origin;
+  const origin = getPublicBaseUrl(req);
   const successUrl = `${origin}/scheduling/payment/success?session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl = `${origin}/scheduling/payment/cancel`;
 

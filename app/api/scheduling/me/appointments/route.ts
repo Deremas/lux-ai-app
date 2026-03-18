@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { normalizeAppointmentPayment } from "@/lib/scheduling/appointment-payment";
 import { requireUserIdFromSession } from "@/lib/scheduling/authz";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import { getMeetingLink } from "@/lib/scheduling/meeting-link";
@@ -79,32 +80,42 @@ export async function GET(req: Request) {
     }),
   ]);
 
-  const items = rows.map((row) => ({
-    id: row.id,
-    status: row.status,
-    startAtUtc: row.startAtUtc,
-    endAtUtc: row.endAtUtc,
-    meetingTypeId: row.meetingTypeId,
-    staffUserId: row.staffUserId,
-    meetingTypeKey: row.meetingType?.key ?? null,
-    meetingTypeTitle: row.meetingType?.key ?? null,
-    durationMin: row.meetingType?.durationMin ?? 60,
-    mode: row.mode,
-    createdAt: row.createdAt,
-    phone: profile?.phone ?? null,
-    notes: row.notes ?? null,
-    paymentPolicy: row.paymentPolicy ?? null,
-    paymentStatus: row.paymentStatus ?? null,
-    priceCents: row.priceCents ?? null,
-    currency: row.currency ?? null,
-    meetingLink:
-      row.status === "confirmed"
-        ? getMeetingLink({
-            appointmentId: row.id,
-            mode: row.mode,
-          })
-        : null,
-  }));
+  const items = rows.map((row) => {
+    const payment = normalizeAppointmentPayment({
+      paymentPolicy: row.paymentPolicy ?? null,
+      paymentStatus: row.paymentStatus ?? null,
+      requiresPayment: row.requiresPayment ?? null,
+      priceCents: row.priceCents ?? null,
+      currency: row.currency ?? null,
+    });
+
+    return {
+      id: row.id,
+      status: row.status,
+      startAtUtc: row.startAtUtc,
+      endAtUtc: row.endAtUtc,
+      meetingTypeId: row.meetingTypeId,
+      staffUserId: row.staffUserId,
+      meetingTypeKey: row.meetingType?.key ?? null,
+      meetingTypeTitle: row.meetingType?.key ?? null,
+      durationMin: row.meetingType?.durationMin ?? 60,
+      mode: row.mode,
+      createdAt: row.createdAt,
+      phone: profile?.phone ?? null,
+      notes: row.notes ?? null,
+      paymentPolicy: payment.paymentPolicy,
+      paymentStatus: payment.paymentStatus,
+      priceCents: payment.priceCents,
+      currency: payment.currency,
+      meetingLink:
+        row.status === "confirmed"
+          ? getMeetingLink({
+              appointmentId: row.id,
+              mode: row.mode,
+            })
+          : null,
+    };
+  });
 
   return NextResponse.json({
     orgId,

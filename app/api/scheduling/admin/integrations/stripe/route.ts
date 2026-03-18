@@ -12,6 +12,7 @@ import { writeAudit } from "@/lib/scheduling/audit";
 import { isBodyTooLarge, isValidUuid } from "@/lib/validation";
 import { decryptSecret, encryptSecret } from "@/lib/security/secret-crypto";
 import { inferStripeMode } from "@/lib/stripe";
+import { getPublicBaseUrl } from "@/lib/public-url";
 
 const MAX_BODY = 4096;
 
@@ -53,13 +54,6 @@ function last4(value: string | null) {
   return trimmed.length <= 4 ? trimmed : trimmed.slice(-4);
 }
 
-function buildBaseUrl(req: Request) {
-  const env = process.env.NEXTAUTH_URL;
-  if (env) return env.replace(/\/+$/, "");
-  const url = new URL(req.url);
-  return url.origin;
-}
-
 async function getStripeStatus(orgId: string, req: Request): Promise<StripeStatus> {
   const secretRow = await prisma.orgSecret.findFirst({
     where: { orgId },
@@ -99,7 +93,7 @@ async function getStripeStatus(orgId: string, req: Request): Promise<StripeStatu
     publishableKeyLast4: last4(orgPublishableKey),
     webhookSecretLast4: last4(effectiveWebhookSecret),
     mode: inferStripeMode(effectiveSecretKey),
-    webhookEndpoint: `${buildBaseUrl(req)}/api/scheduling/webhooks/stripe/${orgId}`,
+    webhookEndpoint: `${getPublicBaseUrl(req)}/api/scheduling/webhooks/stripe/${orgId}`,
     lastWebhookEvent: lastWebhook
       ? {
           id: lastWebhook.entityId,

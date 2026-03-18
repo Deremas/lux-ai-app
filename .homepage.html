@@ -1,0 +1,2166 @@
+<!doctype html>
+<html lang="en" class="scrollbar-gutter-stable">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preload" as="image" href="/images/hero.jpg" />
+    <link rel="preload" as="image" href="/images/analyze.jpg" />
+    <link rel="preload" as="image" href="/images/workflow1.jpg" />
+    <link rel="preload" as="image" href="/images/workflow2.jpg" />
+    <link rel="preload" as="image" href="/images/workflow-automation.png" />
+    <link rel="preload" as="image" href="/images/about.jpg" />
+    <link rel="preload" as="image" href="/images/deploy.jpg" />
+    <link rel="preload" as="image" href="/avatars/molla.png" />
+    <link rel="preload" as="image" href="/avatars/fikre.png" />
+    <link rel="preload" as="image" href="/avatars/dere.png" />
+    <link
+      rel="stylesheet"
+      href="/_next/static/css/app/layout.css?v=1773665568445"
+      data-precedence="next_static/css/app/layout.css"
+    />
+    <link
+      rel="preload"
+      as="script"
+      fetchpriority="low"
+      href="/_next/static/chunks/webpack.js?v=1773665568445"
+    />
+    <script
+      src="/_next/static/chunks/main-app.js?v=1773665568445"
+      async=""
+    ></script>
+    <script src="/_next/static/chunks/app-pages-internals.js" async=""></script>
+    <script src="/_next/static/chunks/app/layout.js" async=""></script>
+    <script src="/_next/static/chunks/app/not-found.js" async=""></script>
+    <script src="/_next/static/chunks/app/page.js" async=""></script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>
+      Lux AI Consultancy &amp; Automation | AI Automation Systems &amp;
+      Consulting for SMEs
+    </title>
+    <meta
+      name="description"
+      content="Lux AI Consultancy &amp; Automation provides AI automation systems and consulting for SMEs that want faster operations, better customer communication, and cleaner business workflows."
+    />
+    <script>
+      (function () {
+        try {
+          // theme
+          var mTheme = document.cookie.match(/(?:^|; )theme=([^;]*)/);
+          var theme = mTheme ? decodeURIComponent(mTheme[1]) : null;
+          if (!theme) {
+            try {
+              theme = localStorage.getItem("theme");
+            } catch (e) {}
+          }
+          var prefersDark =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var resolved =
+            theme === "dark"
+              ? "dark"
+              : theme === "light"
+                ? "light"
+                : prefersDark
+                  ? "dark"
+                  : "light";
+          document.documentElement.classList.toggle(
+            "dark",
+            resolved === "dark",
+          );
+
+          // lang
+          var mLang = document.cookie.match(/(?:^|; )lang=([^;]*)/);
+          var lang = mLang ? decodeURIComponent(mLang[1]) : null;
+          if (
+            lang === "en" ||
+            lang === "fr" ||
+            lang === "de" ||
+            lang === "lb"
+          ) {
+            document.documentElement.setAttribute("lang", lang);
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <script>
+      (function () {
+        try {
+          var html = document.documentElement;
+          var body = document.body;
+
+          function scrollbarWidth() {
+            return window.innerWidth - html.clientWidth;
+          }
+
+          function applyFix() {
+            var computed = window.getComputedStyle(body);
+            var overflowHidden =
+              body.style.overflow === "hidden" ||
+              computed.overflowY === "hidden" ||
+              body.classList.contains("overflow-hidden");
+
+            if (overflowHidden) {
+              var w = scrollbarWidth();
+              if (w > 0) body.style.paddingRight = w + "px";
+            } else {
+              body.style.paddingRight = "";
+            }
+          }
+
+          applyFix();
+          window.addEventListener("resize", applyFix);
+
+          var obs = new MutationObserver(applyFix);
+          obs.observe(body, {
+            attributes: true,
+            attributeFilter: ["style", "class"],
+          });
+
+          var obs2 = new MutationObserver(applyFix);
+          obs2.observe(html, {
+            attributes: true,
+            attributeFilter: ["style", "class"],
+          });
+        } catch (e) {}
+      })();
+    </script>
+    <script src="/_next/static/chunks/polyfills.js" nomodule=""></script>
+  </head>
+  <body
+    class="antialiased font-sans bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 transition-colors duration-300"
+  >
+    <div
+      class="min-h-screen bg-white text-slate-950 transition-colors duration-300 dark:bg-slate-950 dark:text-white"
+    >
+      <header
+        class="sticky top-0 left-0 z-[2147483000] w-full border-b border-blue-100/80 bg-white/85 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.45)] backdrop-blur-xl transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950/80"
+        style="-webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px)"
+      >
+        <div class="mx-auto w-full max-w-7xl px-3 sm:px-4 lg:px-6">
+          <div
+            class="flex min-h-[4.5rem] items-center justify-between gap-3 py-2"
+          >
+            <a class="flex min-w-0 items-center gap-3" href="/"
+              ><span
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-primary-500/25 bg-primary-50 text-sm font-extrabold uppercase tracking-[0.2em] text-primary-600 dark:border-accent-500/35 dark:bg-accent-500/10 dark:text-accent-400"
+                aria-label="Lux AI"
+                title="Lux AI Consultancy &amp; Automation"
+                >Lux</span
+              ><span class="hidden min-w-0 md:block"
+                ><span
+                  class="block truncate text-sm font-bold text-slate-950 dark:text-white"
+                  >Lux AI Consultancy &amp; Automation</span
+                ><span
+                  class="block truncate text-xs font-medium text-slate-500 dark:text-slate-300"
+                  >AI Automation Systems &amp; Consulting for SMEs</span
+                ></span
+              ></a
+            >
+            <nav class="hidden lg:flex flex-1 items-center justify-center">
+              <div class="flex items-center gap-4 xl:gap-6">
+                <a
+                  class="relative whitespace-nowrap text-sm font-medium transition-colors duration-200 xl:text-[0.95rem] text-primary-600 dark:text-accent-400"
+                  href="/"
+                  >Heem<span
+                    class="absolute -bottom-2 left-0 h-0.5 w-full rounded-full bg-accent-500"
+                  ></span></a
+                ><a
+                  class="relative whitespace-nowrap text-sm font-medium transition-colors duration-200 xl:text-[0.95rem] text-slate-700 hover:text-primary-600 dark:text-slate-200 dark:hover:text-accent-400"
+                  href="/services"
+                  >Léisungen</a
+                ><a
+                  class="relative whitespace-nowrap text-sm font-medium transition-colors duration-200 xl:text-[0.95rem] text-slate-700 hover:text-primary-600 dark:text-slate-200 dark:hover:text-accent-400"
+                  href="/services#consulting"
+                  >Berodung</a
+                ><a
+                  class="relative whitespace-nowrap text-sm font-medium transition-colors duration-200 xl:text-[0.95rem] text-slate-700 hover:text-primary-600 dark:text-slate-200 dark:hover:text-accent-400"
+                  href="/use-cases"
+                  >Use Cases</a
+                ><a
+                  class="relative whitespace-nowrap text-sm font-medium transition-colors duration-200 xl:text-[0.95rem] text-slate-700 hover:text-primary-600 dark:text-slate-200 dark:hover:text-accent-400"
+                  href="/how-it-works"
+                  >Wéi Et Geet</a
+                ><a
+                  class="relative whitespace-nowrap text-sm font-medium transition-colors duration-200 xl:text-[0.95rem] text-slate-700 hover:text-primary-600 dark:text-slate-200 dark:hover:text-accent-400"
+                  href="/about"
+                  >Iwwer Eis</a
+                ><a
+                  class="relative whitespace-nowrap text-sm font-medium transition-colors duration-200 xl:text-[0.95rem] text-slate-700 hover:text-primary-600 dark:text-slate-200 dark:hover:text-accent-400"
+                  href="/contact"
+                  >Kontakt</a
+                >
+              </div>
+            </nav>
+            <div class="flex shrink-0 items-center gap-2 sm:gap-3">
+              <button
+                type="button"
+                role="combobox"
+                aria-controls="radix-:Rtdsmkq:"
+                aria-expanded="false"
+                aria-autocomplete="none"
+                dir="ltr"
+                data-state="closed"
+                class="flex items-center justify-between whitespace-nowrap px-3 py-2 shadow-sm ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&amp;&gt;span]:line-clamp-1 h-9 w-[6.25rem] rounded-full border border-slate-200 bg-white text-sm dark:border-slate-700 dark:bg-slate-900 sm:w-[8.25rem] lg:w-[7.5rem] xl:w-[160px]"
+              >
+                <span style="pointer-events: none"></span
+                ><svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-chevron-down h-4 w-4 opacity-50"
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6"></path>
+                </svg></button
+              ><select
+                aria-hidden="true"
+                tabindex="-1"
+                style="
+                  position: absolute;
+                  border: 0;
+                  width: 1px;
+                  height: 1px;
+                  padding: 0;
+                  margin: -1px;
+                  overflow: hidden;
+                  clip: rect(0, 0, 0, 0);
+                  white-space: nowrap;
+                  word-wrap: normal;
+                "
+              ></select
+              ><button
+                class="rounded-full border border-slate-200 bg-slate-50 p-2.5 transition-colors duration-200 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+                aria-label="Toggle theme"
+                type="button"
+              >
+                <i
+                  class="ri-moon-line text-base text-slate-700 dark:text-slate-100"
+                ></i></button
+              ><a
+                class="hidden items-center rounded-full bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-700 lg:inline-flex"
+                href="/contact"
+                >Gratis Audit</a
+              ><button
+                class="rounded-full border border-slate-200 p-2.5 transition-all duration-200 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 lg:hidden"
+                aria-label="Toggle menu"
+                type="button"
+              >
+                <i
+                  class="ri-menu-line text-base text-slate-700 dark:text-slate-100"
+                ></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+      <div
+        class="fixed inset-0 z-[2147483647] transition-opacity duration-200 lg:hidden pointer-events-none opacity-0"
+      >
+        <button
+          type="button"
+          aria-label="Close menu"
+          class="absolute inset-0 bg-slate-950/40"
+        ></button>
+        <div class="absolute top-[4.75rem] left-0 right-0 p-3">
+          <div
+            class="mx-auto w-full max-w-[calc(100vw-1.5rem)] rounded-[28px] border border-slate-200 bg-white/95 p-2 shadow-2xl backdrop-blur-xl transition-transform duration-200 dark:border-slate-800 dark:bg-slate-950/95 -translate-y-2 scale-95"
+            style="
+              -webkit-backdrop-filter: blur(18px);
+              backdrop-filter: blur(18px);
+            "
+          >
+            <div class="max-h-[75vh] overflow-auto">
+              <nav class="flex flex-col gap-1 p-2">
+                <a
+                  class="rounded-2xl px-4 py-3 text-sm font-medium transition-colors duration-200 bg-primary-50 text-primary-600 dark:bg-slate-800 dark:text-accent-400"
+                  href="/"
+                  >Heem</a
+                ><a
+                  class="rounded-2xl px-4 py-3 text-sm font-medium transition-colors duration-200 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  href="/services"
+                  >Léisungen</a
+                ><a
+                  class="rounded-2xl px-4 py-3 text-sm font-medium transition-colors duration-200 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  href="/services#consulting"
+                  >Berodung</a
+                ><a
+                  class="rounded-2xl px-4 py-3 text-sm font-medium transition-colors duration-200 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  href="/use-cases"
+                  >Use Cases</a
+                ><a
+                  class="rounded-2xl px-4 py-3 text-sm font-medium transition-colors duration-200 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  href="/how-it-works"
+                  >Wéi Et Geet</a
+                ><a
+                  class="rounded-2xl px-4 py-3 text-sm font-medium transition-colors duration-200 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  href="/about"
+                  >Iwwer Eis</a
+                ><a
+                  class="rounded-2xl px-4 py-3 text-sm font-medium transition-colors duration-200 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  href="/contact"
+                  >Kontakt</a
+                ><a
+                  class="mt-2 inline-flex items-center justify-center rounded-2xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-primary-700"
+                  href="/contact"
+                  >Gratis Audit</a
+                >
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      <main>
+        <section
+          class="relative overflow-hidden bg-[linear-gradient(135deg,#eff6ff_0%,#ffffff_42%,#f8fafc_100%)] dark:bg-[linear-gradient(135deg,#020617_0%,#0f172a_42%,#111827_100%)]"
+        >
+          <div
+            class="absolute inset-0 bg-[url(&#x27;/images/hero-bg.jpg&#x27;)] bg-cover bg-center opacity-[0.09]"
+          ></div>
+          <div
+            class="absolute -top-32 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-accent-500/20 blur-3xl"
+          ></div>
+          <div
+            class="relative mx-auto max-w-7xl px-4 pb-24 pt-20 sm:px-6 lg:px-8 lg:pb-28 lg:pt-24"
+          >
+            <div class="grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]">
+              <div
+                class="space-y-8"
+                style="opacity: 0; transform: translateX(-60px) translateZ(0)"
+              >
+                <span
+                  class="inline-flex rounded-full border border-primary-500/15 bg-white/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-primary-600 shadow-sm dark:border-accent-500/20 dark:bg-slate-900/75 dark:text-accent-400"
+                  >AI Automation Systems &amp; Consulting for SMEs</span
+                >
+                <div class="space-y-5">
+                  <h1
+                    class="max-w-3xl text-4xl font-black tracking-[-0.04em] text-slate-950 dark:text-white sm:text-5xl lg:text-6xl"
+                  >
+                    Automate SME Business Operations with AI-Powered Solutions
+                  </h1>
+                  <p
+                    class="max-w-3xl text-lg leading-8 text-slate-600 dark:text-slate-300 sm:text-xl"
+                  >
+                    We design, implement, and optimize AI automation systems and
+                    consulting solutions that reduce manual work, improve
+                    customer communication, and streamline business workflows.
+                  </p>
+                </div>
+                <div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
+                  <a
+                    class="inline-flex items-center justify-center rounded-full bg-primary-600 px-7 py-4 text-base font-semibold text-white shadow-lg shadow-primary-600/20 transition-all duration-200 hover:-translate-y-1 hover:bg-primary-700"
+                    href="/contact"
+                    >Get a Free Audit<i
+                      class="ri-arrow-right-line ml-2 text-lg"
+                    ></i></a
+                  ><a
+                    class="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white/90 px-7 py-4 text-base font-semibold text-slate-800 transition-all duration-200 hover:-translate-y-1 hover:border-primary-500 hover:text-primary-600 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:border-accent-400 dark:hover:text-accent-400"
+                    href="/how-it-works"
+                    >See How It Works<i
+                      class="ri-play-circle-line ml-2 text-lg"
+                    ></i
+                  ></a>
+                </div>
+                <div class="space-y-3">
+                  <p
+                    class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
+                  >
+                    Built for SMEs and growing businesses in Luxembourg and
+                    Europe.
+                  </p>
+                  <div class="flex flex-wrap gap-3">
+                    <span
+                      class="rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-200"
+                      >Workflow audits and opportunity mapping</span
+                    ><span
+                      class="rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-200"
+                      >AI systems, integrations, and implementation</span
+                    ><span
+                      class="rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-200"
+                      >Ongoing optimization for growing teams</span
+                    >
+                  </div>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateX(60px) translateZ(0)"
+              >
+                <div class="relative">
+                  <div
+                    class="overflow-hidden rounded-[2rem] border border-white/60 bg-white/70 p-3 shadow-[0_30px_80px_-30px_rgba(15,23,42,0.45)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/70"
+                  >
+                    <img
+                      src="/images/hero.jpg"
+                      alt="Lux AI automation team planning workflow delivery"
+                      class="h-full w-full rounded-[1.5rem] object-cover"
+                    />
+                  </div>
+                  <div
+                    class="absolute -bottom-8 left-4 right-4 rounded-[1.75rem] border border-white/70 bg-white/92 p-5 shadow-[0_30px_60px_-36px_rgba(15,23,42,0.4)] backdrop-blur dark:border-slate-800 dark:bg-slate-950/92 sm:left-10 sm:right-10"
+                  >
+                    <p
+                      class="text-xs font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-accent-400"
+                    >
+                      Workflow View
+                    </p>
+                    <div class="mt-4 flex flex-col gap-3">
+                      <div
+                        class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900"
+                      >
+                        <span
+                          class="flex h-11 w-11 items-center justify-center rounded-full bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                          ><i class="ri-mail-open-line text-lg"></i></span
+                        ><span
+                          class="flex-1 text-sm font-medium text-slate-700 dark:text-slate-200"
+                          >Email / Form / Chat</span
+                        ><i class="ri-arrow-down-line text-slate-400"></i>
+                      </div>
+                      <div
+                        class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900"
+                      >
+                        <span
+                          class="flex h-11 w-11 items-center justify-center rounded-full bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                          ><i class="ri-robot-2-line text-lg"></i></span
+                        ><span
+                          class="flex-1 text-sm font-medium text-slate-700 dark:text-slate-200"
+                          >AI Agent</span
+                        ><i class="ri-arrow-down-line text-slate-400"></i>
+                      </div>
+                      <div
+                        class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900"
+                      >
+                        <span
+                          class="flex h-11 w-11 items-center justify-center rounded-full bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                          ><i class="ri-git-merge-line text-lg"></i></span
+                        ><span
+                          class="flex-1 text-sm font-medium text-slate-700 dark:text-slate-200"
+                          >Automation Workflow</span
+                        ><i class="ri-arrow-down-line text-slate-400"></i>
+                      </div>
+                      <div
+                        class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900"
+                      >
+                        <span
+                          class="flex h-11 w-11 items-center justify-center rounded-full bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                          ><i class="ri-database-2-line text-lg"></i></span
+                        ><span
+                          class="flex-1 text-sm font-medium text-slate-700 dark:text-slate-200"
+                          >CRM / Internal Tool / Database</span
+                        ><i class="ri-arrow-down-line text-slate-400"></i>
+                      </div>
+                      <div
+                        class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900"
+                      >
+                        <span
+                          class="flex h-11 w-11 items-center justify-center rounded-full bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                          ><i class="ri-flashlight-line text-lg"></i></span
+                        ><span
+                          class="flex-1 text-sm font-medium text-slate-700 dark:text-slate-200"
+                          >Faster Operations</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <div
+          class="py-24 sm:py-28"
+          style="opacity: 0; transform: translateY(60px) translateZ(0)"
+        >
+          <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-3xl text-center">
+              <p
+                class="text-sm font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-accent-400"
+              >
+                Common Business Bottlenecks We Help Solve
+              </p>
+              <h2
+                class="mt-4 text-3xl font-black tracking-[-0.04em] sm:text-5xl"
+              >
+                Operational friction that holds SME growth back
+              </h2>
+              <p
+                class="mt-5 text-lg leading-8 text-slate-600 dark:text-slate-300"
+              >
+                Every section of the site should answer a business question.
+                This one answers whether LuxAI understands the day-to-day
+                operational pain teams are dealing with.
+              </p>
+            </div>
+            <div class="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="h-full rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_22px_55px_-36px_rgba(15,23,42,0.35)] transition-all duration-200 dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <span
+                    class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                    ><i class="ri-file-copy-line text-2xl"></i
+                  ></span>
+                  <h3 class="mt-5 text-xl font-bold">Repetitive admin work</h3>
+                  <p
+                    class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Manual approvals, handoffs, and copy-paste work slow teams
+                    down and create avoidable errors.
+                  </p>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="h-full rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_22px_55px_-36px_rgba(15,23,42,0.35)] transition-all duration-200 dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <span
+                    class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                    ><i class="ri-customer-service-2-line text-2xl"></i
+                  ></span>
+                  <h3 class="mt-5 text-xl font-bold">
+                    Slow customer responses
+                  </h3>
+                  <p
+                    class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Leads and support requests wait too long when teams rely on
+                    inboxes and fragmented tools.
+                  </p>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="h-full rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_22px_55px_-36px_rgba(15,23,42,0.35)] transition-all duration-200 dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <span
+                    class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                    ><i class="ri-links-line text-2xl"></i
+                  ></span>
+                  <h3 class="mt-5 text-xl font-bold">Disconnected systems</h3>
+                  <p
+                    class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    CRM, email, forms, internal tools, and databases are often
+                    not working as one operating system.
+                  </p>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="h-full rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_22px_55px_-36px_rgba(15,23,42,0.35)] transition-all duration-200 dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <span
+                    class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                    ><i class="ri-keyboard-box-line text-2xl"></i
+                  ></span>
+                  <h3 class="mt-5 text-xl font-bold">Manual data entry</h3>
+                  <p
+                    class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Teams waste time updating records, moving documents, and
+                    re-entering the same information.
+                  </p>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="h-full rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_22px_55px_-36px_rgba(15,23,42,0.35)] transition-all duration-200 dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <span
+                    class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                    ><i class="ri-flow-chart text-2xl"></i
+                  ></span>
+                  <h3 class="mt-5 text-xl font-bold">Workflow bottlenecks</h3>
+                  <p
+                    class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Critical processes break under growth when no one has
+                    redesigned them around speed and clarity.
+                  </p>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="h-full rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_22px_55px_-36px_rgba(15,23,42,0.35)] transition-all duration-200 dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <span
+                    class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                    ><i class="ri-line-chart-line text-2xl"></i
+                  ></span>
+                  <h3 class="mt-5 text-xl font-bold">
+                    Scaling without structure
+                  </h3>
+                  <p
+                    class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    More volume should not always require more people, more
+                    inboxes, and more operational friction.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="bg-slate-50 py-24 dark:bg-slate-900/60 sm:py-28"
+          style="opacity: 0; transform: translateY(60px) translateZ(0)"
+        >
+          <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-3xl text-center">
+              <p
+                class="text-sm font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-accent-400"
+              >
+                AI Automation Solutions for Business Operations
+              </p>
+              <h2
+                class="mt-4 text-3xl font-black tracking-[-0.04em] sm:text-5xl"
+              >
+                Core solutions built around business outcomes
+              </h2>
+              <p
+                class="mt-5 text-lg leading-8 text-slate-600 dark:text-slate-300"
+              >
+                Automation is the main identity. Consulting stays visible, but
+                it exists to support better solution design and delivery.
+              </p>
+            </div>
+            <div class="mt-14 grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-950"
+                >
+                  <span
+                    class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600 text-white shadow-lg shadow-primary-600/20"
+                    ><i class="ri-flow-chart text-2xl"></i
+                  ></span>
+                  <h3 class="mt-5 text-xl font-bold">AI Workflow Automation</h3>
+                  <p
+                    class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Automate repetitive business processes across forms,
+                    approvals, admin tasks, notifications, and internal
+                    workflows.
+                  </p>
+                  <p
+                    class="mt-4 text-sm font-semibold text-primary-600 dark:text-accent-400"
+                  >
+                    Business outcome:
+                    <!-- -->Reduce manual work and improve operational speed.
+                  </p>
+                  <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">
+                    Ideal for teams handling recurring operational steps and
+                    back-office work.
+                  </p>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-950"
+                >
+                  <span
+                    class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600 text-white shadow-lg shadow-primary-600/20"
+                    ><i class="ri-message-3-line text-2xl"></i
+                  ></span>
+                  <h3 class="mt-5 text-xl font-bold">
+                    AI Customer Communication
+                  </h3>
+                  <p
+                    class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Deploy AI assistants for support, lead qualification, FAQs,
+                    customer onboarding, and response routing.
+                  </p>
+                  <p
+                    class="mt-4 text-sm font-semibold text-primary-600 dark:text-accent-400"
+                  >
+                    Business outcome:
+                    <!-- -->Improve responsiveness and reduce communication
+                    load.
+                  </p>
+                  <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">
+                    Ideal for sales, support, onboarding, and service teams.
+                  </p>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-950"
+                >
+                  <span
+                    class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600 text-white shadow-lg shadow-primary-600/20"
+                    ><i class="ri-plug-2-line text-2xl"></i
+                  ></span>
+                  <h3 class="mt-5 text-xl font-bold">
+                    Business System Integration
+                  </h3>
+                  <p
+                    class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Connect CRM, email, forms, internal tools, databases, and
+                    APIs into efficient business workflows.
+                  </p>
+                  <p
+                    class="mt-4 text-sm font-semibold text-primary-600 dark:text-accent-400"
+                  >
+                    Business outcome:
+                    <!-- -->Eliminate manual handoffs and fragmented operations.
+                  </p>
+                  <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">
+                    Ideal for companies with disconnected tools or manual data
+                    movement.
+                  </p>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-950"
+                >
+                  <span
+                    class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600 text-white shadow-lg shadow-primary-600/20"
+                    ><i class="ri-shield-check-line text-2xl"></i
+                  ></span>
+                  <h3 class="mt-5 text-xl font-bold">
+                    Internal AI Knowledge Systems
+                  </h3>
+                  <p
+                    class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Provide secure AI assistants for internal teams and
+                    controlled access to company knowledge.
+                  </p>
+                  <p
+                    class="mt-4 text-sm font-semibold text-primary-600 dark:text-accent-400"
+                  >
+                    Business outcome:
+                    <!-- -->Faster information retrieval and better decision
+                    support.
+                  </p>
+                  <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">
+                    Ideal for operations, support, HR, and cross-functional
+                    teams.
+                  </p>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-950"
+                >
+                  <span
+                    class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600 text-white shadow-lg shadow-primary-600/20"
+                    ><i class="ri-settings-3-line text-2xl"></i
+                  ></span>
+                  <h3 class="mt-5 text-xl font-bold">Process Optimization</h3>
+                  <p
+                    class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Review and improve workflows before or alongside automation
+                    so the system design actually fits the business.
+                  </p>
+                  <p
+                    class="mt-4 text-sm font-semibold text-primary-600 dark:text-accent-400"
+                  >
+                    Business outcome:
+                    <!-- -->Make automations more effective and sustainable.
+                  </p>
+                  <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">
+                    Ideal for SMEs refining workflows before implementation or
+                    scale.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="mt-12 text-center">
+              <a
+                class="inline-flex items-center justify-center rounded-full border border-primary-600 px-6 py-3 text-sm font-semibold text-primary-600 transition-colors duration-200 hover:bg-primary-600 hover:text-white dark:border-accent-400 dark:text-accent-400 dark:hover:bg-accent-400 dark:hover:text-slate-950"
+                href="/services#solutions"
+                >Explore the solution mix</a
+              >
+            </div>
+          </div>
+        </div>
+        <div
+          class="py-24 sm:py-28"
+          style="opacity: 0; transform: translateY(60px) translateZ(0)"
+        >
+          <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="grid items-center gap-12 lg:grid-cols-[0.95fr_1.05fr]">
+              <div
+                class=""
+                style="opacity: 0; transform: translateX(-60px) translateZ(0)"
+              >
+                <div
+                  class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-3 shadow-[0_26px_65px_-36px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <img
+                    src="/images/analyze.jpg"
+                    alt="Consulting and automation planning session"
+                    class="h-full w-full rounded-[1.5rem] object-cover"
+                  />
+                </div>
+              </div>
+              <div
+                class="space-y-7"
+                style="opacity: 0; transform: translateX(60px) translateZ(0)"
+              >
+                <div>
+                  <p
+                    class="text-sm font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-accent-400"
+                  >
+                    Consulting That Turns Automation Ideas into Action
+                  </p>
+                  <h2
+                    class="mt-4 text-3xl font-black tracking-[-0.04em] sm:text-5xl"
+                  >
+                    Strategy is visible, but implementation stays central
+                  </h2>
+                </div>
+                <p class="text-lg leading-8 text-slate-600 dark:text-slate-300">
+                  Consulting stays visible because strategy matters, but it
+                  supports the main offer: designing and implementing AI
+                  automation systems that improve business operations.
+                </p>
+                <p
+                  class="text-base leading-8 text-slate-500 dark:text-slate-400"
+                >
+                  We use consulting to help clients define priorities, validate
+                  the right systems, and move naturally into implementation
+                  projects or ongoing optimization retainers.
+                </p>
+                <div class="grid gap-5 md:grid-cols-2">
+                  <div
+                    class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-900"
+                  >
+                    <p
+                      class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
+                    >
+                      Consulting covers
+                    </p>
+                    <ul
+                      class="mt-4 space-y-3 text-sm text-slate-700 dark:text-slate-200"
+                    >
+                      <li class="flex items-start gap-3">
+                        <i
+                          class="ri-check-line mt-0.5 text-primary-600 dark:text-accent-400"
+                        ></i
+                        ><span>Free Automation Audit</span>
+                      </li>
+                      <li class="flex items-start gap-3">
+                        <i
+                          class="ri-check-line mt-0.5 text-primary-600 dark:text-accent-400"
+                        ></i
+                        ><span>AI Readiness Assessment</span>
+                      </li>
+                      <li class="flex items-start gap-3">
+                        <i
+                          class="ri-check-line mt-0.5 text-primary-600 dark:text-accent-400"
+                        ></i
+                        ><span>Automation Opportunity Discovery</span>
+                      </li>
+                      <li class="flex items-start gap-3">
+                        <i
+                          class="ri-check-line mt-0.5 text-primary-600 dark:text-accent-400"
+                        ></i
+                        ><span>Workflow and Process Review</span>
+                      </li>
+                      <li class="flex items-start gap-3">
+                        <i
+                          class="ri-check-line mt-0.5 text-primary-600 dark:text-accent-400"
+                        ></i
+                        ><span>Integration Architecture Advisory</span>
+                      </li>
+                      <li class="flex items-start gap-3">
+                        <i
+                          class="ri-check-line mt-0.5 text-primary-600 dark:text-accent-400"
+                        ></i
+                        ><span>Implementation Roadmap</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div
+                    class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-900"
+                  >
+                    <p
+                      class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
+                    >
+                      Clients receive
+                    </p>
+                    <ul
+                      class="mt-4 space-y-3 text-sm text-slate-700 dark:text-slate-200"
+                    >
+                      <li class="flex items-start gap-3">
+                        <i
+                          class="ri-arrow-right-line mt-0.5 text-primary-600 dark:text-accent-400"
+                        ></i
+                        ><span>Current process analysis</span>
+                      </li>
+                      <li class="flex items-start gap-3">
+                        <i
+                          class="ri-arrow-right-line mt-0.5 text-primary-600 dark:text-accent-400"
+                        ></i
+                        ><span>Automation opportunities</span>
+                      </li>
+                      <li class="flex items-start gap-3">
+                        <i
+                          class="ri-arrow-right-line mt-0.5 text-primary-600 dark:text-accent-400"
+                        ></i
+                        ><span>Tool and integration recommendations</span>
+                      </li>
+                      <li class="flex items-start gap-3">
+                        <i
+                          class="ri-arrow-right-line mt-0.5 text-primary-600 dark:text-accent-400"
+                        ></i
+                        ><span>Solution architecture</span>
+                      </li>
+                      <li class="flex items-start gap-3">
+                        <i
+                          class="ri-arrow-right-line mt-0.5 text-primary-600 dark:text-accent-400"
+                        ></i
+                        ><span>Implementation plan</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                <div>
+                  <a
+                    class="inline-flex items-center rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-1 hover:bg-primary-700"
+                    href="/services#consulting"
+                    >Talk to Us About Your Business Workflow</a
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="bg-[radial-gradient(circle_at_top,_rgba(14,66,126,0.08),_transparent_48%)] py-24 sm:py-28"
+          style="opacity: 0; transform: translateY(60px) translateZ(0)"
+        >
+          <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-3xl text-center">
+              <p
+                class="text-sm font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-accent-400"
+              >
+                What We Build and Integrate
+              </p>
+              <h2
+                class="mt-4 text-3xl font-black tracking-[-0.04em] sm:text-5xl"
+              >
+                Feature sets tied directly to operational value
+              </h2>
+            </div>
+            <div class="mt-14 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              <div
+                class=""
+                style="opacity: 0; transform: scale(0.8) translateZ(0)"
+              >
+                <div
+                  class="flex h-full gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-34px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <span
+                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                    ><i class="ri-global-line text-xl"></i
+                  ></span>
+                  <div>
+                    <h3 class="text-lg font-bold">Website chatbots</h3>
+                    <p
+                      class="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                    >
+                      Capture leads and answer common questions without adding
+                      inbox load.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: scale(0.8) translateZ(0)"
+              >
+                <div
+                  class="flex h-full gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-34px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <span
+                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                    ><i class="ri-lock-line text-xl"></i
+                  ></span>
+                  <div>
+                    <h3 class="text-lg font-bold">Private AI assistants</h3>
+                    <p
+                      class="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                    >
+                      Give teams faster access to trusted internal information.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: scale(0.8) translateZ(0)"
+              >
+                <div
+                  class="flex h-full gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-34px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <span
+                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                    ><i class="ri-book-open-line text-xl"></i
+                  ></span>
+                  <div>
+                    <h3 class="text-lg font-bold">Admin knowledge systems</h3>
+                    <p
+                      class="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                    >
+                      Keep AI responses current through controlled business
+                      knowledge and updates.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: scale(0.8) translateZ(0)"
+              >
+                <div
+                  class="flex h-full gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-34px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <span
+                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                    ><i class="ri-code-box-line text-xl"></i
+                  ></span>
+                  <div>
+                    <h3 class="text-lg font-bold">APIs and webhooks</h3>
+                    <p
+                      class="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                    >
+                      Move information between tools without manual transfer or
+                      broken handoffs.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: scale(0.8) translateZ(0)"
+              >
+                <div
+                  class="flex h-full gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-34px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <span
+                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                    ><i class="ri-contacts-book-3-line text-xl"></i
+                  ></span>
+                  <div>
+                    <h3 class="text-lg font-bold">CRM integrations</h3>
+                    <p
+                      class="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                    >
+                      Keep customer data synchronized and actionable across
+                      touchpoints.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: scale(0.8) translateZ(0)"
+              >
+                <div
+                  class="flex h-full gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-34px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <span
+                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400"
+                    ><i class="ri-node-tree text-xl"></i
+                  ></span>
+                  <div>
+                    <h3 class="text-lg font-bold">Automation platforms</h3>
+                    <p
+                      class="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                    >
+                      Launch practical workflows quickly and expand them as
+                      operations mature.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="py-24 sm:py-28"
+          style="opacity: 0; transform: translateY(60px) translateZ(0)"
+        >
+          <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-3xl text-center">
+              <p
+                class="text-sm font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-accent-400"
+              >
+                Examples of What We Automate
+              </p>
+              <h2
+                class="mt-4 text-3xl font-black tracking-[-0.04em] sm:text-5xl"
+              >
+                Use cases that make the offer concrete
+              </h2>
+              <p
+                class="mt-5 text-lg leading-8 text-slate-600 dark:text-slate-300"
+              >
+                Real examples reduce uncertainty. They show what the workflow,
+                automation logic, and outcome can look like inside an SME
+                operating environment.
+              </p>
+            </div>
+            <div class="mt-14 grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <img
+                    src="/images/workflow1.jpg"
+                    alt="AI Support Assistant"
+                    class="h-56 w-full object-cover"
+                  />
+                  <div class="p-6">
+                    <h3 class="text-xl font-bold">AI Support Assistant</h3>
+                    <p
+                      class="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
+                    >
+                      Problem
+                    </p>
+                    <p
+                      class="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                    >
+                      Support teams lose time answering the same questions
+                      across channels.
+                    </p>
+                    <p
+                      class="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
+                    >
+                      Outcome
+                    </p>
+                    <p
+                      class="mt-2 text-sm font-semibold text-primary-600 dark:text-accent-400"
+                    >
+                      Faster responses and lower communication load.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <img
+                    src="/images/workflow2.jpg"
+                    alt="Lead Capture and Qualification"
+                    class="h-56 w-full object-cover"
+                  />
+                  <div class="p-6">
+                    <h3 class="text-xl font-bold">
+                      Lead Capture and Qualification
+                    </h3>
+                    <p
+                      class="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
+                    >
+                      Problem
+                    </p>
+                    <p
+                      class="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                    >
+                      Sales teams waste time sorting unqualified leads and
+                      delayed enquiries.
+                    </p>
+                    <p
+                      class="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
+                    >
+                      Outcome
+                    </p>
+                    <p
+                      class="mt-2 text-sm font-semibold text-primary-600 dark:text-accent-400"
+                    >
+                      Cleaner pipelines and faster follow-up.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <img
+                    src="/images/workflow-automation.png"
+                    alt="Smart Appointment Automation"
+                    class="h-56 w-full object-cover"
+                  />
+                  <div class="p-6">
+                    <h3 class="text-xl font-bold">
+                      Smart Appointment Automation
+                    </h3>
+                    <p
+                      class="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
+                    >
+                      Problem
+                    </p>
+                    <p
+                      class="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                    >
+                      Manual scheduling wastes time and causes conflicts or
+                      uneven workload distribution.
+                    </p>
+                    <p
+                      class="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
+                    >
+                      Outcome
+                    </p>
+                    <p
+                      class="mt-2 text-sm font-semibold text-primary-600 dark:text-accent-400"
+                    >
+                      Faster scheduling and better workload balance.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <img
+                    src="/images/analyze.jpg"
+                    alt="Document and Invoice Processing"
+                    class="h-56 w-full object-cover"
+                  />
+                  <div class="p-6">
+                    <h3 class="text-xl font-bold">
+                      Document and Invoice Processing
+                    </h3>
+                    <p
+                      class="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
+                    >
+                      Problem
+                    </p>
+                    <p
+                      class="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                    >
+                      Teams spend too much time extracting data and moving
+                      documents between systems.
+                    </p>
+                    <p
+                      class="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
+                    >
+                      Outcome
+                    </p>
+                    <p
+                      class="mt-2 text-sm font-semibold text-primary-600 dark:text-accent-400"
+                    >
+                      Less manual processing and cleaner records.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <img
+                    src="/images/about.jpg"
+                    alt="Internal Knowledge Assistant"
+                    class="h-56 w-full object-cover"
+                  />
+                  <div class="p-6">
+                    <h3 class="text-xl font-bold">
+                      Internal Knowledge Assistant
+                    </h3>
+                    <p
+                      class="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
+                    >
+                      Problem
+                    </p>
+                    <p
+                      class="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                    >
+                      Employees lose time searching for answers across docs,
+                      inboxes, and tribal knowledge.
+                    </p>
+                    <p
+                      class="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
+                    >
+                      Outcome
+                    </p>
+                    <p
+                      class="mt-2 text-sm font-semibold text-primary-600 dark:text-accent-400"
+                    >
+                      Faster decisions and more consistent internal support.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <img
+                    src="/images/deploy.jpg"
+                    alt="Cross-System Notifications and Approvals"
+                    class="h-56 w-full object-cover"
+                  />
+                  <div class="p-6">
+                    <h3 class="text-xl font-bold">
+                      Cross-System Notifications and Approvals
+                    </h3>
+                    <p
+                      class="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
+                    >
+                      Problem
+                    </p>
+                    <p
+                      class="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                    >
+                      Approval loops and status updates break when teams rely on
+                      email chains and manual chasing.
+                    </p>
+                    <p
+                      class="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
+                    >
+                      Outcome
+                    </p>
+                    <p
+                      class="mt-2 text-sm font-semibold text-primary-600 dark:text-accent-400"
+                    >
+                      More visibility and fewer stalled workflows.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mt-12 text-center">
+              <a
+                class="inline-flex items-center rounded-full border border-primary-600 px-6 py-3 text-sm font-semibold text-primary-600 transition-colors duration-200 hover:bg-primary-600 hover:text-white dark:border-accent-400 dark:text-accent-400 dark:hover:bg-accent-400 dark:hover:text-slate-950"
+                href="/use-cases"
+                >See all use cases</a
+              >
+            </div>
+          </div>
+        </div>
+        <div
+          class="bg-slate-50 py-24 dark:bg-slate-900/60 sm:py-28"
+          style="opacity: 0; transform: translateY(60px) translateZ(0)"
+        >
+          <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-3xl text-center">
+              <p
+                class="text-sm font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-accent-400"
+              >
+                How We Work
+              </p>
+              <h2
+                class="mt-4 text-3xl font-black tracking-[-0.04em] sm:text-5xl"
+              >
+                A delivery flow that lowers buyer uncertainty
+              </h2>
+            </div>
+            <div class="mt-14 grid gap-6 lg:grid-cols-5">
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-36px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-950"
+                >
+                  <span
+                    class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white"
+                    >0<!-- -->1</span
+                  >
+                  <h3 class="mt-5 text-xl font-bold">Audit</h3>
+                  <p
+                    class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Understand the current workflow, identify the bottlenecks,
+                    and define the best automation opportunities.
+                  </p>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-36px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-950"
+                >
+                  <span
+                    class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white"
+                    >0<!-- -->2</span
+                  >
+                  <h3 class="mt-5 text-xl font-bold">Design</h3>
+                  <p
+                    class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Translate business needs into a practical automation
+                    architecture with the right systems and logic.
+                  </p>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-36px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-950"
+                >
+                  <span
+                    class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white"
+                    >0<!-- -->3</span
+                  >
+                  <h3 class="mt-5 text-xl font-bold">Build</h3>
+                  <p
+                    class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Implement workflows, configure AI systems, and connect the
+                    tools that need to work together.
+                  </p>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-36px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-950"
+                >
+                  <span
+                    class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white"
+                    >0<!-- -->4</span
+                  >
+                  <h3 class="mt-5 text-xl font-bold">Optimize</h3>
+                  <p
+                    class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Measure performance, refine the flow, and improve business
+                    outcomes as the system starts running live.
+                  </p>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-36px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-950"
+                >
+                  <span
+                    class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white"
+                    >0<!-- -->5</span
+                  >
+                  <h3 class="mt-5 text-xl font-bold">Maintain</h3>
+                  <p
+                    class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Support ongoing optimization retainers for businesses that
+                    need monitoring, improvements, and new automation requests
+                    over time.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="mt-12 text-center">
+              <a
+                class="inline-flex items-center rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-1 hover:bg-primary-700"
+                href="/how-it-works"
+                >See the full process</a
+              >
+            </div>
+          </div>
+        </div>
+        <div
+          class="py-24 sm:py-28"
+          style="opacity: 0; transform: translateY(60px) translateZ(0)"
+        >
+          <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-3xl text-center">
+              <p
+                class="text-sm font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-accent-400"
+              >
+                The Team Behind LuxAI Automation
+              </p>
+              <h2
+                class="mt-4 text-3xl font-black tracking-[-0.04em] sm:text-5xl"
+              >
+                Authority built through implementation capability
+              </h2>
+              <p
+                class="mt-5 text-lg leading-8 text-slate-600 dark:text-slate-300"
+              >
+                The site should feel like a business automation partner with
+                consulting expertise, not a generic dev agency. The team section
+                reinforces that.
+              </p>
+            </div>
+            <div class="mt-14 grid gap-6 lg:grid-cols-3">
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <div class="flex items-center gap-4">
+                    <img
+                      src="/avatars/molla.png"
+                      alt="Molla Sisay Jemere"
+                      class="h-16 w-16 rounded-full object-cover"
+                    />
+                    <div>
+                      <h3 class="text-lg font-bold">Molla Sisay Jemere</h3>
+                      <p class="text-sm text-slate-500 dark:text-slate-400">
+                        Founder &amp; CEO
+                      </p>
+                    </div>
+                  </div>
+                  <p
+                    class="mt-5 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Leads delivery strategy across AI automation, business
+                    systems, and integration architecture with a strong focus on
+                    practical business outcomes.
+                  </p>
+                  <div class="mt-5 flex flex-wrap gap-2">
+                    <span
+                      class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                      >AI systems</span
+                    ><span
+                      class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                      >Workflow automation</span
+                    ><span
+                      class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                      >MuleSoft Certified Integration Professional</span
+                    ><span
+                      class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                      >Consulting</span
+                    >
+                  </div>
+                  <div class="mt-6">
+                    <a
+                      href="https://www.linkedin.com/in/molla-sisay-jemere"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="inline-flex items-center text-sm font-semibold text-primary-600 transition-colors duration-200 hover:text-primary-700 dark:text-accent-400"
+                      >View LinkedIn<i
+                        class="ri-arrow-right-up-line ml-1 text-base"
+                      ></i
+                    ></a>
+                  </div>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <div class="flex items-center gap-4">
+                    <img
+                      src="/avatars/fikre.png"
+                      alt="Fikremariam Mekonnen"
+                      class="h-16 w-16 rounded-full object-cover"
+                    />
+                    <div>
+                      <h3 class="text-lg font-bold">Fikremariam Mekonnen</h3>
+                      <p class="text-sm text-slate-500 dark:text-slate-400">
+                        Co-Founder &amp; Integrations Engineer
+                      </p>
+                    </div>
+                  </div>
+                  <p
+                    class="mt-5 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Designs and builds reliable integration layers, automation
+                    architecture, and connected operational systems for growing
+                    businesses.
+                  </p>
+                  <div class="mt-5 flex flex-wrap gap-2">
+                    <span
+                      class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                      >APIs</span
+                    ><span
+                      class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                      >Integrations</span
+                    ><span
+                      class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                      >Automation architecture</span
+                    ><span
+                      class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                      >System planning</span
+                    >
+                  </div>
+                  <div class="mt-6">
+                    <a
+                      href="https://www.linkedin.com/in/fikremariam-mekonnen"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="inline-flex items-center text-sm font-semibold text-primary-600 transition-colors duration-200 hover:text-primary-700 dark:text-accent-400"
+                      >View LinkedIn<i
+                        class="ri-arrow-right-up-line ml-1 text-base"
+                      ></i
+                    ></a>
+                  </div>
+                </div>
+              </div>
+              <div
+                class=""
+                style="opacity: 0; transform: translateY(60px) translateZ(0)"
+              >
+                <div
+                  class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <div class="flex items-center gap-4">
+                    <img
+                      src="/avatars/dere.png"
+                      alt="Dereje Masresha"
+                      class="h-16 w-16 rounded-full object-cover"
+                    />
+                    <div>
+                      <h3 class="text-lg font-bold">Dereje Masresha</h3>
+                      <p class="text-sm text-slate-500 dark:text-slate-400">
+                        Full-Stack &amp; AI Solutions Developer
+                      </p>
+                    </div>
+                  </div>
+                  <p
+                    class="mt-5 text-sm leading-7 text-slate-600 dark:text-slate-300"
+                  >
+                    Builds practical AI-enabled applications, internal tools,
+                    and workflow systems that support secure and scalable
+                    delivery.
+                  </p>
+                  <div class="mt-5 flex flex-wrap gap-2">
+                    <span
+                      class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                      >AI applications</span
+                    ><span
+                      class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                      >Full-stack delivery</span
+                    ><span
+                      class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                      >Cloud systems</span
+                    ><span
+                      class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                      >Internal tools</span
+                    >
+                  </div>
+                  <div class="mt-6">
+                    <a
+                      href="https://linkedin.com/in/DerejeMasresha"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="inline-flex items-center text-sm font-semibold text-primary-600 transition-colors duration-200 hover:text-primary-700 dark:text-accent-400"
+                      >View LinkedIn<i
+                        class="ri-arrow-right-up-line ml-1 text-base"
+                      ></i
+                    ></a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="pb-24 sm:pb-28"
+          style="opacity: 0; transform: translateY(60px) translateZ(0)"
+        >
+          <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div
+              class="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#0e427e_0%,#123f7a_58%,#0f172a_100%)] px-6 py-12 text-white shadow-[0_35px_80px_-40px_rgba(14,66,126,0.7)] sm:px-10 lg:px-14"
+            >
+              <div class="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+                <div>
+                  <p
+                    class="text-sm font-semibold uppercase tracking-[0.24em] text-blue-100"
+                  >
+                    Ready to Automate Your Business Operations?
+                  </p>
+                  <h2
+                    class="mt-4 text-3xl font-black tracking-[-0.04em] sm:text-5xl"
+                  >
+                    Start with a free automation audit
+                  </h2>
+                  <p class="mt-5 max-w-2xl text-lg leading-8 text-blue-100">
+                    Get a free automation audit and discover practical AI and
+                    workflow opportunities for your business.
+                  </p>
+                </div>
+                <div
+                  class="rounded-[1.75rem] border border-white/15 bg-white/10 p-6 backdrop-blur"
+                >
+                  <ul class="space-y-4 text-sm text-blue-50">
+                    <li class="flex items-start gap-3">
+                      <i class="ri-check-line mt-0.5 text-accent-400"></i
+                      ><span>Workflow review</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                      <i class="ri-check-line mt-0.5 text-accent-400"></i
+                      ><span>Automation opportunities</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                      <i class="ri-check-line mt-0.5 text-accent-400"></i
+                      ><span>Recommended next steps</span>
+                    </li>
+                  </ul>
+                  <div class="mt-8 flex flex-col gap-4 sm:flex-row">
+                    <a
+                      class="inline-flex items-center justify-center rounded-full bg-accent-500 px-6 py-3 text-sm font-semibold text-slate-950 transition-all duration-200 hover:-translate-y-1 hover:bg-accent-400"
+                      href="/contact"
+                      >Get a Free Audit</a
+                    ><a
+                      class="inline-flex items-center justify-center rounded-full border border-white/25 px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-white/10"
+                      href="/services"
+                      >Explore solutions</a
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <footer class="mt-auto bg-slate-950 text-white">
+        <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+          <div class="grid gap-10 lg:grid-cols-[1.5fr_0.9fr_1fr]">
+            <div>
+              <a class="flex items-center gap-3" href="/"
+                ><span
+                  class="flex h-11 w-11 items-center justify-center rounded-full border border-accent-500/35 bg-accent-500/10 text-sm font-extrabold uppercase tracking-[0.2em] text-accent-400"
+                  >Lux</span
+                ><span
+                  ><span class="block text-lg font-bold"
+                    >Lux AI Consultancy &amp; Automation</span
+                  ><span class="block text-sm text-slate-300"
+                    >AI Automation Systems &amp; Consulting for SMEs</span
+                  ></span
+                ></a
+              >
+              <p class="mt-5 max-w-xl text-sm leading-7 text-slate-300">
+                LuxAI Automation provides AI automation systems and consulting
+                for SMEs and growing businesses that want faster operations,
+                cleaner workflows, and stronger customer communication.
+              </p>
+              <p class="mt-5 text-sm font-semibold text-accent-400">
+                Built for SMEs and growing businesses in Luxembourg and Europe.
+              </p>
+              <div class="mt-6 flex items-center gap-4">
+                <a
+                  href="https://www.linkedin.com/in/molla-sisay-jemere"
+                  aria-label="LinkedIn"
+                  class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-800 bg-slate-900 text-slate-200 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
+                  ><i class="ri-linkedin-fill text-lg"></i></a
+                ><a
+                  href="mailto:molla@luxaiautomation.com"
+                  aria-label="Email"
+                  class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-800 bg-slate-900 text-slate-200 transition-colors duration-200 hover:border-accent-500/40 hover:text-accent-400"
+                  ><i class="ri-mail-line text-lg"></i
+                ></a>
+              </div>
+            </div>
+            <div>
+              <h3
+                class="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400"
+              >
+                Schnelllinken
+              </h3>
+              <ul class="mt-5 space-y-3 text-sm text-slate-300">
+                <li>
+                  <a
+                    class="transition-colors duration-200 hover:text-accent-400"
+                    href="/"
+                    >Heem</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="transition-colors duration-200 hover:text-accent-400"
+                    href="/services"
+                    >Léisungen</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="transition-colors duration-200 hover:text-accent-400"
+                    href="/services#consulting"
+                    >Berodung</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="transition-colors duration-200 hover:text-accent-400"
+                    href="/use-cases"
+                    >Use Cases</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="transition-colors duration-200 hover:text-accent-400"
+                    href="/how-it-works"
+                    >Wéi Et Geet</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="transition-colors duration-200 hover:text-accent-400"
+                    href="/about"
+                    >Iwwer Eis</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="transition-colors duration-200 hover:text-accent-400"
+                    href="/contact"
+                    >Kontakt</a
+                  >
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3
+                class="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400"
+              >
+                Contact
+              </h3>
+              <ul class="mt-5 space-y-4 text-sm text-slate-300">
+                <li class="flex items-start gap-3">
+                  <i class="ri-map-pin-line mt-0.5 text-accent-400"></i
+                  ><span>Belvaux, Luxembourg</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <i class="ri-mail-line mt-0.5 text-accent-400"></i
+                  ><a
+                    href="mailto:molla@luxaiautomation.com"
+                    class="transition-colors duration-200 hover:text-accent-400"
+                    >molla@luxaiautomation.com</a
+                  >
+                </li>
+                <li class="flex items-start gap-3">
+                  <i class="ri-phone-line mt-0.5 text-accent-400"></i
+                  ><a
+                    href="tel:+352691833894"
+                    class="transition-colors duration-200 hover:text-accent-400"
+                    >+352 691 833 894</a
+                  >
+                </li>
+                <li class="flex items-start gap-3">
+                  <i class="ri-file-list-3-line mt-0.5 text-accent-400"></i
+                  ><a
+                    class="transition-colors duration-200 hover:text-accent-400"
+                    href="/legal#business-identifiers"
+                    >Autorisation d’établissement N° 10042992 / 8</a
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div
+            class="mt-10 flex flex-col gap-4 border-t border-slate-800 pt-6 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <p>
+              ©
+              <!-- -->2026<!-- -->
+              <!-- -->Lux AI Consultancy &amp; Automation<!-- -->. All rights
+              reserved.
+            </p>
+            <div class="flex flex-wrap gap-x-3 gap-y-2">
+              <a
+                class="transition-colors duration-200 hover:text-accent-400"
+                href="/legal"
+                >Legal</a
+              ><span>|</span
+              ><a
+                class="transition-colors duration-200 hover:text-accent-400"
+                href="/privacy-policy"
+                >Dateschutz</a
+              ><span>|</span
+              ><a
+                class="transition-colors duration-200 hover:text-accent-400"
+                href="/terms"
+                >Konditiounen</a
+              ><span>|</span
+              ><a
+                class="transition-colors duration-200 hover:text-accent-400"
+                href="/cookies"
+                >Cookies</a
+              >
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <section
+      aria-label="Notifications alt+T"
+      tabindex="-1"
+      aria-live="polite"
+      aria-relevant="additions text"
+      aria-atomic="false"
+    ></section>
+    <div
+      class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] flex flex-col gap-3"
+    >
+      <button
+        class="fixed bottom-[50px] right-1 z-40 p-3 bg-primary-500 hover:bg-primary-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform translate-y-16 opacity-0 scale-0 group"
+        aria-label="Scroll to top"
+      >
+        <div class="w-5 h-5 flex items-center justify-center">
+          <i
+            class="ri-arrow-up-line text-xl group-hover:animate-bounce-gentle"
+          ></i>
+        </div>
+        <div
+          class="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        ></div>
+      </button>
+      <div
+        class="fixed z-[400] left-[max(1rem,env(safe-area-inset-left))] right-[max(1rem,env(safe-area-inset-right))] bottom-[calc(max(1.25rem,env(safe-area-inset-bottom))+4.25rem)] w-auto max-w-[40rem] h-[min(73svh,calc(100svh-9rem))] md:left-auto md:right-[max(1rem,env(safe-area-inset-right))] md:w-[40rem] bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden overscroll-contain opacity-100 hidden"
+      >
+        <div
+          class="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-lg" aria-hidden="true">🤖</span>
+            <div class="leading-tight">
+              <div class="font-semibold text-sm">LuxAI Assistant</div>
+              <div class="text-xs text-blue-100">
+                AI integration • automation • workflows
+              </div>
+            </div>
+          </div>
+          <button
+            class="text-white/80 hover:text-white text-xl leading-none px-1"
+            aria-label="Close chat"
+            type="button"
+          >
+            ×
+          </button>
+        </div>
+        <div class="flex-1 min-h-0 bg-slate-50">
+          <div
+            class="flex flex-col h-full text-sm text-gray-900 dark:text-slate-100"
+            aria-hidden="false"
+          >
+            <div
+              class="flex-1 min-h-0 overflow-y-auto space-y-3 bg-gray-50 dark:bg-slate-900 p-3 rounded-lg"
+            >
+              <div class="relative flex-1 overflow-y-hidden h-full" role="log">
+                <div style="height: 100%; width: 100%">
+                  <div class="flex flex-col gap-8 p-4"></div>
+                </div>
+              </div>
+            </div>
+            <div class="mt-3 space-y-2 ml-2">
+              <div class="flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  class="text-xs text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-slate-100"
+                >
+                  Clear chat</button
+                ><button
+                  type="button"
+                  role="combobox"
+                  aria-controls="radix-:R16jakq:"
+                  aria-expanded="false"
+                  aria-autocomplete="none"
+                  dir="ltr"
+                  data-state="closed"
+                  class="flex items-center justify-between whitespace-nowrap py-2 ring-offset-background data-[placeholder]:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 [&amp;&gt;span]:line-clamp-1 border-none font-medium aria-expanded:bg-accent aria-expanded:text-foreground h-9 w-[10rem] px-3 mr-1 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-gray-700 dark:text-gray-200 shadow-none hover:bg-[#1967D2] hover:text-white dark:hover:bg-slate-700/40 hover:border-gray-300 dark:hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1967D2]/25 data-[state=open]:ring-2 data-[state=open]:ring-[#1967D2]/25 transition-colors"
+                >
+                  <span style="pointer-events: none"></span
+                  ><svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-chevron-down h-4 w-4 opacity-50"
+                    aria-hidden="true"
+                  >
+                    <path d="m6 9 6 6 6-6"></path>
+                  </svg></button
+                ><select
+                  aria-hidden="true"
+                  tabindex="-1"
+                  style="
+                    position: absolute;
+                    border: 0;
+                    width: 1px;
+                    height: 1px;
+                    padding: 0;
+                    margin: -1px;
+                    overflow: hidden;
+                    clip: rect(0, 0, 0, 0);
+                    white-space: nowrap;
+                    word-wrap: normal;
+                  "
+                ></select>
+              </div>
+              <div
+                class="mt-2 border-t border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2"
+              >
+                <div class="flex items-center gap-2">
+                  <textarea
+                    placeholder="Ask about AI integration or automation..."
+                    rows="1"
+                    class="flex-1 resize-none rounded-lg border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-gray-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500 max-h-[96px] overflow-y-auto"
+                    style="line-height: 1.4"
+                  ></textarea
+                  ><button
+                    class="justify-center whitespace-nowrap rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 text-sm shadow-none size-8 p-0 has-[&gt;svg]:p-0 shrink-0 self-center"
+                    type="submit"
+                    data-size="icon-sm"
+                    aria-label="Send message"
+                    disabled=""
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-send size-6"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"
+                      ></path>
+                      <path d="m21.854 2.147-10.94 10.939"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button
+        class="fixed z-40 right-[max(1.5rem,env(safe-area-inset-right))] bottom-[max(0.5rem,env(safe-area-inset-bottom))] flex items-center gap-2 rounded-full shadow-xl bg-accent-500 hover:bg-amber-500 text-white px-3 py-2 max-w-[calc(100svw-2rem)]"
+        aria-hidden="false"
+        aria-label="Open chat"
+        type="button"
+      >
+        <span
+          class="flex items-center justify-center text-xl"
+          aria-hidden="true"
+          ><i class="ri-chat-1-line"></i></span
+        ><span class="text-sm font-medium leading-none">LuxAI</span>
+      </button>
+    </div>
+    <script
+      src="/_next/static/chunks/webpack.js?v=1773665568445"
+      async=""
+    ></script>
+    <script>
+      (self.__next_f = self.__next_f || []).push([0]);
+      self.__next_f.push([2, null]);
+    </script>
+    <script>
+      self.__next_f.push([
+        1,
+        '1:HL["/_next/static/css/app/layout.css?v=1773665568445","style"]\n0:"$L2"\n',
+      ]);
+    </script>
+    <script>
+      self.__next_f.push([
+        1,
+        '3:I["(app-pages-browser)/./node_modules/next/dist/client/components/app-router.js",["app-pages-internals","static/chunks/app-pages-internals.js"],""]\n5:I["(app-pages-browser)/./node_modules/next/dist/client/components/error-boundary.js",["app-pages-internals","static/chunks/app-pages-internals.js"],""]\n6:I["(app-pages-browser)/./components/LenisProvider.tsx",["app/layout","static/chunks/app/layout.js"],""]\n7:I["(app-pages-browser)/./app/providers.tsx",["app/layout","static/chunks/app/layout.js"],""]\n8:I["(a',
+      ]);
+    </script>
+    <script>
+      self.__next_f.push([
+        1,
+        'pp-pages-browser)/./node_modules/next/dist/client/components/layout-router.js",["app-pages-internals","static/chunks/app-pages-internals.js"],""]\n9:I["(app-pages-browser)/./node_modules/next/dist/client/components/render-from-template-context.js",["app-pages-internals","static/chunks/app-pages-internals.js"],""]\na:I["(app-pages-browser)/./components/Header.tsx",["app/not-found","static/chunks/app/not-found.js"],""]\nb:I["(app-pages-browser)/./node_modules/next/dist/client/link.js",["app/not-found","static/ch',
+      ]);
+    </script>
+    <script>
+      self.__next_f.push([
+        1,
+        'unks/app/not-found.js"],""]\nc:I["(app-pages-browser)/./components/Footer.tsx",["app/not-found","static/chunks/app/not-found.js"],""]\ne:I["(app-pages-browser)/./node_modules/next/dist/client/components/static-generation-searchparams-bailout-provider.js",["app-pages-internals","static/chunks/app-pages-internals.js"],""]\nf:I["(app-pages-browser)/./app/page.tsx",["app/page","static/chunks/app/page.js"],""]\n10:I["(app-pages-browser)/./components/CookieConsent.tsx",["app/layout","static/chunks/app/layout.js"],""]',
+      ]);
+    </script>
+    <script>
+      self.__next_f.push([
+        1,
+        '\n11:I["(app-pages-browser)/./components/ui/sonner.tsx",["app/layout","static/chunks/app/layout.js"],"Toaster"]\n12:I["(app-pages-browser)/./components/ScrollToTop.tsx",["app/layout","static/chunks/app/layout.js"],""]\n13:I["(app-pages-browser)/./components/ChatWidget.tsx",["app/layout","static/chunks/app/layout.js"],""]\n',
+      ]);
+    </script>
+    <script>
+      self.__next_f.push([
+        1,
+        '2:[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/css/app/layout.css?v=1773665568445","precedence":"next_static/css/app/layout.css","crossOrigin":"$undefined"}]],["$","$L3",null,{"buildId":"development","assetPrefix":"","initialCanonicalUrl":"/","initialTree":["",{"children":["__PAGE__",{}]},"$undefined","$undefined",true],"initialHead":[false,"$L4"],"globalErrorComponent":"$5","children":[null,["$","html",null,{"lang":"en","suppressHydrationWarning":true,"className":"scrollbar-gutter-stable","children":[["$","head",null,{"children":[["$","link",null,{"rel":"icon","type":"image/svg+xml","href":"/favicon.svg"}],["$","script",null,{"dangerouslySetInnerHTML":{"__html":"\\n(function () {\\n  try {\\n    // theme\\n    var mTheme = document.cookie.match(/(?:^|; )theme=([^;]*)/);\\n    var theme = mTheme ? decodeURIComponent(mTheme[1]) : null;\\n    if (!theme) {\\n      try {\\n        theme = localStorage.getItem(\\"theme\\");\\n      } catch (e) {}\\n    }\\n    var prefersDark =\\n      window.matchMedia \u0026\u0026\\n      window.matchMedia(\\"(prefers-color-scheme: dark)\\").matches;\\n    var resolved =\\n      theme === \\"dark\\" ? \\"dark\\" : theme === \\"light\\" ? \\"light\\" : prefersDark ? \\"dark\\" : \\"light\\";\\n    document.documentElement.classList.toggle(\\"dark\\", resolved === \\"dark\\");\\n\\n    // lang\\n    var mLang = document.cookie.match(/(?:^|; )lang=([^;]*)/);\\n    var lang = mLang ? decodeURIComponent(mLang[1]) : null;\\n    if (lang === \\"en\\" || lang === \\"fr\\" || lang === \\"de\\" || lang === \\"lb\\") {\\n      document.documentElement.setAttribute(\\"lang\\", lang);\\n    }\\n  } catch (e) {}\\n})();\\n            "}}],["$","script",null,{"dangerouslySetInnerHTML":{"__html":"\\n(function () {\\n  try {\\n    var html = document.documentElement;\\n    var body = document.body;\\n\\n    function scrollbarWidth() {\\n      return window.innerWidth - html.clientWidth;\\n    }\\n\\n    function applyFix() {\\n      var computed = window.getComputedStyle(body);\\n      var overflowHidden =\\n        body.style.overflow === \\"hidden\\" ||\\n        computed.overflowY === \\"hidden\\" ||\\n        body.classList.contains(\\"overflow-hidden\\");\\n\\n      if (overflowHidden) {\\n        var w = scrollbarWidth();\\n        if (w \u003e 0) body.style.paddingRight = w + \\"px\\";\\n      } else {\\n        body.style.paddingRight = \\"\\";\\n      }\\n    }\\n\\n    applyFix();\\n    window.addEventListener(\\"resize\\", applyFix);\\n\\n    var obs = new MutationObserver(applyFix);\\n    obs.observe(body, { attributes: true, attributeFilter: [\\"style\\", \\"class\\"] });\\n\\n    var obs2 = new MutationObserver(applyFix);\\n    obs2.observe(html, { attributes: true, attributeFilter: [\\"style\\", \\"class\\"] });\\n  } catch (e) {}\\n})();\\n            "}}]]}],["$","body",null,{"className":" antialiased font-sans bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 transition-colors duration-300 ","children":[["$","$L6",null,{"children":["$","$L7",null,{"initialLang":"$undefined","children":[["$","$L8",null,{"parallelRouterKey":"children","segmentPath":["children"],"loading":"$undefined","loadingStyles":"$undefined","loadingScripts":"$undefined","hasLoading":false,"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L9",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":["$","div",null,{"className":"min-h-screen flex flex-col bg-background text-foreground","children":[["$","$La",null,{}],["$","main",null,{"className":"flex-1","children":["$","section",null,{"className":"relative mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:px-8","children":[["$","div",null,{"className":"absolute -top-10 left-10 h-40 w-40 rounded-full bg-primary/10 blur-3xl"}],["$","div",null,{"className":"absolute -bottom-10 right-8 h-56 w-56 rounded-full bg-accent/15 blur-3xl"}],["$","div",null,{"className":"relative overflow-hidden rounded-3xl border border-border bg-card p-8 shadow-md sm:p-12","children":["$","div",null,{"className":"flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between","children":[["$","div",null,{"className":"max-w-2xl space-y-4","children":[["$","p",null,{"className":"text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground","children":"Error 404"}],["$","h1",null,{"className":"text-4xl font-semibold text-foreground sm:text-5xl","children":"This page is missing."}],["$","p",null,{"className":"text-base text-muted-foreground sm:text-lg","children":"The link might be outdated or the page has moved. Use the shortcuts below to get back on track."}],["$","div",null,{"className":"flex flex-wrap gap-3 pt-2","children":[["$","$Lb",null,{"href":"/","children":"Go to home","className":"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [\u0026_svg]:pointer-events-none [\u0026_svg]:size-4 [\u0026_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2"}],["$","$Lb",null,{"href":"/scheduling","children":"Open scheduling","className":"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [\u0026_svg]:pointer-events-none [\u0026_svg]:size-4 [\u0026_svg]:shrink-0 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"}],["$","$Lb",null,{"href":"/contact","children":"Contact support","className":"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [\u0026_svg]:pointer-events-none [\u0026_svg]:size-4 [\u0026_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"}]]}]]}],["$","div",null,{"className":"rounded-2xl border border-border bg-muted/50 p-6 text-center","children":[["$","div",null,{"className":"text-6xl font-semibold text-primary","children":"404"}],["$","div",null,{"className":"mt-2 text-sm text-muted-foreground","children":"Page not found"}],["$","div",null,{"className":"mt-6 space-y-2 text-xs text-muted-foreground","children":[["$","div",null,{"children":"Try checking the URL for typos."}],["$","div",null,{"children":"Use the sidebar or search the site."}]]}]]}]]}]}]]}]}],["$","$Lc",null,{}]]}],"notFoundStyles":[],"childProp":{"current":["$Ld",["$","$Le",null,{"propsForComponent":{"params":{},"searchParams":{}},"Component":"$f","isStaticGeneration":false}],null],"segment":"__PAGE__"},"styles":null}],["$","$L10",null,{}],["$","$L11",null,{"position":"top-right","offset":80}]]}]}],["$","div",null,{"className":"fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] flex flex-col gap-3","children":[["$","$L12",null,{}],["$","$L13",null,{}]]}]]}]]}],null]}]]\n',
+      ]);
+    </script>
+    <script>
+      self.__next_f.push([
+        1,
+        '4:[["$","meta","0",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","1",{"charSet":"utf-8"}],["$","title","2",{"children":"Lux AI Consultancy \u0026 Automation | AI Automation Systems \u0026 Consulting for SMEs"}],["$","meta","3",{"name":"description","content":"Lux AI Consultancy \u0026 Automation provides AI automation systems and consulting for SMEs that want faster operations, better customer communication, and cleaner business workflows."}]]\nd:null\n',
+      ]);
+    </script>
+    <script>
+      self.__next_f.push([1, ""]);
+    </script>
+  </body>
+</html>

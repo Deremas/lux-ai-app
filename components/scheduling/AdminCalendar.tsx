@@ -261,6 +261,16 @@ export function AdminCalendar({
     [events],
   );
 
+  const appointmentCount = useMemo(
+    () => events.filter((event) => event.type === "appointment").length,
+    [events]
+  );
+
+  const blockedCount = useMemo(
+    () => events.filter((event) => event.type === "blocked").length,
+    [events]
+  );
+
   const handleAutoAssign = async () => {
     if (!selectedEvent || selectedEvent.type !== "appointment") return;
     setAssigning(true);
@@ -310,80 +320,109 @@ export function AdminCalendar({
   };
 
   return (
-    <div className="rounded-3xl border border-white/70 bg-white/85 p-4 space-y-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <label className="text-gray-600 dark:text-gray-300">Display timezone</label>
-        <div className="relative" ref={tzRef}>
-          <button
-            type="button"
-            className="flex h-10 min-w-[260px] items-center justify-between gap-3 rounded-xl border border-white/70 bg-white/80 px-3 text-sm leading-6 shadow-sm backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/70"
-            onClick={() => setTzOpen((prev) => !prev)}
-            onKeyDown={handleTzKeyDown}
-            aria-haspopup="listbox"
-            aria-expanded={tzOpen}
-          >
-            <span className="truncate">{displayTz}</span>
-            <span aria-hidden>▾</span>
-          </button>
-          {tzOpen && (
-            <div className="absolute z-20 mt-2 w-[280px] rounded-xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
-              <input
-                className="h-9 w-full rounded-lg border border-white/70 bg-transparent px-3 text-sm leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60"
-                value={tzQuery}
-                onChange={(e) => setTzQuery(e.target.value)}
-                placeholder="Search timezone"
-                autoFocus
-                onKeyDown={handleTzKeyDown}
-              />
-              <div
-                ref={tzListRef}
-                className="mt-2 max-h-60 overflow-auto rounded-lg border border-gray-100/80 dark:border-slate-700/60"
-              >
-                {filteredTimezones.length === 0 ? (
-                  <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                    No matches
-                  </div>
-                ) : (
-                  filteredTimezones.map((zone, index) => (
-                    <button
-                      key={zone}
-                      type="button"
-                      data-tz-index={index}
-                      className={[
-                        "w-full px-3 py-2 text-left text-sm hover:bg-gray-100/80 dark:hover:bg-slate-800/60",
-                        zone === displayTz ? "font-semibold" : "",
-                        index === tzHighlight ? "bg-gray-100/80 dark:bg-slate-800/60" : "",
-                      ].join(" ")}
-                      onClick={() => {
-                        setDisplayTz(zone);
-                        setTzQuery("");
-                        setTzOpen(false);
-                      }}
-                    >
-                      {zone}
-                    </button>
-                  ))
-                )}
+    <div className="lux-calendar-frame space-y-5 rounded-[30px] border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-500 dark:text-slate-400">
+              Operations
+            </p>
+            <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">
+              Scheduling calendar
+            </h2>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              Monitor appointments and blocked windows, then open details directly from the grid.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="lux-calendar-chip lux-calendar-chip--busy">
+              {appointmentCount} appointments
+            </span>
+            <span className="lux-calendar-chip lux-calendar-chip--blocked">
+              {blockedCount} blocked
+            </span>
+            <span className="lux-calendar-chip lux-calendar-chip--neutral">
+              Live updates every 30s
+            </span>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <label className="text-slate-600 dark:text-slate-300">Display timezone</label>
+          <div className="relative" ref={tzRef}>
+            <button
+              type="button"
+              className="flex h-10 min-w-[260px] items-center justify-between gap-3 rounded-2xl border border-white/80 bg-white/90 px-3 text-sm leading-6 shadow-sm backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/75"
+              onClick={() => setTzOpen((prev) => !prev)}
+              onKeyDown={handleTzKeyDown}
+              aria-haspopup="listbox"
+              aria-expanded={tzOpen}
+            >
+              <span className="truncate">{displayTz}</span>
+              <span aria-hidden>▾</span>
+            </button>
+            {tzOpen && (
+              <div className="absolute z-20 mt-2 w-[280px] rounded-2xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
+                <input
+                  className="h-9 w-full rounded-xl border border-white/70 bg-transparent px-3 text-sm leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60"
+                  value={tzQuery}
+                  onChange={(e) => setTzQuery(e.target.value)}
+                  placeholder="Search timezone"
+                  autoFocus
+                  onKeyDown={handleTzKeyDown}
+                />
+                <div
+                  ref={tzListRef}
+                  className="mt-2 max-h-60 overflow-auto rounded-xl border border-gray-100/80 dark:border-slate-700/60"
+                >
+                  {filteredTimezones.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      No matches
+                    </div>
+                  ) : (
+                    filteredTimezones.map((zone, index) => (
+                      <button
+                        key={zone}
+                        type="button"
+                        data-tz-index={index}
+                        className={[
+                          "w-full px-3 py-2 text-left text-sm hover:bg-gray-100/80 dark:hover:bg-slate-800/60",
+                          zone === displayTz ? "font-semibold" : "",
+                          index === tzHighlight ? "bg-gray-100/80 dark:bg-slate-800/60" : "",
+                        ].join(" ")}
+                        onClick={() => {
+                          setDisplayTz(zone);
+                          setTzQuery("");
+                          setTzOpen(false);
+                        }}
+                      >
+                        {zone}
+                      </button>
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
-      <FullCalendar
-        plugins={[timeGridPlugin, dayGridPlugin, interactionPlugin]}
-        initialView="timeGridWeek"
-        timeZone={displayTz}
-        dayHeaderContent={(arg) => dayHeaderFormatter.format(arg.date)}
-        nowIndicator
-        allDaySlot={false}
-        height="auto"
-        slotMinTime="06:00:00"
-        slotMaxTime="20:00:00"
-        datesSet={handleDatesSet}
-        events={fcEvents}
-        eventClick={handleEventClick}
-      />
+      <div className="lux-fullcalendar rounded-[26px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,248,255,0.92))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:border-slate-700/60 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.95),rgba(15,23,42,0.82))]">
+        <FullCalendar
+          plugins={[timeGridPlugin, dayGridPlugin, interactionPlugin]}
+          initialView="timeGridWeek"
+          timeZone={displayTz}
+          dayHeaderContent={(arg) => dayHeaderFormatter.format(arg.date)}
+          nowIndicator
+          allDaySlot={false}
+          height="auto"
+          slotMinTime="06:00:00"
+          slotMaxTime="20:00:00"
+          datesSet={handleDatesSet}
+          events={fcEvents}
+          eventClick={handleEventClick}
+        />
+      </div>
 
       <Dialog
         open={!!selectedEvent}

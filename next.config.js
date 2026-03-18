@@ -9,12 +9,16 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  webpack: (config) => {
-    config.cache = false; // disable webpack filesystem cache
-    return config;
-  },
   typescript: {
     // ignoreBuildErrors: true,
+  },
+  webpack: (config, { dev }) => {
+    if (dev) {
+      // Avoid filesystem cache writes when the local dev disk is nearly full.
+      config.cache = false;
+    }
+
+    return config;
   },
 };
 

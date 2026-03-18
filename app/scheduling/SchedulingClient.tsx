@@ -8,17 +8,233 @@ import { DateTime } from "luxon";
 import { toast } from "sonner";
 
 import AvailabilityCalendar from "@/components/scheduling/AvailabilityCalendar";
+import { useLanguage } from "@/components/LanguageProvider";
 import Stepper from "@/components/scheduling/Stepper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import SearchablePhoneInput from "@/components/PhoneInputField";
+import type { AppLanguage } from "@/lib/i18n";
+
+const localeByLanguage: Record<AppLanguage, string> = {
+  en: "en-US",
+  fr: "fr-FR",
+  de: "de-DE",
+  lb: "lb-LU",
+};
+
+const schedulingCopyEn = {
+  bridge: {
+    eyebrow: "Need a broader workflow audit?",
+    title: "Move from booking into a deeper contact and scoping discussion.",
+    description:
+      "If the challenge spans systems, integrations, or process redesign, send the workflow through contact so we can review the context and recommend the right next step.",
+    primaryCta: "Talk About Your Workflow",
+    secondaryCta: "Jump to Contact Form",
+    guestNote:
+      "Not ready to sign in and book yet? Use the contact form first and we can guide you to the right session.",
+  },
+  heroEyebrow: "Scheduling",
+  heroTitle: "Book Your Free Audit",
+  heroBody:
+    "Use scheduling to book the free audit or continue into a live conversation with the Lux AI team.",
+  guest: {
+    eyebrow: "Free audit option",
+    title: "Book your free audit here after sign-in.",
+    description:
+      "Use this page to continue into scheduling. Once you sign in, we will take you to the free audit option so you can choose a time and complete the booking.",
+    bullets: [
+      "Free audit booking happens inside scheduling",
+      "You choose the time only after sign-in",
+      "Contact still works if you prefer to send context first",
+    ],
+    primaryCta: "Sign in and continue",
+    secondaryCta: "Use contact instead",
+  },
+  unavailableEyebrow: "Scheduling unavailable",
+  unavailableTitle: "We could not load booking availability.",
+  unavailableFallback:
+    "Scheduling is temporarily unavailable right now. Please try again later or use the contact form.",
+  unavailablePrimary: "Open contact form",
+  unavailableSecondary: "Contact the team",
+  stepLabels: { type: "Type", mode: "Mode", profile: "Profile", time: "Time", confirm: "Confirm" },
+  buttons: {
+    back: "Back", next: "Next", signIn: "Sign in", freeAudit: "Contact form", editDetails: "Edit details", saveProfile: "Save profile", saving: "Saving...", cancel: "Cancel", changeMeetingType: "Change meeting type", viewBookings: "View my bookings", confirmBooking: "Confirm booking", proceedToPayment: "Proceed to payment", booking: "Booking...", signInToBook: "Sign in to book", downloadIcs: "Download ICS", addToGoogleCalendar: "Add to Google Calendar", bookAnotherTime: "Book another time",
+  },
+  status: { loading: "Loading...", meetingTypes: "Loading meeting types...", profile: "Loading your profile...", noMeetingTypes: "No meeting types available yet." },
+  errors: {
+    unknown: "Unknown error", notesRequired: "Meeting notes are required.", notesLength: "Notes must be 8-1000 characters.", fullName: "Full name must be 2-120 characters.", phone: "Enter a valid phone number.", timezone: "Select a timezone.", roleRequired: "Role is required when company is provided.", companyTooLong: "Company name is too long.", roleTooLong: "Role is too long.", loadMeetingTypes: "Failed to load meeting types", loadProfile: "Failed to load profile.", saveProfile: "Failed to save profile.", signInToBook: "Please sign in to book and complete payment.", missingPaidConfig: "This paid meeting type is missing a price or currency.", paymentSetup: "Payment setup failed.", bookingFailed: "Booking failed.", bookingPending: "Booking request submitted.", bookingConfirmed: "Booking confirmed.",
+  },
+  meetingModes: { select: "Select a meeting mode", googleMeet: "Google Meet", zoom: "Zoom", phone: "Phone call", inPerson: "In-person" },
+  timezonePicker: { search: "Search timezone", empty: "No matches" },
+  step1: { title: "Step 1 · Choose a meeting type", body: "Pick the session that fits your goals.", signIn: "Sign in to choose a meeting type and continue.", modeTbd: "mode: tbd", required: "required" },
+  step2: { title: "Step 2 · Choose a meeting mode", body: "Pick how you want to connect with our team.", signIn: "Sign in to choose a meeting mode.", unlock: "Select a meeting type first to unlock meeting modes.", availableModes: "Available modes", basedOn: "Based on", noModes: "No modes configured for this meeting type." },
+  step3: { title: "Step 3 · Booking profile", body: "We save this once and reuse it for future bookings.", unlock: "Select a meeting type and meeting mode to unlock the booking profile.", fullName: "Full name *", phone: "Phone *", phonePlaceholder: "Enter phone number", phoneHint: "Use a WhatsApp-enabled number for booking updates.", timezone: "Timezone *", company: "Company (optional)", role: "Role in company", rolePlaceholder: "Required if company is provided", incomplete: "Fill in the required fields to save your profile.", contact: "Contact", timezoneCard: "Timezone", timezoneHint: "Used to keep your booking times consistent.", confirm: "I confirm these details are correct for this booking." },
+  step4: { title: "Step 4 · Choose a time", body: "Display timezone controls how the calendar is shown.", displayTimezone: "Display timezone", displayCurrency: "Display currency", ratesUpdated: "Rates updated", selectType: "Select a meeting type to unlock available times.", selectMode: "Select a meeting mode to unlock available times.", completeProfile: "Complete your booking profile to unlock available times.", confirmProfile: "Confirm your booking profile to unlock available times.", selectedTime: "Selected time", timeSelected: "Time selected", noTimeSelected: "No time selected yet", pickSlotPrefix: "Pick a slot to preview in", clearSelection: "Click to clear selection.", notes: "Meeting concept notes *", notesPlaceholder: "Share what you want to cover in this session.", notesUsage: "Used only for this booking." },
+  step5: { title: "Step 5 · Confirmation", body: "Review details before confirming your booking.", meeting: "Meeting", sessionFallback: "Session", phoneCallTo: "Phone call to", meetingLinkLater: "Meeting link will be emailed after confirmation.", time: "Time", booker: "Booker", personalBooking: "Personal booking", notes: "Notes", preferredTimezone: "Preferred timezone", payment: "Payment", paymentRequired: "Payment required", paid: "Payment: Paid", checkoutHint: "Click “Proceed to payment” to pay in Stripe before this booking can be confirmed.", approvalHint: "If the organization requires approval, your booking can still stay pending until the team approves it.", paymentLinkHint: "If redirect fails, use the payment link provided by your admin.", paymentStatus: "Payment status", notifications: "You will receive a confirmation email if notifications are enabled.", selectTimeNotice: "Select a time to review your booking details." },
+  calendarText: { fileName: "luxai-booking.ics", meetingWithLuxAi: "Meeting with Lux AI", notesPrefix: "Notes", modePrefix: "Mode", meetingLinkPrefix: "Meeting link", phonePrefix: "Phone", phoneFallback: "n/a" },
+};
+
+const schedulingCopyFr = {
+  bridge: {
+    eyebrow: "Besoin d'un audit de workflow plus large ?",
+    title: "Passez de la reservation a une discussion plus approfondie sur le cadrage et le besoin.",
+    description:
+      "Si le sujet touche plusieurs systemes, integrations ou une refonte de processus, utilisez le contact pour que nous analysions le contexte et recommandions la bonne suite.",
+    primaryCta: "Parler de votre workflow",
+    secondaryCta: "Aller au formulaire de contact",
+    guestNote:
+      "Pas encore pret a vous connecter et reserver ? Utilisez d'abord le formulaire de contact et nous vous guiderons vers la bonne session.",
+  },
+  heroEyebrow: "Planification",
+  heroTitle: "Reservez votre audit gratuit",
+  heroBody: "Utilisez la planification pour reserver l'audit gratuit ou avancer vers une conversation en direct avec l'equipe Lux AI.",
+  guest: {
+    eyebrow: "Option audit gratuit",
+    title: "Reservez votre audit gratuit ici apres connexion.",
+    description:
+      "Utilisez cette page pour continuer vers la planification. Une fois connecte, nous vous amenons a l'option d'audit gratuit pour choisir un creneau et finaliser la reservation.",
+    bullets: [
+      "La reservation de l'audit gratuit se fait dans la planification",
+      "Vous choisissez le creneau seulement apres connexion",
+      "Le contact reste disponible si vous preferez envoyer le contexte d'abord",
+    ],
+    primaryCta: "Se connecter et continuer",
+    secondaryCta: "Utiliser le contact",
+  },
+  unavailableEyebrow: "Planification indisponible",
+  unavailableTitle: "Nous n'avons pas pu charger les disponibilites.",
+  unavailableFallback: "La planification est temporairement indisponible. Reessayez plus tard ou utilisez le formulaire de contact.",
+  unavailablePrimary: "Ouvrir le formulaire de contact",
+  unavailableSecondary: "Contacter l'equipe",
+  stepLabels: { type: "Type", mode: "Mode", profile: "Profil", time: "Heure", confirm: "Confirmer" },
+  buttons: {
+    back: "Retour", next: "Suivant", signIn: "Se connecter", freeAudit: "Formulaire de contact", editDetails: "Modifier les informations", saveProfile: "Enregistrer le profil", saving: "Enregistrement...", cancel: "Annuler", changeMeetingType: "Changer de type de session", viewBookings: "Voir mes reservations", confirmBooking: "Confirmer la reservation", proceedToPayment: "Passer au paiement", booking: "Reservation...", signInToBook: "Se connecter pour reserver", downloadIcs: "Telecharger l'ICS", addToGoogleCalendar: "Ajouter a Google Agenda", bookAnotherTime: "Reserver un autre creneau",
+  },
+  status: { loading: "Chargement...", meetingTypes: "Chargement des types de session...", profile: "Chargement de votre profil...", noMeetingTypes: "Aucun type de session disponible pour le moment." },
+  errors: {
+    unknown: "Erreur inconnue", notesRequired: "Les notes de session sont obligatoires.", notesLength: "Les notes doivent contenir entre 8 et 1000 caracteres.", fullName: "Le nom complet doit contenir entre 2 et 120 caracteres.", phone: "Saisissez un numero de telephone valide.", timezone: "Selectionnez un fuseau horaire.", roleRequired: "Le role est obligatoire si une entreprise est indiquee.", companyTooLong: "Le nom de l'entreprise est trop long.", roleTooLong: "Le role est trop long.", loadMeetingTypes: "Impossible de charger les types de session", loadProfile: "Impossible de charger le profil.", saveProfile: "Impossible d'enregistrer le profil.", signInToBook: "Veuillez vous connecter pour reserver et finaliser le paiement.", missingPaidConfig: "Ce type de session payant n'a pas de prix ou de devise configure.", paymentSetup: "La preparation du paiement a echoue.", bookingFailed: "La reservation a echoue.", bookingPending: "Demande de reservation envoyee.", bookingConfirmed: "Reservation confirmee.",
+  },
+  meetingModes: { select: "Selectionner un mode de reunion", googleMeet: "Google Meet", zoom: "Zoom", phone: "Appel telephonique", inPerson: "En presentiel" },
+  timezonePicker: { search: "Rechercher un fuseau horaire", empty: "Aucun resultat" },
+  step1: { title: "Etape 1 · Choisir un type de session", body: "Choisissez la session adaptee a votre objectif.", signIn: "Connectez-vous pour choisir un type de session et continuer.", modeTbd: "mode : a definir", required: "requis" },
+  step2: { title: "Etape 2 · Choisir un mode de reunion", body: "Choisissez comment vous souhaitez echanger avec notre equipe.", signIn: "Connectez-vous pour choisir un mode de reunion.", unlock: "Choisissez d'abord un type de session pour debloquer les modes de reunion.", availableModes: "Modes disponibles", basedOn: "Base sur", noModes: "Aucun mode configure pour ce type de session." },
+  step3: { title: "Etape 3 · Profil de reservation", body: "Nous l'enregistrons une fois et le reutilisons pour les reservations futures.", unlock: "Choisissez un type de session et un mode de reunion pour debloquer le profil de reservation.", fullName: "Nom complet *", phone: "Telephone *", phonePlaceholder: "Saisir le numero", phoneHint: "Utilisez un numero joignable sur WhatsApp pour les mises a jour de reservation.", timezone: "Fuseau horaire *", company: "Entreprise (optionnel)", role: "Role dans l'entreprise", rolePlaceholder: "Obligatoire si une entreprise est indiquee", incomplete: "Renseignez les champs obligatoires pour enregistrer votre profil.", contact: "Contact", timezoneCard: "Fuseau horaire", timezoneHint: "Utilise pour garder des horaires de reservation coherents.", confirm: "Je confirme que ces informations sont correctes pour cette reservation." },
+  step4: { title: "Etape 4 · Choisir une heure", body: "Le fuseau horaire d'affichage controle la facon dont le calendrier est presente.", displayTimezone: "Fuseau horaire d'affichage", displayCurrency: "Devise d'affichage", ratesUpdated: "Taux mis a jour", selectType: "Choisissez un type de session pour debloquer les horaires disponibles.", selectMode: "Choisissez un mode de reunion pour debloquer les horaires disponibles.", completeProfile: "Completez votre profil de reservation pour debloquer les horaires disponibles.", confirmProfile: "Confirmez votre profil de reservation pour debloquer les horaires disponibles.", selectedTime: "Horaire selectionne", timeSelected: "Horaire selectionne", noTimeSelected: "Aucun horaire selectionne pour le moment", pickSlotPrefix: "Choisissez un creneau pour l'apercu dans", clearSelection: "Cliquez pour effacer la selection.", notes: "Notes sur l'objectif de la session *", notesPlaceholder: "Indiquez ce que vous souhaitez couvrir pendant cette session.", notesUsage: "Utilise uniquement pour cette reservation." },
+  step5: { title: "Etape 5 · Confirmation", body: "Verifiez les details avant de confirmer votre reservation.", meeting: "Session", sessionFallback: "Session", phoneCallTo: "Appel vers", meetingLinkLater: "Le lien de reunion sera envoye par e-mail apres confirmation.", time: "Horaire", booker: "Reservant", personalBooking: "Reservation personnelle", notes: "Notes", preferredTimezone: "Fuseau horaire prefere", payment: "Paiement", paymentRequired: "Paiement requis", paid: "Paiement : paye", checkoutHint: "Cliquez sur « Passer au paiement » pour payer dans Stripe avant que cette reservation puisse etre confirmee.", approvalHint: "Si l'organisation exige une approbation, la reservation peut rester en attente jusqu'a validation par l'equipe.", paymentLinkHint: "Si la redirection echoue, utilisez le lien de paiement fourni par votre administrateur.", paymentStatus: "Statut du paiement", notifications: "Vous recevrez un e-mail de confirmation si les notifications sont activees.", selectTimeNotice: "Selectionnez un horaire pour verifier les details de votre reservation." },
+  calendarText: { fileName: "reservation-luxai.ics", meetingWithLuxAi: "Reunion avec Lux AI", notesPrefix: "Notes", modePrefix: "Mode", meetingLinkPrefix: "Lien de reunion", phonePrefix: "Telephone", phoneFallback: "n/d" },
+};
+
+const schedulingCopyDe = {
+  bridge: {
+    eyebrow: "Brauchen Sie ein breiteres Workflow-Audit?",
+    title: "Wechseln Sie von der Buchung in ein tieferes Kontakt- und Scoping-Gesprach.",
+    description: "Wenn die Herausforderung mehrere Systeme, Integrationen oder Prozessneugestaltung betrifft, nutzen Sie das Kontaktformular. So konnen wir den Kontext prufen und den richtigen nachsten Schritt empfehlen.",
+    primaryCta: "Uber Ihren Workflow sprechen",
+    secondaryCta: "Zum Kontaktformular",
+    guestNote: "Noch nicht bereit, sich anzumelden und zu buchen? Nutzen Sie zuerst das Kontaktformular, und wir leiten Sie zur passenden Session.",
+  },
+  heroEyebrow: "Terminbuchung",
+  heroTitle: "Buchen Sie Ihr kostenloses Audit",
+  heroBody: "Nutzen Sie die Terminbuchung, um das kostenlose Audit zu buchen oder in ein Live-Gesprach mit dem Lux-AI-Team zu wechseln.",
+  guest: {
+    eyebrow: "Kostenloses Audit",
+    title: "Buchen Sie Ihr kostenloses Audit hier nach der Anmeldung.",
+    description:
+      "Nutzen Sie diese Seite als Einstieg in die Terminplanung. Nach der Anmeldung fuhren wir Sie direkt zur kostenlosen Audit-Option, damit Sie eine Zeit auswahlen und die Buchung abschliessen konnen.",
+    bullets: [
+      "Die kostenlose Audit-Buchung lauft innerhalb der Terminplanung",
+      "Die Uhrzeit wahlen Sie erst nach der Anmeldung",
+      "Kontakt bleibt verfugbar, wenn Sie den Kontext lieber zuerst senden mochten",
+    ],
+    primaryCta: "Anmelden und fortfahren",
+    secondaryCta: "Kontakt nutzen",
+  },
+  unavailableEyebrow: "Terminbuchung nicht verfugbar",
+  unavailableTitle: "Die Buchungsverfugbarkeit konnte nicht geladen werden.",
+  unavailableFallback: "Die Terminbuchung ist derzeit nicht verfugbar. Bitte versuchen Sie es spater erneut oder nutzen Sie das Kontaktformular.",
+  unavailablePrimary: "Kontaktformular offnen",
+  unavailableSecondary: "Team kontaktieren",
+  stepLabels: { type: "Typ", mode: "Modus", profile: "Profil", time: "Zeit", confirm: "Bestatigen" },
+  buttons: {
+    back: "Zuruck", next: "Weiter", signIn: "Anmelden", freeAudit: "Kontaktformular", editDetails: "Angaben bearbeiten", saveProfile: "Profil speichern", saving: "Speichert...", cancel: "Abbrechen", changeMeetingType: "Meeting-Typ andern", viewBookings: "Meine Buchungen ansehen", confirmBooking: "Buchung bestatigen", proceedToPayment: "Zur Zahlung", booking: "Bucht...", signInToBook: "Zum Buchen anmelden", downloadIcs: "ICS herunterladen", addToGoogleCalendar: "Zu Google Kalender hinzufugen", bookAnotherTime: "Anderen Termin buchen",
+  },
+  status: { loading: "Ladt...", meetingTypes: "Meeting-Typen werden geladen...", profile: "Ihr Profil wird geladen...", noMeetingTypes: "Noch keine Meeting-Typen verfugbar." },
+  errors: {
+    unknown: "Unbekannter Fehler", notesRequired: "Sitzungsnotizen sind erforderlich.", notesLength: "Die Notizen mussen zwischen 8 und 1000 Zeichen lang sein.", fullName: "Der vollstandige Name muss zwischen 2 und 120 Zeichen lang sein.", phone: "Geben Sie eine gultige Telefonnummer ein.", timezone: "Wahlen Sie eine Zeitzone aus.", roleRequired: "Eine Rolle ist erforderlich, wenn ein Unternehmen angegeben ist.", companyTooLong: "Der Unternehmensname ist zu lang.", roleTooLong: "Die Rolle ist zu lang.", loadMeetingTypes: "Meeting-Typen konnten nicht geladen werden", loadProfile: "Profil konnte nicht geladen werden.", saveProfile: "Profil konnte nicht gespeichert werden.", signInToBook: "Bitte melden Sie sich an, um zu buchen und die Zahlung abzuschliessen.", missingPaidConfig: "Fur diesen kostenpflichtigen Meeting-Typ fehlen Preis oder Wahrung.", paymentSetup: "Die Zahlungseinrichtung ist fehlgeschlagen.", bookingFailed: "Die Buchung ist fehlgeschlagen.", bookingPending: "Buchungsanfrage gesendet.", bookingConfirmed: "Buchung bestatigt.",
+  },
+  meetingModes: { select: "Meeting-Modus auswahlen", googleMeet: "Google Meet", zoom: "Zoom", phone: "Telefonat", inPerson: "Vor Ort" },
+  timezonePicker: { search: "Zeitzone suchen", empty: "Keine Treffer" },
+  step1: { title: "Schritt 1 · Meeting-Typ wahlen", body: "Wahlen Sie die Session, die zu Ihrem Ziel passt.", signIn: "Melden Sie sich an, um einen Meeting-Typ auszuwahlen und fortzufahren.", modeTbd: "Modus: offen", required: "erforderlich" },
+  step2: { title: "Schritt 2 · Meeting-Modus wahlen", body: "Wahlen Sie, wie Sie mit unserem Team in Kontakt treten mochten.", signIn: "Melden Sie sich an, um einen Meeting-Modus zu wahlen.", unlock: "Wahlen Sie zuerst einen Meeting-Typ, um die Meeting-Modi freizuschalten.", availableModes: "Verfugbare Modi", basedOn: "Basierend auf", noModes: "Fur diesen Meeting-Typ sind keine Modi konfiguriert." },
+  step3: { title: "Schritt 3 · Buchungsprofil", body: "Wir speichern dies einmal und verwenden es fur kunftige Buchungen wieder.", unlock: "Wahlen Sie einen Meeting-Typ und einen Meeting-Modus, um das Buchungsprofil freizuschalten.", fullName: "Vollstandiger Name *", phone: "Telefon *", phonePlaceholder: "Telefonnummer eingeben", phoneHint: "Verwenden Sie eine WhatsApp-fahige Nummer fur Buchungsupdates.", timezone: "Zeitzone *", company: "Unternehmen (optional)", role: "Rolle im Unternehmen", rolePlaceholder: "Erforderlich, wenn ein Unternehmen angegeben ist", incomplete: "Fullen Sie die Pflichtfelder aus, um Ihr Profil zu speichern.", contact: "Kontakt", timezoneCard: "Zeitzone", timezoneHint: "Dient dazu, Ihre Buchungszeiten konsistent zu halten.", confirm: "Ich bestatige, dass diese Angaben fur diese Buchung korrekt sind." },
+  step4: { title: "Schritt 4 · Zeit wahlen", body: "Die Anzeige-Zeitzone steuert, wie der Kalender dargestellt wird.", displayTimezone: "Anzeige-Zeitzone", displayCurrency: "Anzeige-Wahrung", ratesUpdated: "Kurse aktualisiert", selectType: "Wahlen Sie einen Meeting-Typ, um verfugbare Zeiten freizuschalten.", selectMode: "Wahlen Sie einen Meeting-Modus, um verfugbare Zeiten freizuschalten.", completeProfile: "Vervollstandigen Sie Ihr Buchungsprofil, um verfugbare Zeiten freizuschalten.", confirmProfile: "Bestatigen Sie Ihr Buchungsprofil, um verfugbare Zeiten freizuschalten.", selectedTime: "Gewahlte Zeit", timeSelected: "Zeit ausgewahlt", noTimeSelected: "Noch keine Zeit ausgewahlt", pickSlotPrefix: "Wahlen Sie ein Zeitfenster zur Vorschau in", clearSelection: "Klicken Sie, um die Auswahl zu loschen.", notes: "Notizen zum Sitzungsthema *", notesPlaceholder: "Teilen Sie mit, was Sie in dieser Session besprechen mochten.", notesUsage: "Wird nur fur diese Buchung verwendet." },
+  step5: { title: "Schritt 5 · Bestatigung", body: "Prufen Sie die Details, bevor Sie Ihre Buchung bestatigen.", meeting: "Meeting", sessionFallback: "Session", phoneCallTo: "Telefonat an", meetingLinkLater: "Der Meeting-Link wird nach der Bestatigung per E-Mail gesendet.", time: "Zeit", booker: "Buchende Person", personalBooking: "Personliche Buchung", notes: "Notizen", preferredTimezone: "Bevorzugte Zeitzone", payment: "Zahlung", paymentRequired: "Zahlung erforderlich", paid: "Zahlung: bezahlt", checkoutHint: "Klicken Sie auf „Zur Zahlung“, um in Stripe zu zahlen, bevor diese Buchung bestatigt werden kann.", approvalHint: "Wenn die Organisation eine Freigabe verlangt, kann Ihre Buchung dennoch auf ausstehend bleiben, bis das Team zustimmt.", paymentLinkHint: "Falls die Weiterleitung fehlschlagt, verwenden Sie den von Ihrem Admin bereitgestellten Zahlungslink.", paymentStatus: "Zahlungsstatus", notifications: "Sie erhalten eine Bestatigungs-E-Mail, wenn Benachrichtigungen aktiviert sind.", selectTimeNotice: "Wahlen Sie eine Zeit, um die Buchungsdetails zu prufen." },
+  calendarText: { fileName: "luxai-buchung.ics", meetingWithLuxAi: "Meeting mit Lux AI", notesPrefix: "Notizen", modePrefix: "Modus", meetingLinkPrefix: "Meeting-Link", phonePrefix: "Telefon", phoneFallback: "k. A." },
+};
+
+const schedulingCopyLb = {
+  bridge: {
+    eyebrow: "Braucht Dir e méi breeden Workflow-Audit?",
+    title: "Gitt vun der Buchung an eng méi déif Kontakt- a Scoping-Diskussioun.",
+    description: "Wann d'Erausfuerderung iwwer Systemer, Integratiounen oder Prozess-Redesign geet, benotzt de Kontakt, fir datt mir de Kontext kënne kucken an de richtege nächste Schrëtt recommandéieren.",
+    primaryCta: "Iwwer Äre Workflow schwätzen",
+    secondaryCta: "Bei de Kontakt-Formulaire",
+    guestNote: "Nach net prett, Iech unzemellen a ze buchen? Benotzt fir d'éischt de Kontakt-Formulaire, an da féiere mir Iech op déi richteg Session.",
+  },
+  heroEyebrow: "Planung",
+  heroTitle: "Bucht Äre gratis Audit",
+  heroBody: "Benotzt d'Scheduling, fir de gratis Audit ze buchen oder an e Live-Gespréich mat der Lux-AI-Equipe weiderzegoen.",
+  guest: {
+    eyebrow: "Gratis Audit Optioun",
+    title: "Bucht Äre gratis Audit hei no der Umeldung.",
+    description:
+      "Benotzt dës Säit fir an d'Scheduling eran ze goen. No der Umeldung féiere mir Iech direkt op d'Gratis-Audit-Optioun, fir datt Dir eng Zäit wielt an d'Buchung ofschléisst.",
+    bullets: [
+      "D'Gratis-Audit-Buchung leeft an der Scheduling",
+      "Dir wielt d'Zäit eréischt no der Umeldung",
+      "Kontakt bleift disponibel, wann Dir léiwer fir d'éischt de Kontext schécke wëllt",
+    ],
+    primaryCta: "Umellen a weidergoen",
+    secondaryCta: "Kontakt benotzen",
+  },
+  unavailableEyebrow: "Planung net verfügbar",
+  unavailableTitle: "Mir konnten d'Buchungsdisponibilitéit net lueden.",
+  unavailableFallback: "D'Planung ass aktuell temporär net verfügbar. Probéiert et méi spéit nach eng Kéier oder benotzt de Kontakt-Formulaire.",
+  unavailablePrimary: "Kontakt-Formulaire opmaachen",
+  unavailableSecondary: "Equipe kontaktéieren",
+  stepLabels: { type: "Typ", mode: "Modus", profile: "Profil", time: "Zäit", confirm: "Confirméieren" },
+  buttons: {
+    back: "Zréck", next: "Weider", signIn: "Umellen", freeAudit: "Kontakt-Formulaire", editDetails: "Detailer änneren", saveProfile: "Profil späicheren", saving: "Späichert...", cancel: "Ofbriechen", changeMeetingType: "Meeting-Typ änneren", viewBookings: "Meng Buchunge kucken", confirmBooking: "Buchung confirméieren", proceedToPayment: "Weider op Bezuelung", booking: "Bucht...", signInToBook: "Umellen fir ze buchen", downloadIcs: "ICS eroflueden", addToGoogleCalendar: "Bei Google Kalenner dobäisetzen", bookAnotherTime: "Eng aner Zäit buchen",
+  },
+  status: { loading: "Lued...", meetingTypes: "Meeting-Typpe ginn gelueden...", profile: "Äre Profil gëtt gelueden...", noMeetingTypes: "Et si nach keng Meeting-Typpe verfügbar." },
+  errors: {
+    unknown: "Onbekannte Feeler", notesRequired: "Session-Notize si verlaangt.", notesLength: "D'Notize mussen tëscht 8 an 1000 Zeeche leien.", fullName: "De komplette Numm muss tëscht 2 an 120 Zeeche leien.", phone: "Gitt eng valabel Telefonsnummer an.", timezone: "Wielt eng Zäitzon aus.", roleRequired: "Eng Roll ass verlaangt, wann eng Firma uginn ass.", companyTooLong: "De Firmennumm ass ze laang.", roleTooLong: "D'Roll ass ze laang.", loadMeetingTypes: "D'Meeting-Typpe konnten net geluede ginn", loadProfile: "De Profil konnt net geluede ginn.", saveProfile: "De Profil konnt net gespäichert ginn.", signInToBook: "Mellt Iech w.e.g. un, fir ze buchen an d'Bezuelung ofzeschléissen.", missingPaidConfig: "Fir dëse bezuelte Meeting-Typ feelt e Präis oder eng Währung.", paymentSetup: "D'Bezuelungskonfiguratioun ass feelgeschloen.", bookingFailed: "D'Buchung ass feelgeschloen.", bookingPending: "Buchungsufro agereecht.", bookingConfirmed: "Buchung confirméiert.",
+  },
+  meetingModes: { select: "Meeting-Modus auswielen", googleMeet: "Google Meet", zoom: "Zoom", phone: "Telefonsgespréich", inPerson: "Op der Plaz" },
+  timezonePicker: { search: "Zäitzon sichen", empty: "Keng Treffer" },
+  step1: { title: "Schrëtt 1 · Meeting-Typ auswielen", body: "Wielt d'Session, déi am Beschte bei Äert Zil passt.", signIn: "Mellt Iech un, fir e Meeting-Typ ze wielen an weiderzefueren.", modeTbd: "Modus: nach op", required: "néideg" },
+  step2: { title: "Schrëtt 2 · Meeting-Modus auswielen", body: "Wielt, wéi Dir mat eiser Equipe verbannen wëllt.", signIn: "Mellt Iech un, fir e Meeting-Modus ze wielen.", unlock: "Wielt als éischt e Meeting-Typ, fir d'Meeting-Modi fräizeginn.", availableModes: "Verfügbar Modi", basedOn: "Baséiert op", noModes: "Fir dëse Meeting-Typ si keng Modi ageriicht." },
+  step3: { title: "Schrëtt 3 · Buchungsprofil", body: "Mir späicheren dat eng Kéier a benotzen et fir zukünfteg Buchungen erëm.", unlock: "Wielt e Meeting-Typ an e Meeting-Modus, fir de Buchungsprofil fräizeginn.", fullName: "Komplette Numm *", phone: "Telefon *", phonePlaceholder: "Telefonsnummer aginn", phoneHint: "Benotzt eng WhatsApp-fäheg Nummer fir Buchungsupdates.", timezone: "Zäitzon *", company: "Firma (optional)", role: "Roll an der Firma", rolePlaceholder: "Verlaangt, wann eng Firma uginn ass", incomplete: "Fëllt déi néideg Felder aus, fir Äre Profil ze späicheren.", contact: "Kontakt", timezoneCard: "Zäitzon", timezoneHint: "Dat gëtt benotzt, fir Är Buchungszäite konsequent ze halen.", confirm: "Ech confirméieren, datt dës Detailer fir dës Buchung richteg sinn." },
+  step4: { title: "Schrëtt 4 · Zäit auswielen", body: "D'Affichage-Zäitzon bestëmmt, wéi de Kalenner gewise gëtt.", displayTimezone: "Affichage-Zäitzon", displayCurrency: "Affichage-Währung", ratesUpdated: "Coursen aktualiséiert", selectType: "Wielt e Meeting-Typ, fir verfügbar Zäiten fräizeginn.", selectMode: "Wielt e Meeting-Modus, fir verfügbar Zäiten fräizeginn.", completeProfile: "Fëllt Äre Buchungsprofil aus, fir verfügbar Zäiten fräizeginn.", confirmProfile: "Confirméiert Äre Buchungsprofil, fir verfügbar Zäiten fräizeginn.", selectedTime: "Gewielte Zäit", timeSelected: "Zäit ausgewielt", noTimeSelected: "Nach keng Zäit ausgewielt", pickSlotPrefix: "Wielt e Slot fir d'Virschau an", clearSelection: "Klickt fir d'Auswiel ze läschen.", notes: "Notize fir d'Sessiounszil *", notesPlaceholder: "Deelt mat, wat Dir an dëser Session ofdecke wëllt.", notesUsage: "Nëmme fir dës Buchung benotzt." },
+  step5: { title: "Schrëtt 5 · Confirmatioun", body: "Iwwerpréift d'Detailer, ier Dir Är Buchung confirméiert.", meeting: "Meeting", sessionFallback: "Session", phoneCallTo: "Telefonsgespréich un", meetingLinkLater: "De Meeting-Link gëtt no der Confirmatioun per E-Mail geschéckt.", time: "Zäit", booker: "Buchend Persoun", personalBooking: "Perséinlech Buchung", notes: "Notizen", preferredTimezone: "Bevorzucht Zäitzon", payment: "Bezuelung", paymentRequired: "Bezuelung verlaangt", paid: "Bezuelung: bezuelt", checkoutHint: "Klickt op « Weider op Bezuelung », fir an Stripe ze bezuelen, ier dës Buchung confirméiert ka ginn.", approvalHint: "Wann d'Organisatioun eng Zoustëmmung verlaangt, kann Är Buchung nach ëmmer op pending bleiwen, bis d'Equipe zoustëmmt.", paymentLinkHint: "Wann d'Weiderleedung feelt, benotzt de Bezuelungslink vun Ärem Admin.", paymentStatus: "Bezuelungsstatus", notifications: "Dir kritt eng Confirmatiouns-E-Mail, wann Notifikatiounen aktivéiert sinn.", selectTimeNotice: "Wielt eng Zäit, fir Är Buchungsdetailer ze iwwerpréiwen." },
+  calendarText: { fileName: "luxai-buchung.ics", meetingWithLuxAi: "Meeting mat Lux AI", notesPrefix: "Notizen", modePrefix: "Modus", meetingLinkPrefix: "Meeting-Link", phonePrefix: "Telefon", phoneFallback: "keng Angab" },
+};
+
+const localizedSchedulingCopy = {
+  en: schedulingCopyEn,
+  fr: schedulingCopyFr,
+  de: schedulingCopyDe,
+  lb: schedulingCopyLb,
+} as const;
 
 type Props = {
   orgId: string; // required for booking flows
   meetingTypeId?: string;
+  meetingTypeKey?: string;
   staffUserId?: string;
   tz?: string;
+  availabilityError?: string;
 };
 
 type BookingProfile = {
@@ -87,9 +303,61 @@ type BookingSummary = {
 };
 
 type PaymentPolicy = "FREE" | "PAID";
+type SchedulingCopy = typeof schedulingCopyEn;
 
 function cleanString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeMeetingTypeToken(value: string): string {
+  return cleanString(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function resolveMeetingTypeId(
+  items: MeetingType[],
+  params: { meetingTypeId?: string; meetingTypeKey?: string }
+): string {
+  const byId = cleanString(params.meetingTypeId);
+  if (byId && items.some((item) => item.id === byId)) {
+    return byId;
+  }
+
+  const keyToken = normalizeMeetingTypeToken(params.meetingTypeKey ?? "");
+  if (keyToken) {
+    const byKey = items.find((item) => {
+      const candidates = [
+        item.key,
+        item.title,
+        item.subtitle ?? "",
+      ].map(normalizeMeetingTypeToken);
+
+      return candidates.some(
+        (candidate) =>
+          candidate === keyToken ||
+          candidate.includes(keyToken) ||
+          keyToken.includes(candidate)
+      );
+    });
+
+    if (byKey) return byKey.id;
+  }
+
+  return items[0]?.id ?? "";
+}
+
+function buildSchedulingHref(params: { meetingTypeKey?: string; tz?: string }) {
+  const search = new URLSearchParams();
+  const meetingTypeKey = cleanString(params.meetingTypeKey);
+  const tz = cleanString(params.tz);
+
+  if (meetingTypeKey) search.set("meetingTypeKey", meetingTypeKey);
+  if (tz) search.set("tz", tz);
+
+  const query = search.toString();
+  return query ? `/scheduling?${query}` : "/scheduling";
 }
 
 const UUID_REGEX =
@@ -101,10 +369,10 @@ function normalizeStaffUserId(value?: string | null): string | null {
   return UUID_REGEX.test(cleaned) ? cleaned : null;
 }
 
-function asErrorMessage(err: unknown): string {
+function asErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error) return err.message;
   if (typeof err === "string") return err;
-  return "Unknown error";
+  return fallback;
 }
 
 function isPhoneValid(value: string): boolean {
@@ -116,11 +384,14 @@ function isPhoneValid(value: string): boolean {
   return parsed.isValid() && parsed.isPossible();
 }
 
-function validateMeetingNotes(value: string): string | null {
+function validateMeetingNotes(
+  value: string,
+  copy: SchedulingCopy
+): string | null {
   const trimmed = value.trim();
-  if (!trimmed) return "Meeting notes are required.";
+  if (!trimmed) return copy.errors.notesRequired;
   if (trimmed.length < 8 || trimmed.length > 1000) {
-    return "Notes must be 8–1000 characters.";
+    return copy.errors.notesLength;
   }
   return null;
 }
@@ -132,11 +403,12 @@ function resolveBrowserTz() {
 
 function formatPrice(
   priceCents: number | null,
-  currency: string | null
+  currency: string | null,
+  locale: string
 ): string | null {
   if (!priceCents || !currency) return null;
   try {
-    return new Intl.NumberFormat("en", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
     }).format(priceCents / 100);
@@ -197,17 +469,17 @@ function buildGoogleCalendarUrl(args: {
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
-function formatMeetingMode(mode: MeetingMode | "") {
-  if (!mode) return "Select a meeting mode";
+function formatMeetingMode(mode: MeetingMode | "", copy: SchedulingCopy) {
+  if (!mode) return copy.meetingModes.select;
   switch (mode) {
     case "google_meet":
-      return "Google Meet";
+      return copy.meetingModes.googleMeet;
     case "zoom":
-      return "Zoom";
+      return copy.meetingModes.zoom;
     case "phone":
-      return "Phone call";
+      return copy.meetingModes.phone;
     case "in_person":
-      return "In-person";
+      return copy.meetingModes.inPerson;
     default:
       return mode;
   }
@@ -217,12 +489,16 @@ function TimezonePicker({
   value,
   onChange,
   options,
+  searchPlaceholder,
+  emptyLabel,
   buttonClassName,
   menuClassName,
 }: {
   value: string;
   onChange: (next: string) => void;
   options: string[];
+  searchPlaceholder: string;
+  emptyLabel: string;
   buttonClassName?: string;
   menuClassName?: string;
 }) {
@@ -327,7 +603,7 @@ function TimezonePicker({
             className="h-9 w-full rounded-lg border border-white/70 bg-white/90 px-3 text-sm text-gray-900 leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/80 dark:text-gray-100"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search timezone"
+            placeholder={searchPlaceholder}
             autoFocus
             onKeyDown={handleKeyDown}
           />
@@ -337,7 +613,7 @@ function TimezonePicker({
           >
             {filtered.length === 0 ? (
               <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                No matches
+                {emptyLabel}
               </div>
             ) : (
               filtered.map((zone, index) => (
@@ -368,11 +644,16 @@ function TimezonePicker({
 }
 
 export default function SchedulingClient(props: Props) {
+  const { lang } = useLanguage();
+  const copy = localizedSchedulingCopy[lang] ?? localizedSchedulingCopy.en;
+  const locale = localeByLanguage[lang] ?? localeByLanguage.en;
   // Ensure props are plain strings (protect against accidental undefined / whitespace)
   const orgId = cleanString(props.orgId);
   const initialMeetingTypeId = cleanString(props.meetingTypeId);
+  const initialMeetingTypeKey = cleanString(props.meetingTypeKey);
   const staffUserId = cleanString(props.staffUserId);
   const initialTz = cleanString(props.tz) || "Africa/Addis_Ababa";
+  const availabilityError = cleanString(props.availabilityError);
   const myBookingsHref = "/scheduling/my";
 
   const { status } = useSession();
@@ -425,14 +706,23 @@ export default function SchedulingClient(props: Props) {
   const [fieldErrors, setFieldErrors] = useState<Partial<FormState>>({});
   const [meetingNotes, setMeetingNotes] = useState("");
   const [meetingNotesTouched, setMeetingNotesTouched] = useState(false);
+  const signInCallbackUrl = useMemo(
+    () =>
+      buildSchedulingHref({
+        meetingTypeKey: initialMeetingTypeKey || "free-audit",
+        tz: displayTz || initialTz,
+      }),
+    [displayTz, initialMeetingTypeKey, initialTz]
+  );
 
   const meetingNotesError = useMemo(
-    () => (meetingNotesTouched ? validateMeetingNotes(meetingNotes) : null),
-    [meetingNotes, meetingNotesTouched]
+    () =>
+      meetingNotesTouched ? validateMeetingNotes(meetingNotes, copy) : null,
+    [meetingNotes, meetingNotesTouched, copy]
   );
   const meetingNotesValid = useMemo(
-    () => !validateMeetingNotes(meetingNotes),
-    [meetingNotes]
+    () => !validateMeetingNotes(meetingNotes, copy),
+    [meetingNotes, copy]
   );
 
   const isProfileIncomplete = Boolean(
@@ -459,13 +749,14 @@ export default function SchedulingClient(props: Props) {
   );
   const selectedModeLabel =
     selectedModeDetails?.details?.label?.trim() ||
-    formatMeetingMode(selectedMode as MeetingMode);
+    formatMeetingMode(selectedMode as MeetingMode, copy);
   const effectivePaymentPolicy =
     (selectedMeetingType?.paymentPolicy ?? orgPaymentPolicy) as PaymentPolicy;
   const paymentUrl = process.env.NEXT_PUBLIC_PAYMENT_URL;
   const paymentPriceLabel = formatPrice(
     selectedMeetingType?.priceCents ?? null,
-    selectedMeetingType?.currency ?? null
+    selectedMeetingType?.currency ?? null,
+    locale
   );
   const convertedPriceLabel = useMemo(() => {
     if (!selectedMeetingType?.priceCents || !selectedMeetingType?.currency) {
@@ -477,12 +768,13 @@ export default function SchedulingClient(props: Props) {
     const rate = exchangeRates[displayCurrency];
     if (!rate || !Number.isFinite(rate)) return null;
     const converted = Math.round(selectedMeetingType.priceCents * rate);
-    return formatPrice(converted, displayCurrency);
+    return formatPrice(converted, displayCurrency, locale);
   }, [
     selectedMeetingType?.priceCents,
     selectedMeetingType?.currency,
     displayCurrency,
     exchangeRates,
+    locale,
   ]);
   const paymentRequiredByPolicy = effectivePaymentPolicy !== "FREE";
   const meetingHasPaymentConfig =
@@ -493,11 +785,15 @@ export default function SchedulingClient(props: Props) {
   const requiresCheckout = paymentRequiredByPolicy;
   const selectedSlotLabel = useMemo(() => {
     if (!selectedSlot) return null;
-    const start = DateTime.fromISO(selectedSlot.startUtc).setZone(displayTz);
-    const end = DateTime.fromISO(selectedSlot.endUtc).setZone(displayTz);
+    const start = DateTime.fromISO(selectedSlot.startUtc)
+      .setZone(displayTz)
+      .setLocale(locale);
+    const end = DateTime.fromISO(selectedSlot.endUtc)
+      .setZone(displayTz)
+      .setLocale(locale);
     if (!start.isValid || !end.isValid) return null;
-    return `${start.toFormat("ccc, LLL dd · HH:mm")} – ${end.toFormat("HH:mm")}`;
-  }, [selectedSlot, displayTz]);
+    return `${start.toFormat("ccc, LLL dd · HH:mm")} - ${end.toFormat("HH:mm")}`;
+  }, [selectedSlot, displayTz, locale]);
   const hasSelectedSlot = Boolean(selectedSlot);
   const [activeStep, setActiveStep] = useState(1);
   const canAdvanceStep = useMemo(
@@ -602,7 +898,12 @@ export default function SchedulingClient(props: Props) {
   }, []);
 
   useEffect(() => {
-    if (!orgId) return;
+    if (!orgId || !isAuthed) {
+      setMeetingTypes([]);
+      setMeetingTypesLoading(false);
+      setMeetingTypesError(null);
+      return;
+    }
 
     let cancelled = false;
     setMeetingTypesLoading(true);
@@ -625,7 +926,7 @@ export default function SchedulingClient(props: Props) {
       .then(({ ok, data }) => {
         if (cancelled) return;
         if (!ok) {
-          setMeetingTypesError(data?.error ?? "Failed to load meeting types");
+          setMeetingTypesError(data?.error ?? copy.errors.loadMeetingTypes);
           setMeetingTypes([]);
           return;
         }
@@ -644,22 +945,16 @@ export default function SchedulingClient(props: Props) {
         setAllowedCurrencies(allowed);
         setDefaultCurrency(defaultCur);
 
-        if (items.length > 0) {
-          if (
-            initialMeetingTypeId &&
-            items.some((item) => item.id === initialMeetingTypeId)
-          ) {
-            setSelectedMeetingTypeId(initialMeetingTypeId);
-          } else {
-            setSelectedMeetingTypeId(items[0].id);
-          }
-        }
+        setSelectedMeetingTypeId(
+          resolveMeetingTypeId(items, {
+            meetingTypeId: initialMeetingTypeId,
+            meetingTypeKey: initialMeetingTypeKey,
+          })
+        );
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setMeetingTypesError(
-          asErrorMessage(err) || "Failed to load meeting types"
-        );
+        setMeetingTypesError(asErrorMessage(err, copy.errors.loadMeetingTypes));
         setMeetingTypes([]);
       })
       .finally(() => {
@@ -669,7 +964,14 @@ export default function SchedulingClient(props: Props) {
     return () => {
       cancelled = true;
     };
-  }, [orgId, initialMeetingTypeId]);
+  }, [
+    orgId,
+    isAuthed,
+    initialMeetingTypeId,
+    initialMeetingTypeKey,
+    locale,
+    copy.errors.loadMeetingTypes,
+  ]);
 
   useEffect(() => {
     if (!selectedMeetingType) return;
@@ -738,7 +1040,7 @@ export default function SchedulingClient(props: Props) {
         if (cancelled) return;
 
         if (!ok) {
-          setProfileError(data?.error ?? "Failed to load profile");
+          setProfileError(data?.error ?? copy.errors.loadProfile);
           setProfile(null);
           setShowForm(true);
           setConfirmed(false);
@@ -768,7 +1070,7 @@ export default function SchedulingClient(props: Props) {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setProfileError(asErrorMessage(err) || "Failed to load profile");
+        setProfileError(asErrorMessage(err, copy.errors.loadProfile));
         setProfile(null);
         setShowForm(true);
         setConfirmed(false);
@@ -780,7 +1082,7 @@ export default function SchedulingClient(props: Props) {
     return () => {
       cancelled = true;
     };
-  }, [isAuthed, displayTzLocked]);
+  }, [isAuthed, displayTzLocked, copy.errors.loadProfile]);
 
   async function handleSaveProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -796,27 +1098,27 @@ export default function SchedulingClient(props: Props) {
     const errors: Partial<FormState> = {};
 
     if (!fullName || fullName.length < 2 || fullName.length > 120) {
-      errors.fullName = "Full name must be 2–120 characters.";
+      errors.fullName = copy.errors.fullName;
     }
 
     if (!phone || !isPhoneValid(phone)) {
-      errors.phone = "Enter a valid phone number.";
+      errors.phone = copy.errors.phone;
     }
 
     if (!timezone) {
-      errors.timezone = "Select a timezone.";
+      errors.timezone = copy.errors.timezone;
     }
 
     if (company && !companyRole) {
-      errors.companyRole = "Role is required when company is provided.";
+      errors.companyRole = copy.errors.roleRequired;
     }
 
     if (company && company.length > 120) {
-      errors.company = "Company name is too long.";
+      errors.company = copy.errors.companyTooLong;
     }
 
     if (companyRole && companyRole.length > 120) {
-      errors.companyRole = "Role is too long.";
+      errors.companyRole = copy.errors.roleTooLong;
     }
 
     if (Object.keys(errors).length > 0) {
@@ -842,7 +1144,7 @@ export default function SchedulingClient(props: Props) {
 
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setProfileError(json?.error ?? "Failed to save profile.");
+        setProfileError(json?.error ?? copy.errors.saveProfile);
         return;
       }
 
@@ -854,7 +1156,7 @@ export default function SchedulingClient(props: Props) {
       }
       setConfirmed(false);
     } catch (err: unknown) {
-      setProfileError(asErrorMessage(err) || "Failed to save profile.");
+      setProfileError(asErrorMessage(err, copy.errors.saveProfile));
     } finally {
       setSaving(false);
     }
@@ -864,7 +1166,7 @@ export default function SchedulingClient(props: Props) {
     if (!selectedSlot || !selectedMeetingTypeId || !profile || !selectedMode)
       return;
     if (bookingSubmitting) return;
-    const notesError = validateMeetingNotes(meetingNotes);
+    const notesError = validateMeetingNotes(meetingNotes, copy);
     if (notesError) {
       setMeetingNotesTouched(true);
       setBookingError(notesError);
@@ -872,7 +1174,7 @@ export default function SchedulingClient(props: Props) {
       return;
     }
     if (!isAuthed) {
-      const message = "Please sign in to book and complete payment.";
+      const message = copy.errors.signInToBook;
       setBookingError(message);
       toast.error(message);
       if (typeof window !== "undefined") {
@@ -881,8 +1183,7 @@ export default function SchedulingClient(props: Props) {
       return;
     }
     if (missingPaymentConfig) {
-      const message =
-        "This paid meeting type is missing a price or currency.";
+      const message = copy.errors.missingPaidConfig;
       setBookingError(message);
       toast.error(message);
       return;
@@ -914,7 +1215,7 @@ export default function SchedulingClient(props: Props) {
           meetingTitle: normalizeMeetingTitle(
             selectedMeetingType?.title ??
               selectedMeetingType?.key ??
-              "Lux AI Session",
+              copy.calendarText.meetingWithLuxAi,
             selectedMeetingType?.durationMin ?? 60
           ),
           durationMin: selectedMeetingType?.durationMin ?? 60,
@@ -928,7 +1229,7 @@ export default function SchedulingClient(props: Props) {
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
-          const message = json?.error ?? "Payment setup failed.";
+          const message = json?.error ?? copy.errors.paymentSetup;
           setBookingError(message);
           toast.error(message);
           return;
@@ -966,8 +1267,8 @@ export default function SchedulingClient(props: Props) {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         const message = json?.details
-          ? `${json?.error ?? "Booking failed."} ${json.details}`
-          : json?.error ?? "Booking failed.";
+          ? `${json?.error ?? copy.errors.bookingFailed} ${json.details}`
+          : json?.error ?? copy.errors.bookingFailed;
         setBookingError(message);
         toast.error(message);
         return;
@@ -998,64 +1299,176 @@ export default function SchedulingClient(props: Props) {
       setSelectedSlot(null);
       toast.success(
         bookingStatus === "pending"
-          ? "Booking request submitted."
-          : "Booking confirmed."
+          ? copy.errors.bookingPending
+          : copy.errors.bookingConfirmed
       );
     } catch {
-      setBookingError("Booking failed.");
-      toast.error("Booking failed.");
+      setBookingError(copy.errors.bookingFailed);
+      toast.error(copy.errors.bookingFailed);
     } finally {
       setBookingSubmitting(false);
     }
   }
 
-  return (
-    <div className="space-y-10">
-      <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/85 p-8 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 via-blue-500 to-accent-500" />
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
-              Scheduling
+  const hero = (
+    <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/85 p-8 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 via-blue-500 to-accent-500" />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
+            {copy.heroEyebrow}
+          </p>
+          <h1 className="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">
+            {copy.heroTitle}
+          </h1>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+            {copy.heroBody}
+          </p>
+        </div>
+        <div className="max-w-md rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm dark:border-slate-700/70 dark:bg-slate-950/50">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary-600 dark:text-accent-400">
+            {copy.bridge.eyebrow}
+          </p>
+          <h2 className="mt-2 text-base font-semibold text-gray-900 dark:text-white">
+            {copy.bridge.title}
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
+            {copy.bridge.description}
+          </p>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <Button type="button" size="sm" asChild>
+              <Link href="/contact">{copy.bridge.primaryCta}</Link>
+            </Button>
+            <Button type="button" size="sm" variant="outline" asChild>
+              <Link href="/contact#free-audit-form">
+                {copy.bridge.secondaryCta}
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const schedulingUnavailableMessage =
+    availabilityError ||
+    (!orgId
+      ? copy.unavailableFallback
+      : "");
+
+  if (schedulingUnavailableMessage) {
+    return (
+      <div className="space-y-10">
+        {hero}
+        <div className="rounded-3xl border border-amber-200/70 bg-amber-50/80 p-6 text-amber-950 shadow-[0_18px_50px_-40px_rgba(217,119,6,0.45)] backdrop-blur">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-amber-700">
+            {copy.unavailableEyebrow}
+          </p>
+          <h2 className="mt-3 text-2xl font-semibold">
+            {copy.unavailableTitle}
+          </h2>
+          <p className="mt-3 text-sm leading-7 text-amber-900">
+            {schedulingUnavailableMessage}
+          </p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <Button type="button" asChild>
+              <Link href="/contact#free-audit-form">{copy.unavailablePrimary}</Link>
+            </Button>
+            <Button type="button" variant="outline" asChild>
+              <Link href="/contact">{copy.unavailableSecondary}</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthed) {
+    return (
+      <div className="space-y-10">
+        {hero}
+
+        <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 sm:p-8">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary-600 dark:text-accent-400">
+              {copy.guest.eyebrow}
             </p>
-            <h1 className="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">
-              Book a session with the Lux AI team
-            </h1>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-              Sync availability, match the right expert, and keep your booking
-              smooth.
+            <h2 className="mt-3 text-3xl font-semibold text-gray-900 dark:text-white">
+              {copy.guest.title}
+            </h2>
+            <p className="mt-4 text-sm leading-7 text-gray-600 dark:text-gray-300 sm:text-base">
+              {copy.guest.description}
             </p>
           </div>
 
+          <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5 dark:border-slate-700/60 dark:bg-slate-900/60">
+              <ul className="space-y-4 text-sm leading-7 text-gray-700 dark:text-gray-200">
+                {copy.guest.bullets.map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <i className="ri-check-line mt-1 text-primary-600 dark:text-accent-400" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="rounded-2xl border border-primary-200/70 bg-primary-50/70 p-5 shadow-sm dark:border-primary-500/20 dark:bg-primary-500/10">
+              <p className="text-sm leading-7 text-gray-700 dark:text-gray-200">
+                {copy.bridge.guestNote}
+              </p>
+              <div className="mt-6 flex flex-col gap-3">
+                <Button
+                  type="button"
+                  onClick={() =>
+                    signIn(undefined, { callbackUrl: signInCallbackUrl })
+                  }
+                >
+                  {copy.guest.primaryCta}
+                </Button>
+                <Button type="button" variant="outline" asChild>
+                  <Link href="/contact#free-audit-form">
+                    {copy.guest.secondaryCta}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-10">
+      {hero}
 
       <div className="rounded-3xl border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
         <Stepper
           steps={[
             {
               id: "1",
-              label: "Type",
+              label: copy.stepLabels.type,
               isActive: activeStep === 1,
             },
             {
               id: "2",
-              label: "Mode",
+              label: copy.stepLabels.mode,
               isActive: activeStep === 2,
             },
             {
               id: "3",
-              label: "Profile",
+              label: copy.stepLabels.profile,
               isActive: activeStep === 3,
             },
             {
               id: "4",
-              label: "Time",
+              label: copy.stepLabels.time,
               isActive: activeStep === 4,
             },
             {
               id: "5",
-              label: "Confirm",
+              label: copy.stepLabels.confirm,
               isActive: activeStep === 5,
             },
           ]}
@@ -1067,32 +1480,44 @@ export default function SchedulingClient(props: Props) {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Step 1 · Choose a meeting type
+                {copy.step1.title}
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Pick the session that fits your goals.
+                {copy.step1.body}
               </p>
             </div>
           </div>
 
           {!isAuthed ? (
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900">
-              <span>Sign in to choose a meeting type and continue.</span>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() =>
-                  signIn(undefined, { callbackUrl: "/scheduling" })
-                }
-              >
-                Sign in
-              </Button>
+              <div className="space-y-1">
+                <span className="block">
+                  {copy.step1.signIn}
+                </span>
+                <span className="block text-xs text-amber-800">
+                  {copy.bridge.guestNote}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() =>
+                    signIn(undefined, { callbackUrl: "/scheduling" })
+                  }
+                >
+                  {copy.buttons.signIn}
+                </Button>
+                <Button type="button" size="sm" variant="outline" asChild>
+                  <Link href="/contact#free-audit-form">{copy.buttons.freeAudit}</Link>
+                </Button>
+              </div>
             </div>
           ) : (
             <>
               {meetingTypesLoading && (
                 <div className="mt-4 text-sm text-gray-600 dark:text-gray-300">
-                  Loading meeting types...
+                  {copy.status.meetingTypes}
                 </div>
               )}
 
@@ -1106,7 +1531,7 @@ export default function SchedulingClient(props: Props) {
                 !meetingTypesError &&
                 meetingTypes.length === 0 && (
                   <div className="mt-4 text-sm text-gray-600 dark:text-gray-300">
-                    No meeting types available yet.
+                    {copy.status.noMeetingTypes}
                   </div>
                 )}
 
@@ -1117,7 +1542,8 @@ export default function SchedulingClient(props: Props) {
                         const selected = item.id === selectedMeetingTypeId;
                         const priceLabel = formatPrice(
                           item.priceCents,
-                          item.currency
+                          item.currency,
+                          locale
                         );
                         const title = normalizeMeetingTitle(
                           item.title,
@@ -1125,7 +1551,9 @@ export default function SchedulingClient(props: Props) {
                         );
                         const modeLabels = (item.modes ?? []).map((mode) => {
                           const label = mode.details?.label?.trim();
-                          return (label || formatMeetingMode(mode.mode)).toUpperCase();
+                          return (
+                            label || formatMeetingMode(mode.mode, copy)
+                          ).toUpperCase();
                         });
                         const isPaid = (item.paymentPolicy ?? "FREE") !== "FREE";
 
@@ -1176,11 +1604,11 @@ export default function SchedulingClient(props: Props) {
                             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
                               {modeLabels.length > 0
                                 ? modeLabels.join(" · ")
-                                : "mode: tbd"}
+                                : copy.step1.modeTbd}
                             </div>
                             {isPaid && priceLabel && (
                               <div className="mt-3 text-sm font-semibold">
-                                {priceLabel} required
+                                {priceLabel} {copy.step1.required}
                               </div>
                             )}
                           </button>
@@ -1194,14 +1622,14 @@ export default function SchedulingClient(props: Props) {
           )}
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <Button type="button" variant="outline" disabled>
-              Back
+              {copy.buttons.back}
             </Button>
             <Button
               type="button"
               onClick={() => setActiveStep(2)}
               disabled={!canAdvanceStep[1]}
             >
-              Next
+              {copy.buttons.next}
             </Button>
           </div>
         </div>
@@ -1213,10 +1641,10 @@ export default function SchedulingClient(props: Props) {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Step 2 · Choose a meeting mode
+                {copy.step2.title}
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Pick how you want to connect with our team.
+                {copy.step2.body}
               </p>
             </div>
             <span className="text-xs font-semibold text-gray-500">
@@ -1226,13 +1654,13 @@ export default function SchedulingClient(props: Props) {
 
           {!isAuthed ? (
             <div className="mt-4 rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 backdrop-blur">
-              Sign in to choose a meeting mode.
+              {copy.step2.signIn}
             </div>
           ) : (
             <>
               {!canProceedToMode && (
                 <div className="mt-4 rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 backdrop-blur">
-                  Select a meeting type first to unlock meeting modes.
+                  {copy.step2.unlock}
                 </div>
               )}
               {canProceedToMode && selectedMeetingType && (
@@ -1240,29 +1668,30 @@ export default function SchedulingClient(props: Props) {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
-                        Available modes
+                        {copy.step2.availableModes}
                       </p>
                       <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                        Based on “
+                        {copy.step2.basedOn} "
                         {normalizeMeetingTitle(
                           selectedMeetingType.title,
                           selectedMeetingType.durationMin ?? 60
                         )}
-                        ”.
+                        ".
                       </p>
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {(selectedMeetingType.modes ?? []).length === 0 && (
                       <span className="text-sm text-gray-500">
-                        No modes configured for this meeting type.
+                        {copy.step2.noModes}
                       </span>
                     )}
                     {(selectedMeetingType.modes ?? []).map((mode) => {
                       const value = mode.mode;
                       const active = value === selectedMode;
                       const label =
-                        mode.details?.label?.trim() || formatMeetingMode(value);
+                        mode.details?.label?.trim() ||
+                        formatMeetingMode(value, copy);
                         const description = mode.details?.description?.trim();
                         const safeDescription = description
                           ? description.replace(/https?:\/\/\S+/g, "").trim()
@@ -1291,7 +1720,7 @@ export default function SchedulingClient(props: Props) {
                       {(selectedMeetingType.modes ?? []).map((mode) => {
                         const label =
                           mode.details?.label?.trim() ||
-                          formatMeetingMode(mode.mode);
+                          formatMeetingMode(mode.mode, copy);
                           const description = mode.details?.description?.trim();
                           const safeDescription = description
                             ? description.replace(/https?:\/\/\S+/g, "").trim()
@@ -1318,14 +1747,14 @@ export default function SchedulingClient(props: Props) {
           )}
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <Button type="button" variant="outline" onClick={() => setActiveStep(1)}>
-              Back
+              {copy.buttons.back}
             </Button>
             <Button
               type="button"
               onClick={() => setActiveStep(3)}
               disabled={!canAdvanceStep[2]}
             >
-              Next
+              {copy.buttons.next}
             </Button>
           </div>
         </div>
@@ -1337,10 +1766,10 @@ export default function SchedulingClient(props: Props) {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Step 3 · Booking profile
+                    {copy.step3.title}
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    We save this once and reuse it for future bookings.
+                    {copy.step3.body}
                   </p>
                 </div>
                 {profile && !showForm && (
@@ -1349,20 +1778,20 @@ export default function SchedulingClient(props: Props) {
                     variant="outline"
                     onClick={() => setShowForm(true)}
                   >
-                    Edit details
+                    {copy.buttons.editDetails}
                   </Button>
                 )}
               </div>
 
               {!canProceedToProfile && (
                 <div className="mt-4 rounded-lg border border-amber-200/70 bg-amber-50/80 px-3 py-2 text-sm text-amber-900 backdrop-blur">
-                  Select a meeting type and meeting mode to unlock the booking profile.
+                  {copy.step3.unlock}
                 </div>
               )}
 
               {canProceedToProfile && profileLoading && (
                 <div className="mt-4 text-sm text-gray-600 dark:text-gray-300">
-                  Loading your profile...
+                  {copy.status.profile}
                 </div>
               )}
 
@@ -1379,7 +1808,7 @@ export default function SchedulingClient(props: Props) {
                 >
                   <div className="sm:col-span-2">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                      Full name *
+                      {copy.step3.fullName}
                     </label>
                     <Input
                       value={form.fullName}
@@ -1404,7 +1833,7 @@ export default function SchedulingClient(props: Props) {
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                      Phone *
+                      {copy.step3.phone}
                     </label>
                     <SearchablePhoneInput
                       value={form.phone}
@@ -1415,13 +1844,13 @@ export default function SchedulingClient(props: Props) {
                         );
                       }}
                       defaultCountry="lu"
-                      placeholder="Enter phone number"
+                      placeholder={copy.step3.phonePlaceholder}
                       required
                       invalid={!form.phone || !isPhoneValid(form.phone)}
                       inputContainerClassName="shadow-none focus-within:ring-0"
                     />
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      Use a WhatsApp-enabled number for booking updates.
+                      {copy.step3.phoneHint}
                     </p>
                     {fieldErrors.phone && (
                       <p className="mt-1 text-xs text-red-600">
@@ -1432,7 +1861,7 @@ export default function SchedulingClient(props: Props) {
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                      Timezone *
+                      {copy.step3.timezone}
                     </label>
                     <div className="mt-1">
                       <TimezonePicker
@@ -1447,6 +1876,8 @@ export default function SchedulingClient(props: Props) {
                           );
                         }}
                         options={timezones}
+                        searchPlaceholder={copy.timezonePicker.search}
+                        emptyLabel={copy.timezonePicker.empty}
                         buttonClassName="w-full"
                       />
                     </div>
@@ -1459,7 +1890,7 @@ export default function SchedulingClient(props: Props) {
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                      Company (optional)
+                      {copy.step3.company}
                     </label>
                     <Input
                       value={form.company}
@@ -1483,7 +1914,7 @@ export default function SchedulingClient(props: Props) {
 
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                      Role in company
+                      {copy.step3.role}
                     </label>
                     <Input
                       value={form.companyRole}
@@ -1499,7 +1930,7 @@ export default function SchedulingClient(props: Props) {
                             : prev
                         );
                       }}
-                      placeholder="Required if company is provided"
+                      placeholder={copy.step3.rolePlaceholder}
                     />
                     {fieldErrors.companyRole && (
                       <p className="mt-1 text-xs text-red-600">
@@ -1511,7 +1942,7 @@ export default function SchedulingClient(props: Props) {
                   <div className="sm:col-span-2 grid items-center gap-3 sm:grid-cols-[1fr_auto]">
                     {isProfileIncomplete ? (
                       <p className="text-sm text-gray-500">
-                        Fill in the required fields to save your profile.
+                        {copy.step3.incomplete}
                       </p>
                     ) : (
                       <span />
@@ -1522,7 +1953,7 @@ export default function SchedulingClient(props: Props) {
                         disabled={saving || isProfileIncomplete}
                         className="h-11 min-w-[160px] rounded-full bg-primary-500 px-6 font-semibold text-white shadow-md shadow-primary-200/60 transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500 disabled:shadow-none dark:shadow-none dark:disabled:bg-slate-700 dark:disabled:text-slate-300"
                       >
-                        {saving ? "Saving..." : "Save profile"}
+                        {saving ? copy.buttons.saving : copy.buttons.saveProfile}
                       </Button>
                       {profile && (
                         <Button
@@ -1530,7 +1961,7 @@ export default function SchedulingClient(props: Props) {
                           variant="outline"
                           onClick={() => setShowForm(false)}
                         >
-                          Cancel
+                          {copy.buttons.cancel}
                         </Button>
                       )}
                     </div>
@@ -1543,7 +1974,7 @@ export default function SchedulingClient(props: Props) {
                   <div className="grid gap-3 text-sm text-gray-700 dark:text-gray-200 sm:grid-cols-2">
                     <div className="rounded-xl border border-white/70 bg-white/80 p-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                       <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
-                        Contact
+                        {copy.step3.contact}
                       </p>
                       <p className="mt-2 font-semibold text-gray-900 dark:text-white">
                         {profile.fullName}
@@ -1560,13 +1991,13 @@ export default function SchedulingClient(props: Props) {
                     </div>
                     <div className="rounded-xl border border-white/70 bg-white/80 p-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                       <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
-                        Timezone
+                        {copy.step3.timezoneCard}
                       </p>
                       <p className="mt-2 font-semibold text-gray-900 dark:text-white">
                         {profile.timezone}
                       </p>
                       <p className="mt-1 text-gray-600 dark:text-gray-300">
-                        Used to keep your booking times consistent.
+                        {copy.step3.timezoneHint}
                       </p>
                     </div>
                   </div>
@@ -1579,21 +2010,21 @@ export default function SchedulingClient(props: Props) {
                       className="mt-1 h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
                     />
                     <span>
-                      I confirm these details are correct for this booking.
+                      {copy.step3.confirm}
                     </span>
                   </label>
                 </div>
               )}
               <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
                 <Button type="button" variant="outline" onClick={() => setActiveStep(2)}>
-                  Back
+                  {copy.buttons.back}
                 </Button>
                 <Button
                   type="button"
                   onClick={() => setActiveStep(4)}
                   disabled={!canAdvanceStep[3]}
                 >
-                  Next
+                  {copy.buttons.next}
                 </Button>
               </div>
             </div>
@@ -1607,10 +2038,10 @@ export default function SchedulingClient(props: Props) {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold">
-                    Step 5 · Confirmation
+                    {copy.step5.title}
                   </h3>
                   <p className="text-sm text-emerald-800">
-                    Review details before confirming your booking.
+                    {copy.step5.body}
                   </p>
                 </div>
                 <Button
@@ -1622,18 +2053,18 @@ export default function SchedulingClient(props: Props) {
                     setActiveStep(1);
                   }}
                 >
-                  Change meeting type
+                  {copy.buttons.changeMeetingType}
                 </Button>
               </div>
 
               <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
                 <div className="rounded-xl border border-emerald-200/70 bg-white/80 px-4 py-3 backdrop-blur">
                   <p className="text-xs uppercase tracking-[0.25em] text-emerald-600">
-                    Meeting
+                    {copy.step5.meeting}
                   </p>
                   <p className="mt-2 font-semibold text-emerald-900">
                     {normalizeMeetingTitle(
-                      selectedMeetingType?.title ?? "Session",
+                      selectedMeetingType?.title ?? copy.step5.sessionFallback,
                       selectedMeetingType?.durationMin ?? 60
                     )}
                   </p>
@@ -1645,7 +2076,7 @@ export default function SchedulingClient(props: Props) {
                   </p>
                   {selectedMode === "phone" && profile?.phone && (
                     <p className="mt-2 text-xs text-emerald-700">
-                      Phone call to: {profile.phone}
+                      {copy.step5.phoneCallTo}: {profile.phone}
                     </p>
                   )}
                   {selectedMode !== "phone" &&
@@ -1658,39 +2089,41 @@ export default function SchedulingClient(props: Props) {
                         target="_blank"
                         rel="noreferrer"
                       >
-                        Join meeting link
+                        {copy.calendarText.meetingLinkPrefix}
                       </a>
                     )}
                   {selectedMode !== "phone" &&
                     selectedMode !== "in_person" &&
                     (bookingSummary?.status ?? "pending") !== "confirmed" && (
                       <p className="mt-2 text-xs text-emerald-700">
-                        Meeting link will be emailed after confirmation.
+                        {copy.step5.meetingLinkLater}
                       </p>
                     )}
                 </div>
                 <div className="rounded-xl border border-emerald-200/70 bg-white/80 px-4 py-3 backdrop-blur">
                   <p className="text-xs uppercase tracking-[0.25em] text-emerald-600">
-                    Time
+                    {copy.step5.time}
                   </p>
                   <p className="mt-2 font-semibold text-emerald-900">
                     {DateTime.fromISO(
                       (bookingSummary?.slot ?? selectedSlot)?.startUtc ?? ""
                     )
                       .setZone(displayTz)
+                      .setLocale(locale)
                       .toFormat("ccc, LLL dd · HH:mm")}
                     {" - "}
                     {DateTime.fromISO(
                       (bookingSummary?.slot ?? selectedSlot)?.endUtc ?? ""
                     )
                       .setZone(displayTz)
+                      .setLocale(locale)
                       .toFormat("HH:mm")}
                   </p>
                   <p className="text-xs text-emerald-700">{displayTz}</p>
                 </div>
                 <div className="rounded-xl border border-emerald-200/70 bg-white/80 px-4 py-3 backdrop-blur">
                   <p className="text-xs uppercase tracking-[0.25em] text-emerald-600">
-                    Booker
+                    {copy.step5.booker}
                   </p>
                   <p className="mt-2 font-semibold text-emerald-900">
                     {profile?.fullName ?? "—"}
@@ -1701,18 +2134,18 @@ export default function SchedulingClient(props: Props) {
                   <p className="text-xs text-emerald-700">
                     {profile?.company
                       ? `${profile.company} · ${profile.companyRole || ""}`
-                      : "Personal booking"}
+                      : copy.step5.personalBooking}
                   </p>
                 </div>
                 <div className="rounded-xl border border-emerald-200/70 bg-white/80 px-4 py-3 backdrop-blur">
                   <p className="text-xs uppercase tracking-[0.25em] text-emerald-600">
-                    Notes
+                    {copy.step5.notes}
                   </p>
                   <p className="mt-2 text-sm text-emerald-900">
                     {meetingNotes.trim() || "—"}
                   </p>
                   <p className="mt-2 text-xs text-emerald-700">
-                    Preferred timezone: {profile?.timezone ?? "—"}
+                    {copy.step5.preferredTimezone}: {profile?.timezone ?? "—"}
                   </p>
                 </div>
               </div>
@@ -1720,48 +2153,44 @@ export default function SchedulingClient(props: Props) {
               {paymentRequiredByPolicy && (
                 <div className="mt-4 rounded-xl border border-emerald-200/70 bg-white/80 px-4 py-4 text-sm text-emerald-900 backdrop-blur">
                   <p className="text-xs uppercase tracking-[0.25em] text-emerald-600">
-                    Payment
+                    {copy.step5.payment}
                   </p>
                   {missingPaymentConfig ? (
                     <div className="mt-2 rounded-lg border border-amber-200/70 bg-amber-50/80 px-3 py-2 text-amber-900 backdrop-blur">
-                      This paid meeting type is missing a price or currency.
-                      Please contact the admin.
+                      {copy.errors.missingPaidConfig}
                     </div>
                   ) : (
                     <>
                       <p className="mt-2 text-sm">
                         {paymentPriceLabel
-                          ? `${paymentPriceLabel} required`
-                          : "Payment required"}
+                          ? `${paymentPriceLabel} ${copy.step1.required}`
+                          : copy.step5.paymentRequired}
                       </p>
                       {convertedPriceLabel && (
                         <p className="mt-1 text-xs text-emerald-700">
-                          ≈ {convertedPriceLabel} (display only)
+                          ≈ {convertedPriceLabel}
                         </p>
                       )}
-                      <p className="text-xs text-emerald-700">Payment: Paid</p>
+                      <p className="text-xs text-emerald-700">{copy.step5.paid}</p>
 
                       {!bookingSummary && requiresCheckout && (
                         <div className="mt-3 space-y-2">
                           <p className="text-xs text-emerald-700">
-                            Click “Proceed to payment” to pay in Stripe before
-                            this booking can be confirmed.
+                            {copy.step5.checkoutHint}
                           </p>
                           <p className="text-xs text-emerald-700">
-                            If approval is required, your request will stay
-                            pending after payment until the team approves it.
+                            {copy.step5.approvalHint}
                           </p>
                           {paymentUrl && (
                             <p className="text-xs text-emerald-700">
-                              If redirect fails, use the payment link provided
-                              by your admin.
+                              {copy.step5.paymentLinkHint}
                             </p>
                           )}
                         </div>
                       )}
                       {bookingSummary?.payment && (
                         <p className="mt-3 text-xs text-emerald-700">
-                          Payment status: {bookingSummary.payment.status}
+                          {copy.step5.paymentStatus}: {bookingSummary.payment.status}
                         </p>
                       )}
                     </>
@@ -1778,7 +2207,7 @@ export default function SchedulingClient(props: Props) {
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 {bookingSummary ? (
                   <Button type="button" variant="outline" asChild>
-                    <Link href={myBookingsHref}>View my bookings</Link>
+                    <Link href={myBookingsHref}>{copy.buttons.viewBookings}</Link>
                   </Button>
                 ) : (
                   <Button
@@ -1793,12 +2222,12 @@ export default function SchedulingClient(props: Props) {
                     }
                   >
                     {bookingSubmitting
-                      ? "Booking..."
+                      ? copy.buttons.booking
                       : !isAuthed
-                      ? "Sign in to book"
+                      ? copy.buttons.signInToBook
                       : requiresCheckout
-                      ? "Proceed to payment"
-                      : "Confirm booking"}
+                      ? copy.buttons.proceedToPayment
+                      : copy.buttons.confirmBooking}
                   </Button>
                 )}
                 {bookingSummary && (
@@ -1808,12 +2237,13 @@ export default function SchedulingClient(props: Props) {
                       variant="outline"
                       onClick={() => {
                         const title = normalizeMeetingTitle(
-                          selectedMeetingType?.title ?? "Lux AI Session",
+                          selectedMeetingType?.title ??
+                            copy.calendarText.meetingWithLuxAi,
                           selectedMeetingType?.durationMin ?? 60
                         );
-                        const details = `Meeting with Lux AI${
+                        const details = `${copy.calendarText.meetingWithLuxAi}${
                           meetingNotes.trim()
-                            ? `\n\nNotes: ${meetingNotes.trim()}`
+                            ? `\n\n${copy.calendarText.notesPrefix}: ${meetingNotes.trim()}`
                             : ""
                         }`;
                         const ics = buildIcsContent({
@@ -1828,33 +2258,34 @@ export default function SchedulingClient(props: Props) {
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement("a");
                         a.href = url;
-                        a.download = "luxai-booking.ics";
+                        a.download = copy.calendarText.fileName;
                         document.body.appendChild(a);
                         a.click();
                         a.remove();
                         URL.revokeObjectURL(url);
                       }}
                     >
-                      Download ICS
+                      {copy.buttons.downloadIcs}
                     </Button>
                     <Button type="button" variant="outline" asChild>
                       <Link
                         href={buildGoogleCalendarUrl({
                           title: `${normalizeMeetingTitle(
-                            selectedMeetingType?.title ?? "Lux AI Session",
+                            selectedMeetingType?.title ??
+                              copy.calendarText.meetingWithLuxAi,
                             selectedMeetingType?.durationMin ?? 60
                           )} · ${selectedModeLabel}`,
                           details: [
-                            `Mode: ${selectedModeLabel}`,
+                            `${copy.calendarText.modePrefix}: ${selectedModeLabel}`,
                             bookingSummary?.meetingLink &&
                             bookingSummary.status === "confirmed"
-                              ? `Meeting link: ${bookingSummary.meetingLink}`
+                              ? `${copy.calendarText.meetingLinkPrefix}: ${bookingSummary.meetingLink}`
                               : selectedMode === "phone"
-                              ? `Phone: ${profile?.phone ?? "n/a"}`
+                              ? `${copy.calendarText.phonePrefix}: ${profile?.phone ?? copy.calendarText.phoneFallback}`
                               : "",
                             meetingNotes.trim()
-                              ? `Notes: ${meetingNotes.trim()}`
-                              : "Meeting with Lux AI",
+                              ? `${copy.calendarText.notesPrefix}: ${meetingNotes.trim()}`
+                              : copy.calendarText.meetingWithLuxAi,
                           ]
                             .filter(Boolean)
                             .join("\n"),
@@ -1864,7 +2295,7 @@ export default function SchedulingClient(props: Props) {
                         target="_blank"
                         rel="noreferrer"
                       >
-                        Add to Google Calendar
+                        {copy.buttons.addToGoogleCalendar}
                       </Link>
                     </Button>
                   </>
@@ -1875,27 +2306,29 @@ export default function SchedulingClient(props: Props) {
                   onClick={() => {
                     setBookingSummary(null);
                     setSelectedSlot(null);
+                    setSelectedMeetingTypeId("");
+                    setSelectedMode("");
                     setMeetingNotes("");
                     setMeetingNotesTouched(false);
-                    setActiveStep(4);
+                    setBookingError(null);
+                    setActiveStep(1);
                   }}
                 >
-                  Book another time
+                  {copy.buttons.bookAnotherTime}
                 </Button>
                 <span className="text-xs text-emerald-800">
-                  You will receive a confirmation email if notifications are
-                  enabled.
+                  {copy.step5.notifications}
                 </span>
               </div>
             </div>
           ) : (
             <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 backdrop-blur">
-              Select a time to review your booking details.
+              {copy.step5.selectTimeNotice}
             </div>
           )}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Button type="button" variant="outline" onClick={() => setActiveStep(4)}>
-              Back
+              {copy.buttons.back}
             </Button>
           </div>
         </div>
@@ -1908,15 +2341,15 @@ export default function SchedulingClient(props: Props) {
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/70 bg-white/85 px-4 py-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Step 4 · Choose a time
+                    {copy.step4.title}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Display timezone controls how the calendar is shown.
+                    {copy.step4.body}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <label className="text-gray-600 dark:text-gray-300">
-                    Display timezone
+                    {copy.step4.displayTimezone}
                   </label>
                   <TimezonePicker
                     value={displayTz}
@@ -1925,6 +2358,8 @@ export default function SchedulingClient(props: Props) {
                       setDisplayTzLocked(true);
                     }}
                     options={timezones}
+                    searchPlaceholder={copy.timezonePicker.search}
+                    emptyLabel={copy.timezonePicker.empty}
                     buttonClassName="min-w-[220px]"
                     menuClassName="w-[280px]"
                   />
@@ -1933,7 +2368,7 @@ export default function SchedulingClient(props: Props) {
 
               {allowedCurrencies.length > 0 && (
                 <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-sm text-gray-700 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200">
-                  <span className="font-medium">Display currency</span>
+                  <span className="font-medium">{copy.step4.displayCurrency}</span>
                   <select
                     className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/70"
                     value={displayCurrency ?? ""}
@@ -1947,7 +2382,10 @@ export default function SchedulingClient(props: Props) {
                   </select>
                   {ratesUpdatedAt && (
                     <span className="text-xs text-gray-500">
-                      Rates updated: {DateTime.fromISO(ratesUpdatedAt).toFormat("LLL dd · HH:mm")}
+                      {copy.step4.ratesUpdated}:{" "}
+                      {DateTime.fromISO(ratesUpdatedAt)
+                        .setLocale(locale)
+                        .toFormat("LLL dd · HH:mm")}
                     </span>
                   )}
                 </div>
@@ -1955,17 +2393,17 @@ export default function SchedulingClient(props: Props) {
 
               {!selectedMeetingTypeId && (
                 <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 backdrop-blur">
-                  Select a meeting type to unlock available times.
+                  {copy.step4.selectType}
                 </div>
               )}
               {selectedMeetingTypeId && !selectedMode && (
                 <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 backdrop-blur">
-                  Select a meeting mode to unlock available times.
+                  {copy.step4.selectMode}
                 </div>
               )}
               {selectedMeetingTypeId && selectedMode && (!profile || showForm) && (
                 <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 backdrop-blur">
-                  Complete your booking profile to unlock available times.
+                  {copy.step4.completeProfile}
                 </div>
               )}
               {selectedMeetingTypeId &&
@@ -1974,7 +2412,7 @@ export default function SchedulingClient(props: Props) {
                 !showForm &&
                 !confirmed && (
                 <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 backdrop-blur">
-                  Confirm your booking profile to unlock available times.
+                  {copy.step4.confirmProfile}
                 </div>
               )}
 
@@ -2035,7 +2473,7 @@ export default function SchedulingClient(props: Props) {
                         hasSelectedSlot ? "text-emerald-600" : "text-slate-500",
                       ].join(" ")}
                     >
-                      Selected time
+                      {copy.step4.selectedTime}
                     </p>
                     <p
                       className={[
@@ -2044,8 +2482,8 @@ export default function SchedulingClient(props: Props) {
                       ].join(" ")}
                     >
                       {hasSelectedSlot
-                        ? selectedSlotLabel ?? "Time selected"
-                        : "No time selected yet"}
+                        ? selectedSlotLabel ?? copy.step4.timeSelected
+                        : copy.step4.noTimeSelected}
                     </p>
                     <p
                       className={[
@@ -2055,18 +2493,18 @@ export default function SchedulingClient(props: Props) {
                     >
                       {hasSelectedSlot
                         ? displayTz
-                        : `Pick a slot to preview in ${displayTz}.`}
+                        : `${copy.step4.pickSlotPrefix} ${displayTz}.`}
                     </p>
                     {hasSelectedSlot && (
                       <p className="mt-1 text-xs text-emerald-700">
-                        Click to clear selection.
+                        {copy.step4.clearSelection}
                       </p>
                     )}
                   </button>
 
                   <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-4 text-sm text-gray-700 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                      Meeting concept notes *
+                      {copy.step4.notes}
                     </label>
                     <Textarea
                       value={meetingNotes}
@@ -2078,10 +2516,10 @@ export default function SchedulingClient(props: Props) {
                       }}
                       onBlur={() => setMeetingNotesTouched(true)}
                       className="mt-2 min-h-[140px]"
-                      placeholder="Share what you want to cover in this session."
+                      placeholder={copy.step4.notesPlaceholder}
                     />
                     <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400">
-                      <span>Used only for this booking.</span>
+                      <span>{copy.step4.notesUsage}</span>
                       <span>{meetingNotes.trim().length}/1000</span>
                     </div>
                     {meetingNotesError && (
@@ -2092,7 +2530,7 @@ export default function SchedulingClient(props: Props) {
               )}
               <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
                 <Button type="button" variant="outline" onClick={() => setActiveStep(3)}>
-                  Back
+                  {copy.buttons.back}
                 </Button>
                 <Button
                   type="button"
@@ -2103,7 +2541,7 @@ export default function SchedulingClient(props: Props) {
                   }}
                   disabled={!canAdvanceStep[4]}
                 >
-                  Next
+                  {copy.buttons.next}
                 </Button>
               </div>
         </div>

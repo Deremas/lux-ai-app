@@ -490,6 +490,12 @@ export async function POST(req: Request) {
       profile.timezone && profile.timezone !== resolvedTz
         ? `Booked in ${resolvedTz}. Your profile timezone is ${profile.timezone}.`
         : null;
+    const appointmentPriceCents = paymentRequiredByPolicy
+      ? resolvedPriceCents
+      : null;
+    const appointmentCurrency = paymentRequiredByPolicy
+      ? resolvedCurrency
+      : null;
 
     // 9) create appointment (still org-scoped)
     const appointmentId = crypto.randomUUID();
@@ -515,8 +521,8 @@ export async function POST(req: Request) {
         paymentPolicy: effectivePaymentPolicy,
         paymentStatus,
         requiresPayment: paymentRequiredByPolicy,
-        priceCents: resolvedPriceCents,
-        currency: resolvedCurrency,
+        priceCents: appointmentPriceCents,
+        currency: appointmentCurrency,
         startAtUtc: startUtc.toJSDate(),
         endAtUtc: endUtc.toJSDate(),
         notes:
@@ -586,8 +592,8 @@ export async function POST(req: Request) {
         payment: {
           status: appt.paymentStatus ?? paymentStatus,
           priceCents:
-            appt.priceCents ?? resolvedPriceCents ?? mt.priceCents ?? null,
-          currency: appt.currency ?? resolvedCurrency ?? mt.currency ?? null,
+            appt.priceCents ?? appointmentPriceCents ?? null,
+          currency: appt.currency ?? appointmentCurrency ?? null,
         },
         timezoneNotice,
         emailError,

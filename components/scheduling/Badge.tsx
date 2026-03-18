@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 // Canonical status types
 export type BookingStatus = "pending" | "confirmed" | "completed" | "declined" | "canceled";
 export type PaymentStatus = "paid" | "unpaid" | "not_required";
-export type PolicyStatus = "free" | "pay_before_confirm";
+export type PolicyStatus = "free" | "paid";
 
 type BadgeProps = {
     children: React.ReactNode;
@@ -60,11 +60,6 @@ const statusConfig = {
         bg: "bg-green-50 dark:bg-green-900/20",
         text: "text-green-700 dark:text-green-300",
         border: "border-green-200 dark:border-green-800",
-    },
-    pay_before_confirm: {
-        bg: "bg-blue-50 dark:bg-blue-900/20",
-        text: "text-blue-700 dark:text-blue-300",
-        border: "border-blue-200 dark:border-blue-800",
     },
     // Default variants
     default: {
@@ -131,7 +126,6 @@ export function getStatusDisplay(status: BookingStatus | PaymentStatus | PolicyS
         not_required: "Not Required",
         // Policy statuses
         free: "Free",
-        pay_before_confirm: "Pay Before Confirm",
     };
 
     return statusMap[status] || status;

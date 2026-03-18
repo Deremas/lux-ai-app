@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { normalizeAppointmentPayment } from "@/lib/scheduling/appointment-payment";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import {
   requireOrgRole,
@@ -106,6 +107,13 @@ export async function GET(
     actorName: row.actorUserId ? actorMap.get(row.actorUserId)?.name ?? null : null,
     actorEmail: row.actorUserId ? actorMap.get(row.actorUserId)?.email ?? null : null,
   }));
+  const payment = normalizeAppointmentPayment({
+    paymentPolicy: appt.paymentPolicy ?? null,
+    paymentStatus: appt.paymentStatus ?? null,
+    requiresPayment: appt.requiresPayment ?? null,
+    priceCents: appt.priceCents ?? null,
+    currency: appt.currency ?? null,
+  });
 
   return NextResponse.json({
     appointment: {
@@ -118,11 +126,11 @@ export async function GET(
       durationMin: appt.meetingType?.durationMin ?? 60,
       status: appt.status,
       mode: appt.mode,
-      paymentPolicy: appt.paymentPolicy ?? null,
-      paymentStatus: appt.paymentStatus ?? null,
-      requiresPayment: appt.requiresPayment ?? null,
-      priceCents: appt.priceCents ?? null,
-      currency: appt.currency ?? null,
+      paymentPolicy: payment.paymentPolicy,
+      paymentStatus: payment.paymentStatus,
+      requiresPayment: payment.requiresPayment,
+      priceCents: payment.priceCents,
+      currency: payment.currency,
       startAtUtc: appt.startAtUtc,
       endAtUtc: appt.endAtUtc,
       notes: appt.notes,

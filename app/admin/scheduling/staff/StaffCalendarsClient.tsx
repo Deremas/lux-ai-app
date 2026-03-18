@@ -401,13 +401,13 @@ export default function StaffCalendarsClient({ orgId }: Props) {
               data: items,
               enablePagination: false,
               enableSorting: false,
-              enableColumnActions: false,
+              enableColumnActions: true,
               enableColumnFilters: false,
               enableGlobalFilter: false,
-              enableDensityToggle: false,
-              enableFullScreenToggle: false,
+              enableDensityToggle: true,
+              enableFullScreenToggle: true,
               enableColumnResizing: false,
-              enableHiding: false,
+              enableHiding: true,
               state: { isLoading: loading },
               renderEmptyRowsFallback: () => (
                 <div className="p-4 text-sm text-gray-600">No staff calendars yet.</div>

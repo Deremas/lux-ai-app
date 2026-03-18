@@ -10,7 +10,23 @@ import { DateTime } from "luxon";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
+import { useLanguage } from "@/components/LanguageProvider";
 import { Button } from "@/components/ui/button";
+import type { AppLanguage } from "@/lib/i18n";
+
+const calendarLocaleByLanguage: Record<AppLanguage, string> = {
+  en: "en-US",
+  fr: "fr-FR",
+  de: "de-DE",
+  lb: "lb-LU",
+};
+
+const localizedCalendarCopy = {
+  en: { availability: "Availability", title: "Booking calendar", description: "Pick an available slot. Busy time and lead-time protection stay visible.", openSlots: "open slots", booked: "booked", blocked: "blocked", loading: "Loading...", signIn: "Sign in", signInNotice: "Sign in to book an appointment.", loadCalendar: "Failed to load calendar availability.", loadSlots: "Failed to load available time slots.", unknown: "Unknown error", yourBooking: "Your booking", available: "Available" },
+  fr: { availability: "Disponibilite", title: "Calendrier de reservation", description: "Choisissez un creneau disponible. Les periodes occupees et la protection du delai restent visibles.", openSlots: "creneaux ouverts", booked: "reserves", blocked: "bloques", loading: "Chargement...", signIn: "Se connecter", signInNotice: "Connectez-vous pour reserver un rendez-vous.", loadCalendar: "Impossible de charger la disponibilite du calendrier.", loadSlots: "Impossible de charger les creneaux disponibles.", unknown: "Erreur inconnue", yourBooking: "Votre reservation", available: "Disponible" },
+  de: { availability: "Verfugbarkeit", title: "Buchungskalender", description: "Wahlen Sie ein verfugbares Zeitfenster. Belegte Zeiten und Lead-Time-Schutz bleiben sichtbar.", openSlots: "offene Zeitfenster", booked: "gebucht", blocked: "blockiert", loading: "Ladt...", signIn: "Anmelden", signInNotice: "Melden Sie sich an, um einen Termin zu buchen.", loadCalendar: "Die Kalenderverfugbarkeit konnte nicht geladen werden.", loadSlots: "Die verfugbaren Zeitfenster konnten nicht geladen werden.", unknown: "Unbekannter Fehler", yourBooking: "Ihre Buchung", available: "Verfugbar" },
+  lb: { availability: "Disponibiliteit", title: "Buchungskalenner", description: "Wielt e verfugbare Slot. Besat Zaiten a Lead-Time-Schutz bleiwen sichtbar.", openSlots: "frai Slots", booked: "gebucht", blocked: "blockeiert", loading: "Lued...", signIn: "Umellen", signInNotice: "Mellt Iech un, fir en Rendez-vous ze buchen.", loadCalendar: "D'Kalenderdisponibiliteit konnt net geluede ginn.", loadSlots: "D'verfugbar Zaitslots konnten net geluede ginn.", unknown: "Onbekannte Feeler", yourBooking: "Ar Buchung", available: "Verfugbar" },
+} as const;
 
 type Props = {
   orgId: string;
@@ -81,6 +97,9 @@ export default function AvailabilityCalendar({
   minLeadMinutes = 180,
   initialDate,
 }: Props) {
+  const { lang } = useLanguage();
+  const copy = localizedCalendarCopy[lang] ?? localizedCalendarCopy.en;
+  const locale = calendarLocaleByLanguage[lang] ?? calendarLocaleByLanguage.en;
   const tz = tzProp || "Europe/Luxembourg";
   const displayTz = displayTzProp || tz;
   const { data: session, status } = useSession();
@@ -97,12 +116,12 @@ export default function AvailabilityCalendar({
   const inflightKeyRef = useRef("");
   const dayHeaderFormatter = useMemo(
     () =>
-      new Intl.DateTimeFormat("en", {
+      new Intl.DateTimeFormat(locale, {
         weekday: "short",
         month: "short",
         day: "numeric",
       }),
-    []
+    [locale]
   );
   const minBookableDate = useMemo(
     () =>
@@ -165,9 +184,7 @@ export default function AvailabilityCalendar({
         });
         if (!calRes.ok) {
           const message = await calRes.text().catch(() => "");
-          setAvailabilityError(
-            message || "Failed to load calendar availability."
-          );
+          setAvailabilityError(message || copy.loadCalendar);
           return;
         }
         const calJson = (await calRes.json()) as CalendarApiResponse;
@@ -190,9 +207,7 @@ export default function AvailabilityCalendar({
         });
         if (!availRes.ok) {
           const message = await availRes.text().catch(() => "");
-          setAvailabilityError(
-            message || "Failed to load available time slots."
-          );
+          setAvailabilityError(message || copy.loadSlots);
           return;
         }
         const availJson = (await availRes.json()) as AvailabilityResponse;
@@ -227,7 +242,7 @@ export default function AvailabilityCalendar({
         if (err instanceof DOMException && err.name === "AbortError") {
           return;
         }
-        const message = err instanceof Error ? err.message : "Unknown error";
+        const message = err instanceof Error ? err.message : copy.unknown;
         setAvailabilityError(message);
       } finally {
         setLoading(false);
@@ -237,7 +252,17 @@ export default function AvailabilityCalendar({
         }
       }
     },
-    [orgId, meetingTypeId, staffUserId, displayTz, tz, minBookableDate]
+    [
+      orgId,
+      meetingTypeId,
+      staffUserId,
+      displayTz,
+      tz,
+      minBookableDate,
+      copy.loadCalendar,
+      copy.loadSlots,
+      copy.unknown,
+    ]
   );
 
   useEffect(() => {
@@ -280,7 +305,7 @@ export default function AvailabilityCalendar({
           viewerEmail &&
           typeof e.userEmail === "string" &&
           e.userEmail.toLowerCase() === viewerEmail
-            ? "Your booking"
+            ? copy.yourBooking
             : "",
         start: e.startLocal,
         end: e.endLocal,
@@ -298,7 +323,7 @@ export default function AvailabilityCalendar({
       const isSelected = selectedKey && slotKey === selectedKey;
       return {
         id: `slot:${s.startUtc}-${s.endUtc}-${s.staffUserId ?? "org"}-${index}`,
-        title: "Available",
+        title: copy.available,
         start: DateTime.fromISO(s.startUtc).setZone(displayTz).toISO()!,
         end: DateTime.fromISO(s.endUtc).setZone(displayTz).toISO()!,
         classNames: [
@@ -335,7 +360,22 @@ export default function AvailabilityCalendar({
     minBookableDate,
     session?.user?.email,
     selectedSlot,
+    copy.available,
+    copy.yourBooking,
   ]);
+
+  const appointmentCount = useMemo(
+    () => busyEvents.filter((event) => event.type === "appointment").length,
+    [busyEvents]
+  );
+
+  const blockedCount = useMemo(
+    () =>
+      busyEvents.filter(
+        (event) => event.type === "blocked" || event.type === "google_busy"
+      ).length,
+    [busyEvents]
+  );
 
   const onDatesSet = useCallback(
     (arg: DatesSetArg) => {
@@ -366,30 +406,46 @@ export default function AvailabilityCalendar({
 
   return (
     <div className="grid gap-6">
-      <div className="rounded-3xl border border-white/70 bg-white/85 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
-        <div className="flex items-center justify-between border-b border-white/70 bg-white/70 px-5 py-4 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/60">
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-gray-900">Calendar</h2>
-            <p className="text-sm text-gray-500">
-              Pick an{" "}
-              <span className="font-medium text-gray-700">Available</span> slot
-              to book
-            </p>
+      <div className="lux-calendar-frame rounded-[30px] border border-white/70 bg-white/85 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+        <div className="flex flex-col gap-4 border-b border-white/70 bg-white/72 px-5 py-5 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/60 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-500 dark:text-slate-400">
+                {copy.availability}
+              </p>
+              <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">
+                {copy.title}
+              </h2>
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                {copy.description}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="lux-calendar-chip lux-calendar-chip--available">
+                {slots.length} {copy.openSlots}
+              </span>
+              <span className="lux-calendar-chip lux-calendar-chip--busy">
+                {appointmentCount} {copy.booked}
+              </span>
+              <span className="lux-calendar-chip lux-calendar-chip--blocked">
+                {blockedCount} {copy.blocked}
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-gray-500">
-              TZ: <span className="text-gray-700">{displayTz}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="lux-calendar-chip">
+              TZ: <span className="font-semibold">{displayTz}</span>
             </span>
             {loading && (
-              <span className="rounded-full border border-white/70 bg-white/80 px-2 py-1 text-xs text-gray-600 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-300">
-                Loading…
+              <span className="lux-calendar-chip lux-calendar-chip--neutral">
+                {copy.loading}
               </span>
             )}
           </div>
         </div>
 
-        <div className="border-t border-white/70 p-3 dark:border-slate-700/60">
+        <div className="p-3 dark:border-slate-700/60">
           {availabilityError && (
             <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {availabilityError}
@@ -398,42 +454,44 @@ export default function AvailabilityCalendar({
           {status === "unauthenticated" && (
             <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
               <div className="flex items-center justify-between gap-3">
-                <span>Sign in to book an appointment.</span>
+                <span>{copy.signInNotice}</span>
                 <Button asChild size="sm">
-                  <Link href="/auth/signin">Sign in</Link>
+                  <Link href="/auth/signin">{copy.signIn}</Link>
                 </Button>
               </div>
             </div>
           )}
-          <FullCalendar
-            key={[
-              initialDate ?? "current",
-              displayTz,
-              meetingTypeId,
-              staffUserId ?? "org",
-            ].join("|")}
-            plugins={[timeGridPlugin, dayGridPlugin, interactionPlugin]}
-            initialView="timeGridWeek"
-            initialDate={initialDate}
-            timeZone={displayTz}
-            expandRows
-            contentHeight={720}
-            nowIndicator
-            allDaySlot={false}
-            slotMinTime={timeBounds.min}
-            slotMaxTime={timeBounds.max}
-            slotDuration="01:00:00"
-            snapDuration="01:00:00"
-            eventClick={onEventClick}
-            datesSet={onDatesSet}
-            events={events}
-            dayHeaderContent={(arg) => dayHeaderFormatter.format(arg.date)}
-            eventTimeFormat={{
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: false,
-            }}
-          />
+          <div className="lux-fullcalendar rounded-[26px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,248,255,0.92))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:border-slate-700/60 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.95),rgba(15,23,42,0.82))]">
+            <FullCalendar
+              key={[
+                initialDate ?? "current",
+                displayTz,
+                meetingTypeId,
+                staffUserId ?? "org",
+              ].join("|")}
+              plugins={[timeGridPlugin, dayGridPlugin, interactionPlugin]}
+              initialView="timeGridWeek"
+              initialDate={initialDate}
+              timeZone={displayTz}
+              expandRows
+              contentHeight={720}
+              nowIndicator
+              allDaySlot={false}
+              slotMinTime={timeBounds.min}
+              slotMaxTime={timeBounds.max}
+              slotDuration="01:00:00"
+              snapDuration="01:00:00"
+              eventClick={onEventClick}
+              datesSet={onDatesSet}
+              events={events}
+              dayHeaderContent={(arg) => dayHeaderFormatter.format(arg.date)}
+              eventTimeFormat={{
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>

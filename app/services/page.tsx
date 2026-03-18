@@ -1,380 +1,351 @@
 "use client";
 
 import Link from "next/link";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import AnimatedSection from "@/components/AnimatedSection";
-import { useLanguage } from "@/components/LanguageProvider";
-import { t } from "@/lib/site-copy";
-import { Boxes, LayoutGrid, ShoppingCart, Monitor } from "lucide-react";
 import { motion } from "framer-motion";
 
-type RawHowItHelps = { h1?: unknown; h2?: unknown; h3?: unknown };
-type RawRecommended = {
-  r1?: unknown;
-  r2?: unknown;
-  r3?: unknown;
-  r4?: unknown;
-};
+import AnimatedSection from "@/components/AnimatedSection";
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
+import { useLanguage } from "@/components/LanguageProvider";
+import {
+} from "@/lib/marketing-content";
+import { getLocalizedMarketingSharedContent } from "@/lib/marketing-shared-content";
 
-type RawService = {
-  title?: unknown;
-  description?: unknown;
-  benefits?: unknown;
-  f1?: unknown;
-  f2?: unknown;
-  f3?: unknown;
-  f4?: unknown;
-  imageAlt?: unknown;
-
-  whatItIs?: unknown;
-  howItHelps?: unknown;
-  recommendedAddOns?: unknown;
-};
-
-type Service = {
-  title: string;
-  description: string;
-  benefits: string;
-  features: string[];
-  imageAlt: string;
-
-  whatItIs?: string;
-  howItHelps?: string[];
-  recommendedAddOns?: string[];
-};
-
-function toServiceArray(x: unknown): Service[] {
-  if (!x || typeof x !== "object" || Array.isArray(x)) return [];
-  const items = Object.values(x) as RawService[];
-
-  return items
-    .filter((s) => s && typeof s === "object")
-    .map((s) => {
-      const title = typeof s.title === "string" ? s.title : "";
-      const description =
-        typeof s.description === "string" ? s.description : "";
-      const benefits = typeof s.benefits === "string" ? s.benefits : "";
-      const imageAlt = typeof s.imageAlt === "string" ? s.imageAlt : title;
-
-      // keep your existing title/description/benefits/f1..f4 to replace it easy
-      const features = [s.f1, s.f2, s.f3, s.f4].filter(
-        (f): f is string => typeof f === "string" && f.trim().length > 0
-      );
-
-      const whatItIs =
-        typeof s.whatItIs === "string" && s.whatItIs.trim().length > 0
-          ? s.whatItIs
-          : undefined;
-
-      let howItHelps: string[] | undefined;
-      if (
-        s.howItHelps &&
-        typeof s.howItHelps === "object" &&
-        !Array.isArray(s.howItHelps)
-      ) {
-        const h = s.howItHelps as RawHowItHelps;
-        const list = [h.h1, h.h2, h.h3].filter(
-          (v): v is string => typeof v === "string" && v.trim().length > 0
-        );
-        if (list.length) howItHelps = list;
-      }
-
-      let recommendedAddOns: string[] | undefined;
-      if (
-        s.recommendedAddOns &&
-        typeof s.recommendedAddOns === "object" &&
-        !Array.isArray(s.recommendedAddOns)
-      ) {
-        const r = s.recommendedAddOns as RawRecommended;
-        const list = [r.r1, r.r2, r.r3, r.r4].filter(
-          (v): v is string => typeof v === "string" && v.trim().length > 0
-        );
-        if (list.length) recommendedAddOns = list;
-      }
-
-      return {
-        title,
-        description,
-        benefits,
-        features,
-        imageAlt,
-        whatItIs,
-        howItHelps,
-        recommendedAddOns,
-      };
-    })
-    .filter((s) => s.title.length > 0 && s.description.length > 0);
-}
-
-function safeLabel(value: string, fallback: string) {
-  // If translation is missing, t() returns the key itself (e.g. "services.modal.whatItIsLabel")
-  // This prevents those keys from showing in UI.
-  if (!value) return fallback;
-  if (value.includes(".") && value.startsWith("services.")) return fallback;
-  return value;
-}
+const localizedServicesCopy = {
+  en: {
+    heroEyebrow: "Solutions & Consulting",
+    heroTitle: "AI automation solutions for SME operations",
+    heroBody:
+      "AI automation systems and consulting means automation systems first, with consulting used to sharpen priorities, architecture, and implementation plans.",
+    heroPrimary: "Get a Free Audit",
+    heroSecondary: "See consulting detail",
+    businessOutcome: "Business outcome",
+    solutionsTitle: "Core Solutions",
+    solutionsSubtitle: "What LuxAI builds for businesses",
+    solutionsBody:
+      "The page should make the deliverables easy to understand: solution type, what it does, what business result it creates, and who it fits.",
+    consultingTitle: "Consulting Detail",
+    consultingSubtitle: "Consulting that feeds implementation, not vague advisory",
+    consultingCovers: "What consulting covers",
+    consultingReceive: "What clients receive",
+    consultingFormats: "Best engagement formats",
+    consultingFormatItems: ["Automation Audit", "AI Strategy Session", "Workflow Review", "Implementation Roadmap"],
+    platformsTitle: "Business Systems and Integrations",
+    platformsSubtitle: "The surrounding systems that make automation work",
+    conversionEyebrow: "Conversion Path",
+    conversionTitle: "Start with the audit, then scope, build, and optimize",
+    conversionBody:
+      "Use scheduling when you are ready to book the free audit. Use contact when you prefer to send workflow context first before the conversation.",
+    conversionSteps: ["Free Automation Audit", "Consulting, roadmap, or scoping engagement", "Implementation project", "Monthly optimization retainer"],
+    conversionPrimary: "Get a Free Audit",
+    conversionSecondary: "Use contact instead",
+  },
+  fr: {
+    heroEyebrow: "Solutions & conseil", heroTitle: "Des solutions d’automatisation IA pour les opérations des PME", heroBody: "Les systèmes d’automatisation IA et le conseil signifient que l’automatisation passe d’abord, et que le conseil sert à préciser les priorités, l’architecture et les plans d’implémentation.", heroPrimary: "Obtenir un audit gratuit", heroSecondary: "Voir le détail du conseil", businessOutcome: "Résultat métier", solutionsTitle: "Solutions cœur", solutionsSubtitle: "Ce que LuxAI construit pour les entreprises", solutionsBody: "La page doit rendre les livrables faciles à comprendre : type de solution, rôle, résultat métier et profil idéal.", consultingTitle: "Détail du conseil", consultingSubtitle: "Un conseil qui nourrit l’implémentation, pas un accompagnement vague", consultingCovers: "Ce que couvre le conseil", consultingReceive: "Ce que les clients reçoivent", consultingFormats: "Formats d’intervention recommandés", consultingFormatItems: ["Audit d’automatisation", "Session de stratégie IA", "Revue de workflow", "Feuille de route d’implémentation"], platformsTitle: "Systèmes métier et intégrations", platformsSubtitle: "Les systèmes environnants qui rendent l’automatisation efficace", conversionEyebrow: "Parcours de conversion", conversionTitle: "Commencer par l’audit, puis cadrer, construire et optimiser", conversionBody: "Utilisez la planification quand vous êtes prêt à réserver l’audit gratuit. Utilisez le contact si vous préférez d’abord envoyer le contexte du workflow avant l’échange.", conversionSteps: ["Audit d’automatisation gratuit", "Mission de conseil, feuille de route ou cadrage", "Projet d’implémentation", "Contrat mensuel d’optimisation"], conversionPrimary: "Obtenir un audit gratuit", conversionSecondary: "Utiliser le contact",
+  },
+  de: {
+    heroEyebrow: "Lösungen & Beratung", heroTitle: "KI-Automatisierungslösungen für die Abläufe von KMU", heroBody: "KI-Automatisierungssysteme und Beratung bedeuten, dass Automatisierung zuerst kommt und Beratung Prioritäten, Architektur und Implementierungspläne schärft.", heroPrimary: "Kostenloses Audit anfordern", heroSecondary: "Beratungsdetails ansehen", businessOutcome: "Geschäftsergebnis", solutionsTitle: "Kernlösungen", solutionsSubtitle: "Was LuxAI für Unternehmen baut", solutionsBody: "Die Seite soll die Leistungen leicht verständlich machen: Lösungstyp, Nutzen, Geschäftsergebnis und Passung.", consultingTitle: "Beratungsdetails", consultingSubtitle: "Beratung, die Umsetzung unterstützt, statt vage zu bleiben", consultingCovers: "Was die Beratung abdeckt", consultingReceive: "Was Kunden erhalten", consultingFormats: "Empfohlene Formate", consultingFormatItems: ["Automatisierungs-Audit", "KI-Strategie-Session", "Workflow-Review", "Implementierungs-Roadmap"], platformsTitle: "Geschäftssysteme und Integrationen", platformsSubtitle: "Die umliegenden Systeme, die Automatisierung möglich machen", conversionEyebrow: "Conversion-Pfad", conversionTitle: "Mit Audit starten, dann scopen, bauen und optimieren", conversionBody: "Nutzen Sie die Terminbuchung, wenn Sie das kostenlose Audit direkt buchen möchten. Nutzen Sie Kontakt, wenn Sie zuerst den Workflow-Kontext schicken möchten.", conversionSteps: ["Kostenloses Automatisierungs-Audit", "Beratung, Roadmap oder Scoping-Mandat", "Implementierungsprojekt", "Monatlicher Optimierungsretainer"], conversionPrimary: "Kostenloses Audit anfordern", conversionSecondary: "Kontakt stattdessen nutzen",
+  },
+  lb: {
+    heroEyebrow: "Léisungen & Berodung", heroTitle: "KI-Automatiséierungsléisunge fir d’Operatioune vu PMEen", heroBody: "KI-Automatiséierungssystemer a Berodung bedeiten, datt Automatiséierung als éischt kënnt, an datt Berodung Prioritéiten, Architektur an Ëmsetzungspläng schäerft.", heroPrimary: "Gratis Audit ufroen", heroSecondary: "Berodungsdetail kucken", businessOutcome: "Business-Resultat", solutionsTitle: "Kärléisungen", solutionsSubtitle: "Wat LuxAI fir Betriber baut", solutionsBody: "D’Säit soll d’Liwwerobjekter einfach verständlech maachen: Léisungstyp, Wierkung, Business-Resultat a Passung.", consultingTitle: "Berodungsdetail", consultingSubtitle: "Berodung, déi d’Ëmsetzung fërdert an net vague bleift", consultingCovers: "Wat d’Berodung ofdeckt", consultingReceive: "Wat Cliente kréien", consultingFormats: "Empfole Formater", consultingFormatItems: ["Automatiséierungs-Audit", "KI-Strategie-Session", "Workflow-Review", "Ëmsetzungs-Roadmap"], platformsTitle: "Business-Systemer an Integratiounen", platformsSubtitle: "D’Ëmfeld-Systemer, déi Automatiséierung méiglech maachen", conversionEyebrow: "Conversion-Path", conversionTitle: "Mat Audit ufänken, da scopen, bauen an optimiséieren", conversionBody: "Benotzt d'Scheduling, wann Dir de gratis Audit direkt buche wëllt. Benotzt de Kontakt, wann Dir léiwer fir d'éischt de Workflow-Kontext schécke wëllt.", conversionSteps: ["Gratis Automatiséierungs-Audit", "Berodung, Roadmap oder Scoping-Mandat", "Ëmsetzungsprojet", "Monatleche Optimiséierungsretainer"], conversionPrimary: "Gratis Audit ufroen", conversionSecondary: "Kontakt amplaz benotzen",
+  },
+} as const;
 
 export default function ServicesPage() {
   const { lang } = useLanguage();
-
-  const servicesListRaw = t<unknown>(lang, "services.list");
-  const servicesAll = toServiceArray(servicesListRaw);
-
-  // ✅ Keep AI Strategy & Consulting as 3rd item for ALL langs
-  // Now the list is: s1,s2,s3,s4,s5,s6 (strategy is s5, digital is s6)
-  // desired order: s1, s2, s5, s3, s4, s6
-  const order = [4, 0, 1, 2, 3, 5];
-  const services = order.map((i) => servicesAll[i]).filter(Boolean);
-
-  const platformDefs = [
-    { key: "erp", Icon: Boxes },
-    { key: "customApps", Icon: LayoutGrid },
-    { key: "ecommerce", Icon: ShoppingCart },
-    { key: "websites", Icon: Monitor },
-  ] as const;
-
-  const platforms = platformDefs.map((p) => ({
-    key: p.key,
-    title: t<string>(lang, `services.platforms.${p.key}.title`),
-    desc: t<string>(lang, `services.platforms.${p.key}.desc`),
-    Icon: p.Icon,
-    points: [
-      t<string>(lang, `services.platforms.${p.key}.points.p1`),
-      t<string>(lang, `services.platforms.${p.key}.points.p2`),
-      t<string>(lang, `services.platforms.${p.key}.points.p3`),
-    ].filter(Boolean),
-  }));
-
-  // const platforms = platformDefs.map((p) => ({
-  //   key: p.key,
-  //   title: t<string>(lang, `home.platforms.${p.key}.title`),
-  //   desc: t<string>(lang, `home.platforms.${p.key}.desc`),
-  //   Icon: p.Icon,
-  // }));
-
-  const whatItIsLabel = safeLabel(
-    t<string>(lang, "services.modal.whatItIsLabel"),
-    "What it is:"
-  );
-  const coreFeaturesLabel = safeLabel(
-    t<string>(lang, "services.modal.coreFeaturesLabel"),
-    "Core features:"
-  );
-  const addOnsLabel = safeLabel(
-    t<string>(lang, "services.modal.recommendedAddOnsLabel"),
-    "Recommended add-ons"
-  );
-  const impactLabel = safeLabel(
-    t<string>(lang, "services.modal.impactLabel"),
-    "Impact"
-  );
-
-  const recommendedStartingPointLabel = safeLabel(
-    t<string>(lang, "services.recommendedStartingPoint"),
-    "Recommended starting point"
-  );
+  const copy = localizedServicesCopy[lang] ?? localizedServicesCopy.en;
+  const {
+    solutionCards,
+    businessFit,
+    consultingSection,
+    platformCards,
+  } = getLocalizedMarketingSharedContent(lang);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900">
+    <div className="min-h-screen bg-white text-slate-950 transition-colors duration-300 dark:bg-slate-950 dark:text-white">
       <Header />
 
-      {/* Hero */}
-      <section className="py-32 bg-gradient-to-br from-primary-500 to-primary-600 text-white text-center">
-        <h1 className="text-5xl font-bold mb-6">
-          {t<string>(lang, "services.hero.title")}
-        </h1>
-        <p className="text-xl max-w-3xl mx-auto">
-          {t<string>(lang, "services.hero.subtitle")}
-        </p>
-      </section>
-
-      {/* Services */}
-      <AnimatedSection className="py-32">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 px-6">
-          {services.map((service, i) => (
-            <div
-              key={i}
-              className="bg-gray-50 dark:bg-slate-800 p-8 rounded-xl shadow-lg"
-            >
-              {/* Strategy badge (3rd card) */}
-              {i === 0 && (
-                // <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full text-xs font-semibold bg-primary-50 text-primary-600 dark:bg-slate-700 dark:text-white">
-                <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full text-xs font-semibold bg-primary-50 text-primary-600 dark:bg-slate-700 dark:text-accent-500">
-                  <i className="ri-star-fill text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.9)]" />
-
-                  {recommendedStartingPointLabel}
-                </div>
-              )}
-
-              {/* <h3 className="text-2xl font-bold mb-3 text-primary-500"> */}
-              <h3 className="text-2xl font-bold mb-3 text-primary-600 dark:text-accent-500">
-                {service.title}
-              </h3>
-
-              <p className="mb-4 text-gray-600 dark:text-gray-300">
-                {service.description}
-              </p>
-
-              {!!service.whatItIs && (
-                <p className="mb-4 text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
-                  <span className="font-semibold text-gray-900 dark:text-white">
-                    {whatItIsLabel}{" "}
-                  </span>
-                  {service.whatItIs}
-                </p>
-              )}
-
-              {!!service.howItHelps?.length && (
-                <ul className="mb-4 space-y-2">
-                  {service.howItHelps.map((h, idx) => (
-                    <li key={idx} className="flex items-center gap-2">
-                      <i className="ri-check-line text-accent-500" />
-                      <span className="text-gray-600 dark:text-gray-300">
-                        {h}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {service.features.length > 0 && (
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                  <span className="font-semibold text-gray-900 dark:text-white">
-                    {coreFeaturesLabel}{" "}
-                  </span>
-                  {service.features.join(" • ")}
-                </p>
-              )}
-
-              {!!service.recommendedAddOns?.length && (
-                <details className="mb-4">
-                  {/* <summary className="cursor-pointer text-sm font-semibold text-primary-500"> */}
-                  <summary className="cursor-pointer text-sm font-semibold text-primary-600 dark:text-accent-500">
-                    {addOnsLabel}
-                  </summary>
-                  <ul className="mt-3 space-y-2">
-                    {service.recommendedAddOns.map((r, idx) => (
-                      <li key={idx} className="flex items-center gap-2">
-                        <i className="ri-add-circle-line text-accent-500" />
-                        <span className="text-gray-600 dark:text-gray-300">
-                          {r}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              )}
-
-              <div className="pt-4 border-t border-gray-200 dark:border-slate-700">
-                <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-                  {impactLabel}
-                </p>
-                {/* <p className="font-medium">{service.benefits}</p> */}
-                <p className="font-medium text-gray-800 dark:text-slate-100">
-                  {service.benefits}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Platforms We Build */}
-        <AnimatedSection className="mt-16" delay={0.2}>
-          <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-8 border border-gray-200 dark:border-slate-700">
-            <div className="text-center mb-10">
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {t(lang, "services.platformsBlock.title")}
-              </h3>
-              <p className="mt-2 text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                {t(lang, "services.platformsBlock.subtitle")}
-              </p>
-            </div>
-
-            {/* What you get bullets (service-like) */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-              {["b1", "b2", "b3"].map((k) => (
-                <div
-                  key={k}
-                  className="flex items-center gap-3 bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-700 p-4"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-primary-50 dark:bg-slate-700 flex items-center justify-center shrink-0">
-                    {/* <i className="ri-check-line text-primary-600 dark:text-white text-lg" /> */}
-                    <i className="ri-check-line text-primary-600 dark:text-accent-500 text-lg" />
-                  </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
-                    {t(lang, `services.platformsBlock.bullets.${k}`)}
+      <main>
+        <section className="relative overflow-hidden bg-[linear-gradient(135deg,#0e427e_0%,#123f7a_58%,#0f172a_100%)] text-white">
+          <div className="absolute inset-0 bg-[url('/images/page-bg.jpg')] bg-cover bg-center opacity-15" />
+          <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 sm:py-28">
+            <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+              <AnimatedSection direction="left" className="space-y-7">
+                <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-blue-100 backdrop-blur">
+                  {copy.heroEyebrow}
+                </span>
+                <div>
+                  <h1 className="text-4xl font-black tracking-[-0.04em] sm:text-5xl lg:text-6xl">
+                    {copy.heroTitle}
+                  </h1>
+                  <p className="mt-5 max-w-3xl text-lg leading-8 text-blue-100">
+                    {copy.heroBody}
                   </p>
                 </div>
-              ))}
-            </div>
 
-            {/* Platform cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {platforms.map((p) => (
-                <motion.div
-                  key={p.key}
-                  whileHover={{
-                    y: -8,
-                    scale: 1.02,
-                    boxShadow: "0 22px 45px -18px rgba(0,0,0,0.25)",
-                  }}
-                  transition={{ type: "spring", stiffness: 260, damping: 18 }}
-                  className="group bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-slate-700 transition-all duration-200 hover:shadow-md"
+                <div className="flex flex-col gap-4 sm:flex-row">
+                  <Link
+                    href="/scheduling?meetingTypeKey=free-audit"
+                    className="inline-flex items-center justify-center rounded-full bg-accent-500 px-7 py-4 text-base font-semibold text-slate-950 transition-all duration-200 hover:-translate-y-1 hover:bg-accent-400"
+                  >
+                    {copy.heroPrimary}
+                  </Link>
+                  <Link
+                    href="#consulting"
+                    className="inline-flex items-center justify-center rounded-full border border-white/20 px-7 py-4 text-base font-semibold text-white transition-colors duration-200 hover:bg-white/10"
+                  >
+                    {copy.heroSecondary}
+                  </Link>
+                </div>
+              </AnimatedSection>
+
+              <AnimatedSection direction="right">
+                <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/10 p-3 backdrop-blur">
+                  <img
+                    src="/images/deploy.jpg"
+                    alt="Automation system deployment planning"
+                    className="h-full w-full rounded-[1.5rem] object-cover"
+                  />
+                </div>
+              </AnimatedSection>
+            </div>
+          </div>
+        </section>
+
+        <section id="solutions" className="py-24 sm:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <AnimatedSection className="mx-auto max-w-3xl text-center">
+              <h2 className="lux-display-title">
+                {copy.solutionsTitle}
+              </h2>
+              <p className="mx-auto max-w-2xl lux-section-subtitle">
+                {copy.solutionsSubtitle}
+              </p>
+              <p className="lux-section-copy">
+                {copy.solutionsBody}
+              </p>
+            </AnimatedSection>
+
+            <div className="mt-14 grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+              {solutionCards.map((item, index) => (
+                <AnimatedSection
+                  key={item.title}
+                  delay={index * 0.06}
+                  direction="up"
                 >
                   <motion.div
-                    whileHover={{ rotate: 6, scale: 1.08 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 16 }}
-                    className="w-12 h-12 rounded-xl bg-primary-50 dark:bg-slate-700 flex items-center justify-center mb-4 transition-colors group-hover:bg-primary-100 dark:group-hover:bg-slate-600"
+                    className="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900"
+                    whileHover={{ y: -6 }}
                   >
-                    <p.Icon className="w-6 h-6 text-primary-600 dark:text-accent-500" />
+                    <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600 text-white shadow-lg shadow-primary-600/20">
+                      <i className={`${item.icon} text-2xl`} />
+                    </span>
+
+                    <h3 className="mt-5 text-xl font-bold">{item.title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                      {item.summary}
+                    </p>
+
+                    <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        {copy.businessOutcome}
+                      </p>
+                      <p className="mt-2 text-sm font-semibold text-primary-600 dark:text-accent-400">
+                        {item.outcome}
+                      </p>
+                    </div>
+
+                    <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+                      {item.fit}
+                    </p>
                   </motion.div>
+                </AnimatedSection>
+              ))}
+            </div>
+          </div>
+        </section>
 
-                  <p className="font-semibold text-gray-900 dark:text-white">
-                    {p.title}
-                  </p>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                    {p.desc}
-                  </p>
-
-                  {!!p.points?.length && (
-                    <ul className="mt-4 space-y-2">
-                      {p.points.map((x, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <i className="ri-arrow-right-s-line text-accent-500 mt-0.5" />
-                          <span className="text-sm text-gray-700 dark:text-gray-200">
-                            {x}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </motion.div>
+        <AnimatedSection className="bg-slate-50 py-24 dark:bg-slate-900/60 sm:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-6 lg:grid-cols-4">
+              {businessFit.map((item, index) => (
+                <AnimatedSection
+                  key={item}
+                  delay={index * 0.05}
+                  direction="up"
+                >
+                  <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-[0_20px_45px_-34px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-950">
+                    <p className="text-sm font-semibold leading-7 text-slate-700 dark:text-slate-200">
+                      {item}
+                    </p>
+                  </div>
+                </AnimatedSection>
               ))}
             </div>
           </div>
         </AnimatedSection>
 
-        {/* CTA */}
-        <div className="mt-16 flex justify-center gap-4 px-6">
-          <Link
-            href="/contact"
-            className="px-8 py-4 bg-primary-500 text-white rounded-lg font-semibold"
-          >
-            {t<string>(lang, "services.cta.primary")}
-          </Link>
-          <Link
-            href="/how-it-works"
-            className="
-  px-8 py-4 rounded-lg font-semibold
-  border border-primary-500 text-primary-600
-  dark:border-accent-500 dark:text-accent-500
-"
-          >
-            {t<string>(lang, "services.cta.secondary")}
-          </Link>
-        </div>
-      </AnimatedSection>
+        <section id="consulting" className="py-24 sm:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid items-start gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+              <AnimatedSection direction="left" className="space-y-6">
+                <div>
+                  <h2 className="lux-display-title">
+                    {copy.consultingTitle}
+                  </h2>
+                  <p className="max-w-2xl lux-section-subtitle">
+                    {copy.consultingSubtitle}
+                  </p>
+                </div>
+
+                <p className="text-lg leading-8 text-slate-600 dark:text-slate-300">
+                  {consultingSection.intro}
+                </p>
+                <p className="text-base leading-8 text-slate-500 dark:text-slate-400">
+                  {consultingSection.detail}
+                </p>
+
+                <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-3 shadow-[0_24px_60px_-38px_rgba(15,23,42,0.3)] dark:border-slate-800 dark:bg-slate-900">
+                  <img
+                    src="/images/build-process.jpg"
+                    alt="Consulting and architecture workshop"
+                    className="h-full w-full rounded-[1.5rem] object-cover"
+                  />
+                </div>
+              </AnimatedSection>
+
+              <AnimatedSection direction="right" className="space-y-6">
+                <div className="rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                    {copy.consultingCovers}
+                  </p>
+                  <ul className="mt-5 space-y-3 text-sm text-slate-700 dark:text-slate-200">
+                    {consultingSection.offerings.map((item) => (
+                      <li key={item} className="flex items-start gap-3">
+                        <i className="ri-check-line mt-0.5 text-primary-600 dark:text-accent-400" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                    {copy.consultingReceive}
+                  </p>
+                  <ul className="mt-5 space-y-3 text-sm text-slate-700 dark:text-slate-200">
+                    {consultingSection.deliverables.map((item) => (
+                      <li key={item} className="flex items-start gap-3">
+                        <i className="ri-arrow-right-line mt-0.5 text-primary-600 dark:text-accent-400" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="rounded-[1.75rem] border border-primary-100 bg-primary-50 p-7 dark:border-accent-500/20 dark:bg-accent-500/10">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary-600 dark:text-accent-400">
+                    {copy.consultingFormats}
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    {copy.consultingFormatItems.map((item) => (
+                      <span key={item} className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </AnimatedSection>
+            </div>
+          </div>
+        </section>
+
+        <AnimatedSection className="bg-[radial-gradient(circle_at_top,_rgba(14,66,126,0.08),_transparent_48%)] py-24 sm:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center">
+              <h2 className="lux-display-title">
+                {copy.platformsTitle}
+              </h2>
+              <p className="mx-auto max-w-2xl lux-section-subtitle">
+                {copy.platformsSubtitle}
+              </p>
+            </div>
+
+            <div className="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+              {platformCards.map((item, index) => (
+                <AnimatedSection
+                  key={item.title}
+                  delay={index * 0.06}
+                  direction="scale"
+                >
+                  <motion.div
+                    className="h-full rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900"
+                    whileHover={{ y: -6 }}
+                  >
+                    <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
+                      <i className={`${item.icon} text-2xl`} />
+                    </span>
+                    <h3 className="mt-5 text-xl font-bold">{item.title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                      {item.description}
+                    </p>
+                  </motion.div>
+                </AnimatedSection>
+              ))}
+            </div>
+          </div>
+        </AnimatedSection>
+
+        <AnimatedSection className="pb-24 sm:pb-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#0e427e_0%,#123f7a_58%,#0f172a_100%)] px-6 py-12 text-white shadow-[0_35px_80px_-40px_rgba(14,66,126,0.7)] sm:px-10 lg:px-14">
+              <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.24em] text-blue-100">
+                    {copy.conversionEyebrow}
+                  </p>
+                  <h2 className="lux-display-title">
+                    {copy.conversionTitle}
+                  </h2>
+                  <p className="mt-5 max-w-2xl text-lg leading-8 text-blue-100">
+                    {copy.conversionBody}
+                  </p>
+                </div>
+
+                <div className="rounded-[1.75rem] border border-white/15 bg-white/10 p-6 backdrop-blur">
+                  <ol className="space-y-4 text-sm text-blue-50">
+                    {copy.conversionSteps.map((item, index) => (
+                      <li key={item} className="flex items-start gap-3">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-xs font-bold">
+                          {index + 1}
+                        </span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ol>
+
+                  <div className="mt-8">
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                      <Link
+                        href="/scheduling?meetingTypeKey=free-audit"
+                        className="inline-flex items-center justify-center rounded-full bg-accent-500 px-6 py-3 text-sm font-semibold text-slate-950 transition-all duration-200 hover:-translate-y-1 hover:bg-accent-400"
+                      >
+                        {copy.conversionPrimary}
+                      </Link>
+                      <Link
+                        href="/contact"
+                        className="inline-flex items-center justify-center rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-white/10"
+                      >
+                        {copy.conversionSecondary}
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </AnimatedSection>
+      </main>
 
       <Footer />
     </div>

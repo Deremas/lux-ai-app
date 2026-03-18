@@ -7,7 +7,7 @@ import type { MRT_ColumnDef, MRT_PaginationState } from "material-react-table";
 
 import { Input } from "@/components/ui/input";
 import MrtCardTable from "@/components/scheduling/MrtCardTable";
-import FilterBar from "@/components/scheduling/FilterBar";
+import FilterBar, { FilterField } from "@/components/scheduling/FilterBar";
 import ProductHero from "@/components/scheduling/ProductHero";
 
 type Props = {
@@ -48,6 +48,9 @@ function resolvePagination(
 ) {
   return typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue;
 }
+
+const filterControlClassName =
+  "h-11 w-full rounded-2xl border border-slate-200/90 bg-white/95 px-3 text-sm text-slate-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 dark:border-slate-700/60 dark:bg-slate-900/75 dark:text-slate-100";
 
 export default function AuditLogClient({ orgId, orgName, tz }: Props) {
   const [items, setItems] = useState<AuditRow[]>([]);
@@ -92,6 +95,25 @@ export default function AuditLogClient({ orgId, orgName, tz }: Props) {
     const set = new Set(items.map((r) => r.action).filter(Boolean));
     return Array.from(set).sort();
   }, [items]);
+
+  const activeFilterCount = [
+    Boolean(query.trim()),
+    Boolean(entityType),
+    Boolean(action),
+    Boolean(actorUserId),
+    Boolean(from),
+    Boolean(to),
+  ].filter(Boolean).length;
+
+  function resetFilters() {
+    setQuery("");
+    setDebouncedQuery("");
+    setEntityType("");
+    setAction("");
+    setActorUserId("");
+    setFrom("");
+    setTo("");
+  }
 
   useEffect(() => {
     if (!orgId) return;
@@ -190,49 +212,85 @@ export default function AuditLogClient({ orgId, orgName, tz }: Props) {
         chips={<span className="text-xs text-gray-500">{summary}</span>}
       />
 
-      <FilterBar>
-        <Input
-          className="h-9"
-          placeholder="Search entity, action, actor..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-
-        <select
-          className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
-          value={entityType}
-          onChange={(e) => setEntityType(e.target.value)}
+      <FilterBar
+        title="Filters"
+        description="Refine the audit stream by entity, action, actor, or date range."
+        activeCount={activeFilterCount}
+        onReset={resetFilters}
+        contentClassName="xl:grid-cols-4"
+      >
+        <FilterField
+          label="Search"
+          className="xl:col-span-2"
+          hint="Entity ID, actor, action, or any matching audit text."
         >
-          <option value="">All entity types</option>
-          {entityTypeOptions.map((v) => (
-            <option key={v} value={v}>
-              {v}
-            </option>
-          ))}
-        </select>
+          <Input
+            className={filterControlClassName}
+            placeholder="Search entity, action, actor..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </FilterField>
 
-        <select
-          className="h-9 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70"
-          value={action}
-          onChange={(e) => setAction(e.target.value)}
+        <FilterField label="Entity type">
+          <select
+            className={filterControlClassName}
+            value={entityType}
+            onChange={(e) => setEntityType(e.target.value)}
+          >
+            <option value="">All entity types</option>
+            {entityTypeOptions.map((v) => (
+              <option key={v} value={v}>
+                {v}
+              </option>
+            ))}
+          </select>
+        </FilterField>
+
+        <FilterField label="Action type">
+          <select
+            className={filterControlClassName}
+            value={action}
+            onChange={(e) => setAction(e.target.value)}
+          >
+            <option value="">All actions</option>
+            {actionOptions.map((v) => (
+              <option key={v} value={v}>
+                {v}
+              </option>
+            ))}
+          </select>
+        </FilterField>
+
+        <FilterField label="Actor user ID">
+          <Input
+            className={filterControlClassName}
+            placeholder="Filter by actor UUID"
+            value={actorUserId}
+            onChange={(e) => setActorUserId(e.target.value)}
+          />
+        </FilterField>
+
+        <FilterField
+          label="Date range"
+          className="xl:col-span-2"
+          hint="Leave one side empty to keep the range open."
         >
-          <option value="">All actions</option>
-          {actionOptions.map((v) => (
-            <option key={v} value={v}>
-              {v}
-            </option>
-          ))}
-        </select>
-
-        <Input
-          className="h-9"
-          placeholder="Actor user id"
-          value={actorUserId}
-          onChange={(e) => setActorUserId(e.target.value)}
-        />
-
-        <Input type="date" className="h-9" value={from} onChange={(e) => setFrom(e.target.value)} />
-        <Input type="date" className="h-9" value={to} onChange={(e) => setTo(e.target.value)} />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              type="date"
+              className={filterControlClassName}
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+            />
+            <Input
+              type="date"
+              className={filterControlClassName}
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+            />
+          </div>
+        </FilterField>
       </FilterBar>
 
       {error && (

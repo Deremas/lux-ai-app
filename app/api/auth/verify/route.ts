@@ -3,16 +3,14 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { isValidResetToken, isBodyTooLarge } from "@/lib/validation";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
+import { getPublicBaseUrl } from "@/lib/public-url";
 
 export async function GET(req: Request) {
   if (isBodyTooLarge(req, 1024)) {
     return NextResponse.json({ error: "Request too large" }, { status: 413 });
   }
 
-  const baseUrl = (process.env.NEXTAUTH_URL ?? new URL(req.url).origin).replace(
-    /\/+$/,
-    ""
-  );
+  const baseUrl = getPublicBaseUrl(req);
   const redirectTo = (path: string) =>
     NextResponse.redirect(new URL(path, baseUrl));
 

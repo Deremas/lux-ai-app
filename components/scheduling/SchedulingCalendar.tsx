@@ -258,6 +258,21 @@ export function SchedulingCalendar(props: {
     });
   }, [events]);
 
+  const appointmentCount = useMemo(
+    () => events.filter((event) => event.type === "appointment").length,
+    [events]
+  );
+
+  const blockedCount = useMemo(
+    () => events.filter((event) => event.type === "blocked").length,
+    [events]
+  );
+
+  const bufferCount = useMemo(
+    () => events.filter((event) => event.type === "buffer").length,
+    [events]
+  );
+
   function onDatesSet(arg: any) {
     // arg.startStr / arg.endStr are full ISO with Z; keep simple:
     const fromIso = arg.start.toISOString().slice(0, 19);
@@ -287,17 +302,47 @@ export function SchedulingCalendar(props: {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="text-sm text-gray-600 dark:text-gray-300">
-          {loading ? "Loading calendar..." : `Loaded ${events.length} events`}
+    <div className="lux-calendar-frame space-y-5">
+      <div className="flex flex-col gap-4 rounded-[28px] border border-white/70 bg-white/82 p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 lg:flex-row lg:items-end lg:justify-between">
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-500 dark:text-slate-400">
+              Calendar
+            </p>
+            <h2 className="text-2xl font-semibold text-slate-950 dark:text-white">
+              Schedule overview
+            </h2>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              Review appointments, blocked windows, and internal buffers in one view.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="lux-calendar-chip lux-calendar-chip--busy">
+              {appointmentCount} appointments
+            </span>
+            <span className="lux-calendar-chip lux-calendar-chip--blocked">
+              {blockedCount} blocked
+            </span>
+            <span className="lux-calendar-chip lux-calendar-chip--neutral">
+              {bufferCount} buffers
+            </span>
+            <span className="lux-calendar-chip">
+              {loading ? "Loading calendar..." : `Loaded ${events.length} events`}
+            </span>
+            {selectedInfo ? (
+              <span className="lux-calendar-chip lux-calendar-chip--neutral">
+                {selectedInfo}
+              </span>
+            ) : null}
+          </div>
         </div>
+
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <label className="text-gray-600 dark:text-gray-300">Display timezone</label>
+          <label className="text-slate-600 dark:text-slate-300">Display timezone</label>
           <div className="relative" ref={tzRef}>
             <button
               type="button"
-              className="flex h-10 min-w-[260px] items-center justify-between gap-3 rounded-xl border border-white/70 bg-white/80 px-3 text-sm leading-6 shadow-sm backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/70"
+              className="flex h-10 min-w-[260px] items-center justify-between gap-3 rounded-2xl border border-white/80 bg-white/90 px-3 text-sm leading-6 shadow-sm backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/75"
               onClick={() => setTzOpen((prev) => !prev)}
               onKeyDown={handleTzKeyDown}
               aria-haspopup="listbox"
@@ -307,9 +352,9 @@ export function SchedulingCalendar(props: {
               <span aria-hidden>▾</span>
             </button>
             {tzOpen && (
-              <div className="absolute z-20 mt-2 w-[280px] rounded-xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
+              <div className="absolute z-20 mt-2 w-[280px] rounded-2xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
                 <input
-                  className="h-9 w-full rounded-lg border border-white/70 bg-transparent px-3 text-sm leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60"
+                  className="h-9 w-full rounded-xl border border-white/70 bg-transparent px-3 text-sm leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60"
                   value={tzQuery}
                   onChange={(e) => setTzQuery(e.target.value)}
                   placeholder="Search timezone"
@@ -318,7 +363,7 @@ export function SchedulingCalendar(props: {
                 />
                 <div
                   ref={tzListRef}
-                  className="mt-2 max-h-60 overflow-auto rounded-lg border border-gray-100/80 dark:border-slate-700/60"
+                  className="mt-2 max-h-60 overflow-auto rounded-xl border border-gray-100/80 dark:border-slate-700/60"
                 >
                   {filteredTimezones.length === 0 ? (
                     <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
@@ -350,14 +395,9 @@ export function SchedulingCalendar(props: {
             )}
           </div>
         </div>
-        {selectedInfo ? (
-          <div className="text-sm px-3 py-1 rounded-full border border-white/70 bg-white/80 text-gray-700 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-200">
-            {selectedInfo}
-          </div>
-        ) : null}
       </div>
 
-      <div className="rounded-3xl border border-white/70 bg-white/90 p-3 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+      <div className="lux-fullcalendar rounded-[28px] border border-white/70 bg-white/90 p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
         <FullCalendar
           plugins={[timeGridPlugin, dayGridPlugin, interactionPlugin]}
           initialView="timeGridWeek"

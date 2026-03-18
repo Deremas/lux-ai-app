@@ -14,11 +14,16 @@ import { cookies } from "next/headers";
 export const metadata: Metadata = {
   metadataBase: new URL("https://luxaiautomation.com"),
   title: {
-    default: "Lux AI Consultancy & Automation – AI Workflow & Automation",
-    template: "%s | KindFlow Automation",
+    default: "Lux AI Consultancy & Automation | AI Automation Systems & Consulting for SMEs",
+    template: "%s | Lux AI Consultancy & Automation",
   },
   description:
-    "Lux AI Consultancy & Automation builds AI-powered workflow automation, ERP systems, system integrations, and intelligent chatbots for modern businesses.",
+    "Lux AI Consultancy & Automation provides AI automation systems and consulting for SMEs that want faster operations, better customer communication, and cleaner business workflows.",
+  icons: {
+    icon: [{ url: "/icon.png", type: "image/png", sizes: "64x64" }],
+    shortcut: ["/icon.png"],
+    apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
+  },
 };
 
 export default function RootLayout({
@@ -33,8 +38,6 @@ export default function RootLayout({
       className="scrollbar-gutter-stable"
     >
       <head>
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-
         {/* Apply theme + lang before first paint */}
         <script
           dangerouslySetInnerHTML={{

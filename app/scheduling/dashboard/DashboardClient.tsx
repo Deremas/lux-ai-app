@@ -516,12 +516,12 @@ export default function DashboardClient({ orgId }: Props) {
             data: items,
             manualPagination: true,
             rowCount: total,
-            enableColumnActions: false,
+            enableColumnActions: true,
             enableColumnFilters: false,
             enableGlobalFilter: false,
-            enableDensityToggle: false,
-            enableFullScreenToggle: false,
-            enableTopToolbar: false,
+            enableDensityToggle: true,
+            enableFullScreenToggle: true,
+            enableTopToolbar: true,
             state: {
               isLoading: loading,
               pagination,
@@ -737,8 +737,12 @@ export default function DashboardClient({ orgId }: Props) {
                       Payment
                     </p>
                     <p className="mt-2 text-base font-semibold text-emerald-900">
-                      {formatPrice(detailTarget.priceCents ?? null, detailTarget.currency ?? null) ??
-                        "—"}
+                      {detailTarget.paymentPolicy === "FREE"
+                        ? "No payment required"
+                        : formatPrice(
+                            detailTarget.priceCents ?? null,
+                            detailTarget.currency ?? null
+                          ) ?? "—"}
                     </p>
                     <p className="mt-1 text-xs text-emerald-700">
                       Status: {detailTarget.paymentStatus ?? "n/a"}
