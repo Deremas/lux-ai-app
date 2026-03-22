@@ -12,7 +12,10 @@ import { Input } from "@/components/ui/input";
 export default function SignInPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/scheduling";
+  const requestedCallbackUrl = searchParams.get("callbackUrl") || "/scheduling";
+  const callbackUrl = `/auth/post-sign-in?callbackUrl=${encodeURIComponent(
+    requestedCallbackUrl
+  )}`;
   const authError = searchParams.get("error");
 
   const EMAIL_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;

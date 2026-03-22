@@ -7,7 +7,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { DEFAULT_LANG, LANG_STORAGE_KEY, type AppLanguage } from "@/lib/i18n";
+import { LANG_STORAGE_KEY, type AppLanguage } from "@/lib/i18n";
 import { getCookie, setPrefCookie, LANG_COOKIE } from "@/lib/prefsCookies";
 
 type LangCtx = {
@@ -16,6 +16,7 @@ type LangCtx = {
 };
 
 const LanguageContext = createContext<LangCtx | null>(null);
+const FALLBACK_LANG: AppLanguage = "en";
 
 const isAppLanguage = (v: any): v is AppLanguage =>
   v === "en" || v === "fr" || v === "de" || v === "lb";
@@ -30,7 +31,7 @@ export function LanguageProvider({
   // ✅ prevent flash: hydrate with server cookie value
   const [lang, setLangState] = useState<AppLanguage>(() => {
     if (isAppLanguage(initialLang)) return initialLang;
-    return DEFAULT_LANG;
+    return FALLBACK_LANG;
   });
 
   // ✅ keep <html lang> in sync
@@ -55,9 +56,9 @@ export function LanguageProvider({
         return;
       }
 
-      setLangState(DEFAULT_LANG);
+      setLangState(FALLBACK_LANG);
     } catch {
-      setLangState(DEFAULT_LANG);
+      setLangState(FALLBACK_LANG);
     }
   }, [initialLang]);
 

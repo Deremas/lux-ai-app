@@ -30,10 +30,17 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const initialLang = cookies().get("lang")?.value; // ✅ your LANG_COOKIE is "lang"
+  const htmlLang =
+    initialLang === "en" ||
+    initialLang === "fr" ||
+    initialLang === "de" ||
+    initialLang === "lb"
+      ? initialLang
+      : "en";
 
   return (
     <html
-      lang="en"
+      lang={htmlLang}
       suppressHydrationWarning
       className="scrollbar-gutter-stable"
     >

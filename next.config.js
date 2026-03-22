@@ -5,16 +5,16 @@ const nextConfig = {
   // output: "export",
 
   // serverExternalPackages: ["pdf-parse"],
-  // outputFileTracing: false,
+  outputFileTracing: false,
   images: {
     unoptimized: true,
   },
   typescript: {
     // ignoreBuildErrors: true,
   },
-  webpack: (config, { dev }) => {
-    if (dev) {
-      // Avoid filesystem cache writes when the local dev disk is nearly full.
+  webpack: (config) => {
+    if (config.cache !== false) {
+      // Avoid large filesystem cache writes when the local disk is nearly full.
       config.cache = false;
     }
 

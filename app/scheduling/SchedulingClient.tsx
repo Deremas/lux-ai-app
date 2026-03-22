@@ -657,6 +657,7 @@ export default function SchedulingClient(props: Props) {
   const myBookingsHref = "/scheduling/my";
 
   const { status } = useSession();
+  const isSessionLoading = status === "loading";
   const isAuthed = status === "authenticated";
 
   const [meetingTypes, setMeetingTypes] = useState<MeetingType[]>([]);
@@ -1356,10 +1357,18 @@ export default function SchedulingClient(props: Props) {
       ? copy.unavailableFallback
       : "");
 
+  if (isSessionLoading) {
+    return (
+      <div className="rounded-3xl border border-white/70 bg-white/85 p-6 text-sm text-gray-600 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-300">
+        {copy.status.loading}
+      </div>
+    );
+  }
+
   if (schedulingUnavailableMessage) {
     return (
       <div className="space-y-10">
-        {hero}
+        {!isAuthed ? hero : null}
         <div className="rounded-3xl border border-amber-200/70 bg-amber-50/80 p-6 text-amber-950 shadow-[0_18px_50px_-40px_rgba(217,119,6,0.45)] backdrop-blur">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-amber-700">
             {copy.unavailableEyebrow}
@@ -1441,8 +1450,6 @@ export default function SchedulingClient(props: Props) {
 
   return (
     <div className="space-y-10">
-      {hero}
-
       <div className="rounded-3xl border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
         <Stepper
           steps={[
