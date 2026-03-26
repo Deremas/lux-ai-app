@@ -43,7 +43,7 @@ export default function TeamMemberCard({ member }: TeamMemberCardProps) {
           className="h-16 w-16 rounded-full object-cover"
         />
         <div>
-          <h3 className="text-lg font-bold">{member.name}</h3>
+          <h3 className="text-lg font-semibold">{member.name}</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {member.role}
           </p>

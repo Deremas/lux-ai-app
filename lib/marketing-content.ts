@@ -20,6 +20,7 @@ type NavLabels = {
 
 export const brand = {
   short: "Lux",
+  mobileName: "Lux AI Automation",
   name: "Lux AI Consultancy & Automation",
   positioning: "AI Automation Systems & Consulting for SMEs",
   trustLine: "Built for SMEs and growing businesses in Luxembourg and Europe.",
@@ -88,14 +89,14 @@ export const navLabels: Record<Lang, NavLabels> = {
     home: "Heem",
     solutions: "Léisungen",
     consulting: "Berodung",
-    useCases: "Use Cases",
+    useCases: "Beispiller",
     howItWorks: "Wéi Et Geet",
-    scheduling: "Rendez-vous",
+    scheduling: "Terminplanung",
     about: "Iwwer Eis",
     contact: "Kontakt",
     audit: "Gratis Audit",
     quickLinks: "Schnelllinken",
-    legal: "Legal",
+    legal: "Rechtleches",
     privacy: "Dateschutz",
     terms: "Konditiounen",
     cookies: "Cookies",
@@ -386,6 +387,7 @@ export const useCases = [
 export const processSteps = [
   {
     step: "Assess",
+    duration: "3-5 days",
     description:
       "Understand the current workflow, identify the bottlenecks, and define the best automation opportunities.",
     points: [
@@ -394,10 +396,12 @@ export const processSteps = [
       "Priority use-case definition",
       "Automation opportunity shortlist",
     ],
+    outputs: ["Workflow map", "Automation shortlist"],
     image: "/images/analyze.jpg",
   },
   {
     step: "Design",
+    duration: "1-2 weeks",
     description:
       "Translate business needs into a practical automation architecture with the right systems and logic.",
     points: [
@@ -406,10 +410,12 @@ export const processSteps = [
       "Business rules and routing logic",
       "Implementation plan",
     ],
+    outputs: ["Solution blueprint", "Delivery plan"],
     image: "/images/build-process.jpg",
   },
   {
     step: "Build",
+    duration: "2-6 weeks",
     description:
       "Implement workflows, configure AI systems, and connect the tools that need to work together.",
     points: [
@@ -418,10 +424,12 @@ export const processSteps = [
       "API and system integration",
       "Testing and handover",
     ],
+    outputs: ["Live workflow", "Connected systems"],
     image: "/images/workflow-automation.png",
   },
   {
     step: "Optimize",
+    duration: "2-4 weeks",
     description:
       "Measure performance, refine the flow, and improve business outcomes as the system starts running live.",
     points: [
@@ -430,10 +438,12 @@ export const processSteps = [
       "Response quality improvements",
       "Operational reporting",
     ],
+    outputs: ["Performance review", "Improvement backlog"],
     image: "/images/analytics.png",
   },
   {
     step: "Maintain",
+    duration: "Monthly",
     description:
       "Support ongoing optimization retainers for businesses that need monitoring, improvements, and new automation requests over time.",
     points: [
@@ -442,6 +452,7 @@ export const processSteps = [
       "System updates",
       "Continuous optimization",
     ],
+    outputs: ["Monitoring cadence", "Support queue"],
     image: "/images/monitor.jpg",
   },
 ] as const;

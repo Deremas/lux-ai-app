@@ -141,7 +141,7 @@ export default function Header() {
         }}
       >
         <div className="mx-auto w-full max-w-7xl px-3 sm:px-4 lg:px-6">
-          <div className="flex h-[var(--site-header-height)] items-center justify-between gap-3">
+          <div className="flex h-[var(--site-header-height)] items-center justify-between gap-2 lg:gap-2.5">
             <Link href="/" className="flex min-w-0 items-center gap-3">
               <Image
                 src="/lux-logo.png"
@@ -152,6 +152,12 @@ export default function Header() {
                 className="h-11 w-11 shrink-0 rounded-full object-contain"
               />
 
+              <span className="min-[360px]:block min-w-0 md:hidden">
+                <span className="block max-w-[8.75rem] truncate text-[0.92rem] font-semibold leading-none tracking-[-0.02em] text-slate-950 dark:text-white">
+                  {brand.mobileName}
+                </span>
+              </span>
+
               <span className="hidden min-w-0 md:block">
                 <span className="block truncate text-sm font-bold text-slate-950 dark:text-white">
                   {brand.name}
@@ -160,7 +166,7 @@ export default function Header() {
             </Link>
 
             <nav className="hidden lg:flex flex-1 items-center justify-center">
-              <div className="flex items-center gap-4 xl:gap-6">
+              <div className="flex items-center gap-3 xl:gap-4">
                 {navigation.map((item) => (
                   <Link
                     key={item.name}
@@ -180,7 +186,7 @@ export default function Header() {
               </div>
             </nav>
 
-            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3 lg:gap-2.5">
               <Select
                 value={lang}
                 onValueChange={(value) => setLang(value as AppLanguage)}

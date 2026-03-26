@@ -61,7 +61,7 @@ export default function Footer() {
   const labels = navLabels[lang];
   const copy = localizedFooterCopy[lang] ?? localizedFooterCopy.en;
   const footerSocials = [
-    { label: "LinkedIn", icon: "ri-linkedin-fill", href: "#" },
+    { label: "LinkedIn", icon: "ri-linkedin-fill", href: brand.linkedin },
     { label: "X", icon: "ri-twitter-x-fill", href: "#" },
     { label: "Facebook", icon: "ri-facebook-fill", href: "#" },
     { label: "YouTube", icon: "ri-youtube-fill", href: "#" },
@@ -189,7 +189,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-4 border-t border-blue-600 pt-6 text-sm text-blue-200 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-10 flex flex-col-reverse gap-4 border-t border-blue-600 pt-6 text-sm text-blue-200 sm:flex-row sm:items-center sm:justify-between">
           <p>
             © {currentYear} {brand.name}. {copy.rights}
           </p>

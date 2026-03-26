@@ -1,27 +1,239 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
 
 import AnimatedSection from "@/components/AnimatedSection";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import { CtaLinks, SectionHeading, SurfaceCard } from "@/components/marketing/SectionHeading";
 import { useLanguage } from "@/components/LanguageProvider";
 import { getLocalizedMarketingSharedContent } from "@/lib/marketing-shared-content";
 
 const localizedHowItWorksCopy = {
   en: {
-    heroTitle: "How It Works", heroSubtitle: "A practical path from assessment to live automation", heroBody: "The process should remove uncertainty: understand the workflow, design the right system, build it cleanly, and keep improving it once it is live.", flowTitle: "Delivery Flow", flowSubtitle: "Assess, design, build, optimize, and maintain", whyTitle: "Why This Works", whySubtitle: "A process designed to reduce delivery risk", deliveryReasons: [{ title: "Workflow-first scoping", description: "We start with the business process, not with a random tool or a generic AI demo.", icon: "ri-route-line" }, { title: "Implementation-ready design", description: "Architecture, tools, and business logic are mapped before the build starts.", icon: "ri-layout-masonry-line" }, { title: "Built around existing systems", description: "We connect CRM, communication channels, internal tools, and data sources instead of forcing a full rebuild.", icon: "ri-plug-2-line" }, { title: "Optimization after launch", description: "Delivery does not stop at go-live. We monitor, refine, and expand where the business case is real.", icon: "ri-line-chart-line" }], faqTitle: "FAQs", faqSubtitle: "Common questions before you start", faqs: [{ question: "What happens in the free automation audit?", answer: "We review the workflow, identify bottlenecks, look at the systems involved, and outline where automation or consulting can create practical value first." }, { question: "Do you only advise, or do you also implement?", answer: "Implementation is central. Consulting is used to sharpen priorities, architecture, and roadmaps so the delivery work is better scoped and more effective." }, { question: "Can we start small before a bigger rollout?", answer: "Yes. Many projects begin with one workflow, one communication flow, or one integration path before expanding into a broader automation program." }], ctaEyebrow: "Next Step", ctaTitle: "Ready to move from workflow friction to implementation?", ctaBody: "Start with the workflow assessment, get practical next steps, and decide what should move into roadmap work or implementation.", ctaPrimary: "Get a Free Audit", ctaSecondary: "Explore solutions",
+    heroTitle: "A structured path from workflow audit to live automation",
+    heroBody:
+      "The process is designed to reduce uncertainty. We define the right workflow, build it with clear controls, test it properly, and keep improving it once it is live.",
+    diagramTitle: "Delivery flow",
+    diagramBody:
+      "Each stage has a clear purpose, a realistic timeframe, and concrete outputs before the next step starts.",
+    trustTitle: "How delivery stays trustworthy",
+    trustBody:
+      "The system should be safe to operate, not just impressive in a demo. That means testing, monitoring, and clear control points for the team.",
+    trustItems: [
+      {
+        title: "Controlled scope",
+        body: "We start with one workflow and define the operating logic before expanding into more systems.",
+        icon: "ri-focus-2-line",
+      },
+      {
+        title: "Testing before launch",
+        body: "Rules, routing, edge cases, and notification flows are checked before the live handover.",
+        icon: "ri-shield-check-line",
+      },
+      {
+        title: "Monitoring after launch",
+        body: "We review how the workflow behaves in production and refine it based on real usage.",
+        icon: "ri-line-chart-line",
+      },
+      {
+        title: "Human control",
+        body: "Teams keep visibility, exception paths, and escalation points where review still matters.",
+        icon: "ri-user-settings-line",
+      },
+    ],
+    faqTitle: "Common questions before you start",
+    faqs: [
+      {
+        question: "What happens in the free automation audit?",
+        answer:
+          "We review the workflow, identify bottlenecks, examine the systems involved, and outline the most practical first automation step.",
+      },
+      {
+        question: "Do you only advise, or do you also implement?",
+        answer:
+          "Implementation is central. Consulting is used to sharpen scope, architecture, and rollout decisions so delivery is clearer and lower risk.",
+      },
+      {
+        question: "Can we start small before a larger rollout?",
+        answer:
+          "Yes. Many engagements begin with one workflow, one communication flow, or one integration path before expanding further.",
+      },
+    ],
+    ctaTitle: "Start with the workflow that creates the most value first",
+    ctaBody:
+      "Use the free audit to define the right first workflow, then decide what should move into roadmap work or direct implementation.",
+    ctaPrimary: "Get a Free Audit",
+    ctaSecondary: "Explore Services",
   },
   fr: {
-    heroTitle: "Comment ça marche", heroSubtitle: "Un chemin pratique, de l’évaluation à l’automatisation en production", heroBody: "Le processus doit supprimer l’incertitude : comprendre le workflow, concevoir le bon système, le construire proprement et l’améliorer une fois en ligne.", flowTitle: "Flux de delivery", flowSubtitle: "Évaluer, concevoir, construire, optimiser et maintenir", whyTitle: "Pourquoi cela fonctionne", whySubtitle: "Un processus conçu pour réduire les risques de delivery", deliveryReasons: [{ title: "Cadrage centré sur le workflow", description: "Nous partons du processus métier, pas d’un outil choisi au hasard ni d’une démo IA générique.", icon: "ri-route-line" }, { title: "Conception prête pour l’implémentation", description: "Architecture, outils et logique métier sont cadrés avant le lancement de la build.", icon: "ri-layout-masonry-line" }, { title: "Construit autour des systèmes existants", description: "Nous connectons CRM, canaux de communication, outils internes et données au lieu d’imposer une reconstruction complète.", icon: "ri-plug-2-line" }, { title: "Optimisation après le lancement", description: "La delivery ne s’arrête pas à la mise en production. Nous surveillons, affinons et étendons là où le business case est réel.", icon: "ri-line-chart-line" }], faqTitle: "FAQ", faqSubtitle: "Questions fréquentes avant de commencer", faqs: [{ question: "Que se passe-t-il pendant l’audit gratuit ?", answer: "Nous examinons le workflow, identifions les goulots d’étranglement, regardons les systèmes impliqués et montrons où l’automatisation ou le conseil peuvent créer de la valeur en premier." }, { question: "Faites-vous seulement du conseil ou aussi l’implémentation ?", answer: "L’implémentation est centrale. Le conseil sert à clarifier les priorités, l’architecture et la roadmap pour rendre la delivery plus efficace." }, { question: "Peut-on commencer petit avant un déploiement plus large ?", answer: "Oui. Beaucoup de projets commencent par un workflow, un flux de communication ou une intégration avant d’évoluer vers un programme plus large." }], ctaEyebrow: "Étape suivante", ctaTitle: "Prêt à passer des frictions de workflow à l’implémentation ?", ctaBody: "Commencez par l’évaluation du workflow, obtenez des prochaines étapes concrètes et décidez ce qui doit passer en roadmap ou en implémentation.", ctaPrimary: "Obtenir un audit gratuit", ctaSecondary: "Explorer les solutions",
+    heroTitle: "Un chemin structure de l'audit workflow a l'automatisation live",
+    heroBody:
+      "Le processus est fait pour reduire l'incertitude. Nous cadrons le bon workflow, le construisons avec des controles clairs, le testons proprement et l'ameliorons une fois live.",
+    diagramTitle: "Flux de delivery",
+    diagramBody:
+      "Chaque etape a un role clair, un delai realiste et des sorties concretes avant de passer a la suivante.",
+    trustTitle: "Pourquoi la delivery reste fiable",
+    trustBody:
+      "Le systeme doit etre sur a exploiter, pas seulement impressionnant en demo. Cela demande des tests, du monitoring et des points de controle clairs pour l'equipe.",
+    trustItems: [
+      {
+        title: "Scope controle",
+        body: "Nous commencons par un workflow clair et nous definissons la logique operationnelle avant d'etendre le systeme.",
+        icon: "ri-focus-2-line",
+      },
+      {
+        title: "Tests avant lancement",
+        body: "Les regles, le routage, les cas limites et les notifications sont verifies avant la mise en ligne.",
+        icon: "ri-shield-check-line",
+      },
+      {
+        title: "Monitoring apres lancement",
+        body: "Nous regardons comment le workflow se comporte en production et l'ajustons selon l'usage reel.",
+        icon: "ri-line-chart-line",
+      },
+      {
+        title: "Controle humain",
+        body: "L'equipe garde la visibilite, les chemins d'exception et les points d'escalade la ou la revue reste necessaire.",
+        icon: "ri-user-settings-line",
+      },
+    ],
+    faqTitle: "Questions frequentes avant de commencer",
+    faqs: [
+      {
+        question: "Que se passe-t-il pendant l'audit gratuit ?",
+        answer:
+          "Nous analysons le workflow, identifions les blocages, regardons les systemes impliques et indiquons la premiere etape d'automatisation la plus utile.",
+      },
+      {
+        question: "Faites-vous seulement du conseil ou aussi l'implementation ?",
+        answer:
+          "L'implementation est centrale. Le conseil sert a clarifier le scope, l'architecture et le rollout pour reduire le risque de delivery.",
+      },
+      {
+        question: "Peut-on commencer petit avant un deploiement plus large ?",
+        answer:
+          "Oui. Beaucoup de missions commencent par un workflow, un flux de communication ou une integration avant de s'etendre.",
+      },
+    ],
+    ctaTitle: "Commencez par le workflow qui cree le plus de valeur",
+    ctaBody:
+      "Utilisez l'audit gratuit pour definir le bon premier workflow, puis decidez ce qui doit passer en roadmap ou en implementation directe.",
+    ctaPrimary: "Obtenir un audit gratuit",
+    ctaSecondary: "Explorer les services",
   },
   de: {
-    heroTitle: "So funktioniert es", heroSubtitle: "Ein praktischer Weg von der Analyse zur produktiven Automatisierung", heroBody: "Der Prozess soll Unsicherheit entfernen: Workflow verstehen, das richtige System entwerfen, sauber umsetzen und nach dem Go-live weiter verbessern.", flowTitle: "Delivery-Ablauf", flowSubtitle: "Analysieren, konzipieren, umsetzen, optimieren und betreuen", whyTitle: "Warum das funktioniert", whySubtitle: "Ein Prozess, der Delivery-Risiken gezielt reduziert", deliveryReasons: [{ title: "Scoping vom Workflow aus", description: "Wir starten mit dem Geschäftsprozess, nicht mit einem zufälligen Tool oder einer generischen KI-Demo.", icon: "ri-route-line" }, { title: "Umsetzungsreifes Design", description: "Architektur, Tools und Geschäftslogik werden vor dem Start der Umsetzung sauber abgebildet.", icon: "ri-layout-masonry-line" }, { title: "Rund um bestehende Systeme gebaut", description: "Wir verbinden CRM, Kommunikationskanäle, interne Tools und Datenquellen statt einen kompletten Neuaufbau zu erzwingen.", icon: "ri-plug-2-line" }, { title: "Optimierung nach dem Launch", description: "Delivery endet nicht beim Go-live. Wir überwachen, verfeinern und erweitern dort, wo der Business Case real ist.", icon: "ri-line-chart-line" }], faqTitle: "FAQs", faqSubtitle: "Häufige Fragen vor dem Start", faqs: [{ question: "Was passiert im kostenlosen Automatisierungs-Audit?", answer: "Wir prüfen den Workflow, identifizieren Engpässe, betrachten die beteiligten Systeme und zeigen, wo Automatisierung oder Beratung zuerst praktischen Wert schaffen." }, { question: "Beraten Sie nur oder setzen Sie auch um?", answer: "Die Umsetzung ist zentral. Beratung schärft Prioritäten, Architektur und Roadmaps, damit die Delivery besser eingegrenzt und wirksamer wird." }, { question: "Kann man klein starten, bevor man größer ausrollt?", answer: "Ja. Viele Projekte beginnen mit einem Workflow, einem Kommunikationsfluss oder einer Integration und wachsen dann zu einem breiteren Programm." }], ctaEyebrow: "Nächster Schritt", ctaTitle: "Bereit, von Workflow-Reibung zur Umsetzung zu wechseln?", ctaBody: "Starten Sie mit der Workflow-Analyse, erhalten Sie praktische nächste Schritte und entscheiden Sie, was in Roadmap oder Umsetzung übergehen soll.", ctaPrimary: "Kostenloses Audit anfordern", ctaSecondary: "Lösungen ansehen",
+    heroTitle: "Ein strukturierter Weg vom Workflow-Audit zur live Automatisierung",
+    heroBody:
+      "Der Prozess soll Unsicherheit reduzieren. Wir definieren den richtigen Workflow, bauen ihn mit klaren Kontrollen, testen sauber und verbessern das System nach dem Go-live weiter.",
+    diagramTitle: "Delivery-Ablauf",
+    diagramBody:
+      "Jede Phase hat einen klaren Zweck, einen realistischen Zeitrahmen und konkrete Outputs, bevor der naechste Schritt beginnt.",
+    trustTitle: "Warum die Delivery verlaesslich bleibt",
+    trustBody:
+      "Das System soll sicher zu betreiben sein, nicht nur in einer Demo beeindrucken. Dafuer braucht es Tests, Monitoring und klare Kontrollpunkte fuer das Team.",
+    trustItems: [
+      {
+        title: "Kontrollierter Scope",
+        body: "Wir starten mit einem klaren Workflow und definieren die operative Logik, bevor weitere Systeme hinzukommen.",
+        icon: "ri-focus-2-line",
+      },
+      {
+        title: "Tests vor dem Launch",
+        body: "Regeln, Routing, Randfaelle und Benachrichtigungen werden vor der Uebergabe geprueft.",
+        icon: "ri-shield-check-line",
+      },
+      {
+        title: "Monitoring nach dem Launch",
+        body: "Wir beobachten das Verhalten in Produktion und verfeinern den Workflow auf Basis realer Nutzung.",
+        icon: "ri-line-chart-line",
+      },
+      {
+        title: "Menschliche Kontrolle",
+        body: "Teams behalten Sichtbarkeit, Ausnahmewege und Eskalationspunkte dort, wo Review weiter wichtig bleibt.",
+        icon: "ri-user-settings-line",
+      },
+    ],
+    faqTitle: "Haeufige Fragen vor dem Start",
+    faqs: [
+      {
+        question: "Was passiert im kostenlosen Automatisierungs-Audit?",
+        answer:
+          "Wir pruefen den Workflow, identifizieren Engpaesse, betrachten die beteiligten Systeme und zeigen den sinnvollsten ersten Automatisierungsschritt.",
+      },
+      {
+        question: "Beraten Sie nur oder setzen Sie auch um?",
+        answer:
+          "Die Umsetzung ist zentral. Beratung schaerft Scope, Architektur und Rollout-Entscheidungen, damit die Delivery klarer und risikoaermer wird.",
+      },
+      {
+        question: "Kann man klein anfangen, bevor groesser ausgerollt wird?",
+        answer:
+          "Ja. Viele Engagements starten mit einem Workflow, einem Kommunikationsfluss oder einer Integration und wachsen dann weiter.",
+      },
+    ],
+    ctaTitle: "Starten Sie mit dem Workflow, der zuerst den meisten Wert schafft",
+    ctaBody:
+      "Nutzen Sie das kostenlose Audit, um den richtigen ersten Workflow zu definieren, und entscheiden Sie dann, was in Roadmap oder direkte Umsetzung uebergehen soll.",
+    ctaPrimary: "Kostenloses Audit anfordern",
+    ctaSecondary: "Services ansehen",
   },
   lb: {
-    heroTitle: "Wéi et geet", heroSubtitle: "E praktesche Wee vun der Analys bis zur live Automatiséierung", heroBody: "De Prozess soll Onsécherheet ewechhuelen: de Workflow verstoen, de richtege System entwërfen, propper bauen an no Go-live weider verbesseren.", flowTitle: "Delivery-Flow", flowSubtitle: "Analyséieren, entwërfen, bauen, optimiséieren a betreien", whyTitle: "Firwat dat funktionéiert", whySubtitle: "E Prozess, deen Delivery-Risike gezielt reduzéiert", deliveryReasons: [{ title: "Scoping vum Workflow aus", description: "Mir starte mam Business-Prozess, net mat engem zoufällege Tool oder enger generescher KI-Demo.", icon: "ri-route-line" }, { title: "Ëmsetzungsbereeten Design", description: "Architektur, Tools a Business-Logik ginn propper definéiert, ier d’Build ufänkt.", icon: "ri-layout-masonry-line" }, { title: "Ronderëm bestehend Systemer gebaut", description: "Mir verbannen CRM, Kommunikatiounskanäl, intern Tools an Datequellen amplaz eng komplett Neibau ze forcéieren.", icon: "ri-plug-2-line" }, { title: "Optimiséierung nom Launch", description: "Delivery hält net beim Go-live op. Mir iwwerwaachen, verfeineren a bauen aus, wou de Business Case reell ass.", icon: "ri-line-chart-line" }], faqTitle: "FAQen", faqSubtitle: "Heefeg Froen ier Dir ufänkt", faqs: [{ question: "Wat geschitt beim gratis Automatiséierungs-Audit?", answer: "Mir kucken de Workflow un, erkennen Engpäss, analyséieren déi involvéiert Systemer a weisen, wou Automatiséierung oder Berodung als éischt praktesche Wäert schafe kann." }, { question: "Maacht Dir nëmme Berodung oder och d’Ëmsetzung?", answer: "D’Ëmsetzung ass zentral. Berodung hëlleft Prioritéiten, Architektur a Roadmaps ze schäerfen, sou datt Delivery besser agedeelt an méi effikass gëtt." }, { question: "Kënne mir kleng ufänken, ier mir méi grouss ausrollen?", answer: "Jo. Vill Projeten starten mat engem Workflow, engem Kommunikatiounsflow oder enger Integratioun a wuessen duerno zu engem méi breede Programm." }], ctaEyebrow: "Nächste Schrëtt", ctaTitle: "Bereet vun Workflow-Reiwung op Ëmsetzung ze goen?", ctaBody: "Start mat der Workflow-Analys, kritt praktesch nächst Schrëtt a decidéiert, wat an d’Roadmap oder d’Ëmsetzung soll goen.", ctaPrimary: "Gratis Audit ufroen", ctaSecondary: "Léisunge kucken",
+    heroTitle: "E strukturéierte Wee vum Workflow-Audit bis zur live Automatiséierung",
+    heroBody:
+      "De Prozess soll Onsécherheet reduzéieren. Mir definéieren de richtege Workflow, bauen en mat kloere Kontrollen, testen en propper a verbesseren de System no Go-live weider.",
+    diagramTitle: "Delivery-Flow",
+    diagramBody:
+      "All Etapp huet en kloert Zil, en realisteschen Zäitkader a konkret Outputs, ier de nächste Schrëtt ufänkt.",
+    trustTitle: "Firwat d'Delivery zouverlässeg bleift",
+    trustBody:
+      "De System soll sécher ze bedreiwe sinn, net just an enger Demo impressionéieren. Dat verlaangt Tester, Monitoring a kloer Kontrollpunkte fir d'Equipe.",
+    trustItems: [
+      {
+        title: "Kontrolléierte Scope",
+        body: "Mir starte mat engem kloere Workflow a definéieren d'operativ Logik, ier méi Systemer dobäikommen.",
+        icon: "ri-focus-2-line",
+      },
+      {
+        title: "Tester virum Launch",
+        body: "Reegelen, Routing, Edge Cases an Notifikatiounen ginn iwwerpréift, ier de System live geet.",
+        icon: "ri-shield-check-line",
+      },
+      {
+        title: "Monitoring nom Launch",
+        body: "Mir kucken, wéi de Workflow an der Produktioun leeft, a verfeineren en op Basis vun der reeller Notzung.",
+        icon: "ri-line-chart-line",
+      },
+      {
+        title: "Mënschlech Kontroll",
+        body: "Equippen behalen Visibilitéit, Ausnameweeër an Eskalatiounspunkten, wou Review weider wichteg bleift.",
+        icon: "ri-user-settings-line",
+      },
+    ],
+    faqTitle: "Heefeg Froen ier Dir ufänkt",
+    faqs: [
+      {
+        question: "Wat geschitt beim gratis Automatiséierungs-Audit?",
+        answer:
+          "Mir préiwen de Workflow, identifizéieren Engpäss, kucken déi involvéiert Systemer a weisen de sënnvollsten éischten Automatiséierungsschrëtt.",
+      },
+      {
+        question: "Maacht Dir nëmme Berodung oder och Ëmsetzung?",
+        answer:
+          "D'Ëmsetzung ass zentral. Berodung schäerft Scope, Architektur a Rollout-Decisiounen, sou datt d'Delivery méi kloer a mat manner Risiko leeft.",
+      },
+      {
+        question: "Kënne mir kleng ufänken, ier mir méi grouss ausrollen?",
+        answer:
+          "Jo. Vill Engagementer starten mat engem Workflow, engem Kommunikatiounsflow oder enger Integratioun a wuessen duerno.",
+      },
+    ],
+    ctaTitle: "Fänkt mam Workflow un, deen als éischt de gréisste Wäert schaaft",
+    ctaBody:
+      "Benotzt de gratis Audit, fir de richtegen éischte Workflow ze definéieren, an decidéiert duerno, wat an d'Roadmap oder an déi direkt Ëmsetzung soll goen.",
+    ctaPrimary: "Gratis Audit ufroen",
+    ctaSecondary: "Servicer kucken",
   },
 } as const;
 
@@ -35,164 +247,187 @@ export default function HowItWorksPage() {
       <Header />
 
       <main>
-        <section className="relative overflow-hidden bg-[linear-gradient(135deg,#0e427e_0%,#123f7a_58%,#0f172a_100%)] text-white">
-          <div className="absolute inset-0 bg-[url('/images/page-bg.jpg')] bg-cover bg-center opacity-15" />
-          <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 sm:py-28">
-            <AnimatedSection className="mx-auto max-w-4xl text-center">
-              <h1 className="text-4xl font-black tracking-[-0.04em] sm:text-5xl lg:text-6xl">
-                {copy.heroTitle}
-              </h1>
-              <p className="mx-auto mt-5 max-w-3xl text-xl font-medium leading-8 tracking-[-0.02em] text-blue-100 sm:text-2xl">
-                {copy.heroSubtitle}
-              </p>
-              <p className="mt-6 text-lg leading-8 text-blue-100">
-                {copy.heroBody}
-              </p>
-            </AnimatedSection>
+        <section className="bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_58%,#f8fafc_100%)] py-24 dark:bg-[linear-gradient(180deg,#020617_0%,#0b1120_46%,#0f172a_100%)] sm:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <SectionHeading
+              titleAs="h1"
+              align="center"
+              title={copy.heroTitle}
+              body={copy.heroBody}
+              titleClassName="text-[2.6rem] sm:text-[3.2rem] lg:text-[3.8rem]"
+            />
+
+            <div className="mt-14 grid gap-4 lg:grid-cols-5">
+              {processSteps.map((step, index) => (
+                <AnimatedSection
+                  key={step.step}
+                  delay={index * 0.04}
+                  direction="up"
+                >
+                  <div className="lux-card-soft h-full px-4 py-5 text-center">
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary-600 text-sm font-semibold text-white">
+                      0{index + 1}
+                    </span>
+                    <p className="mt-4 text-lg font-semibold text-slate-950 dark:text-white">
+                      {step.step}
+                    </p>
+                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                      {step.duration}
+                    </p>
+                  </div>
+                </AnimatedSection>
+              ))}
+            </div>
           </div>
         </section>
 
         <section className="py-24 sm:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <AnimatedSection className="mx-auto max-w-3xl text-center">
-              <h2 className="lux-display-title">
-                {copy.flowTitle}
-              </h2>
-              <p className="mx-auto max-w-2xl lux-section-subtitle">
-                {copy.flowSubtitle}
-              </p>
-            </AnimatedSection>
+            <SectionHeading
+              align="center"
+              title={copy.diagramTitle}
+              body={copy.diagramBody}
+            />
 
-            <div className="mt-16 space-y-12">
+            <div className="mt-14 space-y-6">
               {processSteps.map((step, index) => (
                 <AnimatedSection
                   key={step.step}
-                  delay={index * 0.05}
-                  className="grid items-center gap-8 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900 lg:grid-cols-[0.9fr_1.1fr]"
+                  delay={index * 0.04}
+                  className="grid items-center gap-6 lg:grid-cols-[0.92fr_1.08fr]"
                 >
-                  <div className={index % 2 === 1 ? "lg:order-2" : ""}>
+                  <SurfaceCard
+                    className={[
+                      "overflow-hidden p-4",
+                      index % 2 === 1 ? "lg:order-2" : "",
+                    ].join(" ")}
+                  >
                     <img
                       src={step.image}
                       alt={step.step}
-                      className="h-full w-full rounded-[1.5rem] object-cover"
+                      className="w-full rounded-[1.4rem] object-cover"
                     />
-                  </div>
+                  </SurfaceCard>
 
-                  <div className={index % 2 === 1 ? "lg:order-1" : ""}>
-                    <div className="flex items-center gap-4">
-                      <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white">
-                        0{index + 1}
+                  <SurfaceCard
+                    subtle
+                    className={index % 2 === 1 ? "lg:order-1" : ""}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary-600 text-sm font-semibold text-white">
+                          0{index + 1}
+                        </span>
+                        <h2 className="text-2xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+                          {step.step}
+                        </h2>
+                      </div>
+                      <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
+                        {step.duration}
                       </span>
-                      <p className="text-2xl font-black">{step.step}</p>
                     </div>
 
-                    <p className="mt-5 text-base leading-8 text-slate-600 dark:text-slate-300">
+                    <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
                       {step.description}
                     </p>
 
-                    <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-                      {step.points.map((point) => (
-                        <li
-                          key={point}
-                          className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
-                        >
-                          <i className="ri-check-line mt-0.5 text-primary-600 dark:text-accent-400" />
-                          <span>{point}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                    <div className="mt-6 grid gap-5 xl:grid-cols-[1fr_0.9fr]">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Work in this step
+                        </p>
+                        <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+                          {step.points.map((point) => (
+                            <li
+                              key={point}
+                              className="rounded-[1.1rem] border border-slate-200/80 bg-white px-4 py-3 text-sm leading-7 text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                            >
+                              {point}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Outputs
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {(step.outputs ?? []).map((item) => (
+                            <span key={item} className="lux-pill">
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </SurfaceCard>
                 </AnimatedSection>
               ))}
             </div>
           </div>
         </section>
 
-        <AnimatedSection className="bg-slate-50 py-24 dark:bg-slate-900/60 sm:py-28">
+        <section className="bg-slate-50/80 py-24 dark:bg-slate-900/50 sm:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <AnimatedSection className="mx-auto max-w-3xl text-center">
-              <h2 className="lux-display-title">
-                {copy.whyTitle}
-              </h2>
-              <p className="mx-auto max-w-2xl lux-section-subtitle">
-                {copy.whySubtitle}
-              </p>
-            </AnimatedSection>
+            <SectionHeading
+              align="center"
+              title={copy.trustTitle}
+              body={copy.trustBody}
+            />
 
             <div className="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-              {copy.deliveryReasons.map((item, index) => (
+              {copy.trustItems.map((item, index) => (
                 <AnimatedSection
                   key={item.title}
                   delay={index * 0.05}
-                  direction="scale"
+                  direction="up"
                 >
-                  <motion.div
-                    className="h-full rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-950"
-                    whileHover={{ y: -6 }}
-                  >
-                    <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
-                      <i className={`${item.icon} text-2xl`} />
-                    </span>
-                    <h3 className="mt-5 text-xl font-bold">{item.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                      {item.description}
-                    </p>
+                  <motion.div whileHover={{ y: -4 }}>
+                    <SurfaceCard subtle className="gap-4">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
+                        <i className={`${item.icon} text-xl`} />
+                      </span>
+                      <h2 className="text-xl font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
+                        {item.title}
+                      </h2>
+                      <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        {item.body}
+                      </p>
+                    </SurfaceCard>
                   </motion.div>
                 </AnimatedSection>
               ))}
             </div>
           </div>
-        </AnimatedSection>
+        </section>
 
-        <AnimatedSection className="py-24 sm:py-28">
+        <section className="py-24 sm:py-28">
           <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-            <AnimatedSection className="text-center">
-              <h2 className="lux-display-title">
-                {copy.faqTitle}
-              </h2>
-              <p className="mx-auto max-w-2xl lux-section-subtitle">
-                {copy.faqSubtitle}
-              </p>
-            </AnimatedSection>
-
+            <SectionHeading align="center" title={copy.faqTitle} />
             <FaqAccordion items={copy.faqs} />
           </div>
-        </AnimatedSection>
+        </section>
 
-        <AnimatedSection className="pb-24 sm:pb-28">
+        <section className="pb-24 sm:pb-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#0e427e_0%,#123f7a_58%,#0f172a_100%)] px-6 py-12 text-white shadow-[0_35px_80px_-40px_rgba(14,66,126,0.7)] sm:px-10 lg:px-14">
-              <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.24em] text-blue-100">
-                    {copy.ctaEyebrow}
-                  </p>
-                  <h2 className="lux-display-title">
-                    {copy.ctaTitle}
-                  </h2>
-                  <p className="mt-5 max-w-2xl text-lg leading-8 text-blue-100">
-                    {copy.ctaBody}
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-4 rounded-[1.75rem] border border-white/15 bg-white/10 p-6 backdrop-blur">
-                  <Link
-                    href="/scheduling?meetingTypeKey=free-audit"
-                    className="inline-flex items-center justify-center rounded-full bg-accent-500 px-6 py-3 text-sm font-semibold text-slate-950 transition-all duration-200 hover:-translate-y-1 hover:bg-accent-400"
-                  >
-                    {copy.ctaPrimary}
-                  </Link>
-                  <Link
-                    href="/services"
-                    className="inline-flex items-center justify-center rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-white/10"
-                  >
-                    {copy.ctaSecondary}
-                  </Link>
-                </div>
-              </div>
+            <div className="lux-card p-8 text-center sm:p-10 lg:p-12">
+              <SectionHeading
+                align="center"
+                title={copy.ctaTitle}
+                body={copy.ctaBody}
+              />
+              <CtaLinks
+                primaryHref="/scheduling?meetingTypeKey=free-audit"
+                primaryLabel={copy.ctaPrimary}
+                secondaryHref="/services"
+                secondaryLabel={copy.ctaSecondary}
+                centered
+                className="mt-8"
+              />
             </div>
           </div>
-        </AnimatedSection>
+        </section>
       </main>
 
       <Footer />
@@ -208,15 +443,15 @@ function FaqAccordion({
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <div className="mt-14 space-y-4">
+    <div className="mt-12 space-y-4">
       {items.map((item, index) => {
         const isOpen = openIndex === index;
 
         return (
           <motion.div
             key={item.question}
-            className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
-            whileHover={{ y: -3 }}
+            className="overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white shadow-[0_20px_40px_-34px_rgba(15,23,42,0.18)] dark:border-slate-800 dark:bg-slate-950"
+            whileHover={{ y: -2 }}
           >
             <button
               type="button"
@@ -224,10 +459,10 @@ function FaqAccordion({
               className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
               aria-expanded={isOpen}
             >
-              <span className="text-base font-semibold sm:text-lg">
+              <span className="text-base font-semibold text-slate-950 dark:text-white sm:text-lg">
                 {item.question}
               </span>
-              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
                 <i
                   className={`ri-arrow-down-s-line text-xl transition-transform duration-200 ${
                     isOpen ? "rotate-180" : ""

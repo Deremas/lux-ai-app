@@ -49,33 +49,25 @@ export async function POST(req: Request) {
 
     const name = clean(body?.name);
     const email = clean(body?.email).toLowerCase();
-    const confirmEmail = clean(body?.confirmEmail).toLowerCase();
     const phoneRaw = clean(body?.phone);
     const company = clean(body?.company);
     const taskDescription = clean(body?.taskDescription);
 
-    if (
-      !name ||
-      !email ||
-      !confirmEmail ||
-      !phoneRaw ||
-      !company ||
-      !taskDescription
-    ) {
+    if (!name || !email || !phoneRaw || !taskDescription) {
       return NextResponse.json(
         { ok: false, error: "Missing fields" },
         { status: 400 }
       );
     }
 
-    if (!isEmailLike(email) || email !== confirmEmail) {
+    if (!isEmailLike(email)) {
       return NextResponse.json(
-        { ok: false, error: "Email mismatch" },
+        { ok: false, error: "Invalid email" },
         { status: 400 }
       );
     }
 
-    if (!isValidName(name) || !isValidCompany(company)) {
+    if (!isValidName(name) || (company && !isValidCompany(company))) {
       return NextResponse.json(
         { ok: false, error: "Invalid input" },
         { status: 400 }
@@ -138,6 +130,8 @@ export async function POST(req: Request) {
         <h2>New Contact Message</h2>
         <p><strong>Name:</strong> ${name}</p>
         <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Phone:</strong> ${phoneE164}</p>
+        <p><strong>Company:</strong> ${company || "Not provided"}</p>
         <p><strong>Message:</strong> ${taskDescription}</p>
       `,
     });

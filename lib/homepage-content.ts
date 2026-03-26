@@ -16,6 +16,13 @@ export type InfoCard = {
   body: string;
 };
 
+export type ProcessSummaryStep = {
+  title: string;
+  duration: string;
+  body: string;
+  outputs: [string, string];
+};
+
 export type HomePageCopy = {
   hero: {
     eyebrow: string;
@@ -72,9 +79,9 @@ export type HomePageCopy = {
     note: string;
   };
   process: {
-    eyebrow: string;
     title: string;
     body: string;
+    steps: [ProcessSummaryStep, ProcessSummaryStep, ProcessSummaryStep];
     primary: string;
     secondary: string;
   };
@@ -90,20 +97,20 @@ export type HomePageCopy = {
 
 const englishCopy: HomePageCopy = {
   hero: {
-    eyebrow: "AI automation systems for SMEs",
+    eyebrow: "AI Automation Systems & Consulting for SMEs",
     headline:
-      "Automate SME operations with AI workflows, smart client communication, and connected dashboards.",
+      "Automate SME operations with AI-powered workflows.",
     subheadline:
-      "We design, build, and integrate AI systems into the tools you already use so manual work drops, response speed improves, and teams get clear operational visibility.",
+      "We design and implement AI systems that streamline client communication, connect business tools, and bring operational clarity through intelligent automation.",
     proofLine: [
       "GDPR-first",
       "Integration-focused",
       "Custom systems",
       "No vendor lock-in",
     ],
-    urgency: "Limited onboarding slots available this month.",
-    primary: "Get Free Automation Audit",
-    secondary: "See How It Works",
+    urgency: "Built for SMEs and growing businesses in Luxembourg and Europe.",
+    primary: "Get a Free Audit",
+    secondary: "Explore Solutions",
     visualBadge: "Live system view",
     visualTitle:
       "Workflow routing, AI decision logic, and dashboard visibility in one operating system.",
@@ -147,7 +154,7 @@ const englishCopy: HomePageCopy = {
     eyebrow: "Services",
     title: "What we actually deliver",
     body:
-      "Three system layers cover most SME automation needs: workflows, communication, and connected operations.",
+      "Practical AI systems that automate operations and improve business workflows.",
     deliverablesLabel: "Deliverables",
     exampleLabel: "Example",
     resultLabel: "Result",
@@ -214,29 +221,29 @@ const englishCopy: HomePageCopy = {
   },
   why: {
     eyebrow: "Why Lux AI",
-    title: "Built for operational clarity, not just flashy demos",
+    title: "Built for real business operations",
     body:
-      "The point is to make the business work better, not to drop a generic AI layer on top of broken processes.",
+      "Practical automation should improve clarity, reliability, and everyday execution across the business.",
     items: [
       {
-        icon: "ri-shield-check-line",
-        title: "GDPR-first",
-        body: "EU business context, access control, and cleaner handling of operational data from the start.",
+        icon: "ri-layout-grid-line",
+        title: "Usable systems",
+        body: "Built for real workflows and day-to-day execution, not just demos.",
+      },
+      {
+        icon: "ri-line-chart-line",
+        title: "Scalable automation",
+        body: "Designed to support growth without adding more manual coordination.",
+      },
+      {
+        icon: "ri-dashboard-3-line",
+        title: "Clear visibility",
+        body: "Dashboards and structured flows make status and next actions easier to manage.",
       },
       {
         icon: "ri-links-line",
-        title: "Integration-focused",
-        body: "We connect the systems you already use instead of forcing unnecessary rebuilds.",
-      },
-      {
-        icon: "ri-layout-grid-line",
-        title: "Custom systems",
-        body: "Solutions are designed around your workflow, not around a template library.",
-      },
-      {
-        icon: "ri-door-lock-line",
-        title: "No vendor lock-in",
-        body: "You get clear deliverables, documented logic, and systems your team can understand and keep using.",
+        title: "Reliable integrations",
+        body: "Stable system connections reduce friction, re-entry, and missed handoffs.",
       },
     ],
   },
@@ -244,70 +251,89 @@ const englishCopy: HomePageCopy = {
     eyebrow: "What you get",
     title: "A usable automation system, not just advice",
     body:
-      "Every engagement is meant to end in a working business system your team can actually operate.",
+      "We combine validation, design, implementation, and support to turn automation ideas into working business systems.",
     items: [
       {
-        icon: "ri-flow-chart",
-        title: "Workflows",
-        body: "Mapped and redesigned flows with automation logic for the steps that should stop being manual.",
+        icon: "ri-search-eye-line",
+        title: "Validation",
+        body: "We identify practical automation opportunities worth solving first.",
       },
       {
-        icon: "ri-chat-1-line",
-        title: "Chatbot",
-        body: "Client-facing or internal AI chat experiences connected to approved business knowledge.",
+        icon: "ri-draft-line",
+        title: "Design",
+        body: "We define workflow logic, structure, and the right system architecture.",
       },
       {
-        icon: "ri-plug-2-line",
-        title: "Integrations",
-        body: "Connected tools across CRM, email, WhatsApp, ERP, forms, APIs, or internal systems.",
+        icon: "ri-tools-line",
+        title: "Implementation",
+        body: "We build and connect the automation systems your business actually needs.",
       },
       {
-        icon: "ri-dashboard-3-line",
-        title: "Dashboard",
-        body: "Visibility into status, workload, exceptions, and the next action for the team.",
+        icon: "ri-loop-right-line",
+        title: "Evolution",
+        body: "We improve workflows over time as your needs and volume grow.",
       },
       {
         icon: "ri-customer-service-2-line",
         title: "Support",
-        body: "Handover, refinement, and operational support once the first useful system is live.",
+        body: "We maintain and optimize systems after launch so they stay useful.",
       },
     ],
   },
   example: {
     eyebrow: "Example system",
     title:
-      "Scheduling and rendez-vous automation is one workflow example, not the whole offer",
+      "Example: Smart appointment automation",
     body:
-      "If you need booking, reminders, approvals, payments, or calendar routing, we can build it into the wider operating system. The core offer remains custom automation for your business.",
+      "We design systems that automatically schedule, match, and manage appointments using business rules and workflow logic.",
     tag: "Example workflow block",
     imageAlt: "Scheduling workflow example interface",
     imagePill: "Live example",
     bullets: [
-      "Availability and routing rules",
-      "Reminder and follow-up automation",
-      "CRM or dashboard updates",
-      "Approval or payment logic where needed",
+      "Calendar synchronization",
+      "Intelligent matching",
+      "Load balancing",
+      "Approval workflows",
     ],
     note:
-      "Use it as one concrete example of how Lux AI builds connected systems around a real operational flow.",
+      "This is one workflow example inside a broader automation offer covering systems, communication, dashboards, and consulting.",
   },
   process: {
-    eyebrow: "How it works",
     title: "A clear path from audit to working system",
     body:
       "Start with the free audit, confirm the right workflow, then move into design, build, and optimization with a defined next step.",
-    primary: "Get Free Automation Audit",
+    steps: [
+      {
+        title: "Assess",
+        duration: "3-5 days",
+        body: "We review the workflow, map friction points, and define the best automation entry point first.",
+        outputs: ["Workflow map", "Priority shortlist"],
+      },
+      {
+        title: "Design and build",
+        duration: "2-6 weeks",
+        body: "We design the operating flow, connect the tools, and build the automation logic into a usable system.",
+        outputs: ["System blueprint", "Connected workflow"],
+      },
+      {
+        title: "Launch and improve",
+        duration: "Ongoing",
+        body: "We test, monitor, and refine the live system so the team keeps control as the workflow matures.",
+        outputs: ["Live handover", "Optimization plan"],
+      },
+    ],
+    primary: "Get a Free Audit",
     secondary: "See How It Works",
   },
   final: {
     eyebrow: "Next step",
     title: "Start with a free automation audit",
     body:
-      "We review your current workflow, identify the best automation entry point, and outline what the first useful system should include.",
+      "We analyze your workflows and identify practical AI automation opportunities for your business.",
     urgency:
-      "Current availability is limited to a small number of onboarding slots.",
-    primary: "Get Free Automation Audit",
-    secondary: "See How It Works",
+      "You leave with a clearer workflow priority and practical next steps.",
+    primary: "Get a Free Audit",
+    secondary: "Explore Solutions",
   },
 };
 
@@ -315,7 +341,7 @@ const frenchCopy: HomePageCopy = {
   hero: {
     eyebrow: "Systemes d'automatisation IA pour PME",
     headline:
-      "Automatisez les operations des PME avec des workflows IA, une communication client intelligente et des dashboards connectes.",
+      "Automatisation IA pour des operations PME plus fluides.",
     subheadline:
       "Nous concevons, construisons et integrons des systemes IA dans vos outils existants pour reduire le travail manuel, accelerer les reponses et donner une vraie visibilite operationnelle a l'equipe.",
     proofLine: [
@@ -520,10 +546,29 @@ const frenchCopy: HomePageCopy = {
       "Prenez-le comme un exemple concret de la facon dont Lux AI construit des systemes connectes autour d'un vrai flux operationnel.",
   },
   process: {
-    eyebrow: "Comment ca marche",
     title: "Un chemin clair de l'audit au systeme live",
     body:
       "Commencez par l'audit gratuit, validez le bon workflow, puis passez a la conception, a l'implementation et a l'optimisation avec une prochaine etape definie.",
+    steps: [
+      {
+        title: "Evaluer",
+        duration: "3-5 jours",
+        body: "Nous passons le workflow en revue, cartographions les blocages et definissons le meilleur point d'entree pour l'automatisation.",
+        outputs: ["Carte du workflow", "Priorites utiles"],
+      },
+      {
+        title: "Concevoir et construire",
+        duration: "2-6 semaines",
+        body: "Nous definissons le flux cible, connectons les outils et construisons une logique d'automatisation exploitable.",
+        outputs: ["Blueprint du systeme", "Workflow connecte"],
+      },
+      {
+        title: "Lancer et ameliorer",
+        duration: "En continu",
+        body: "Nous testons, surveillons et affinons le systeme live pour garder de la visibilite et du controle.",
+        outputs: ["Mise en service", "Plan d'optimisation"],
+      },
+    ],
     primary: "Obtenir un audit d'automatisation",
     secondary: "Voir le fonctionnement",
   },
@@ -543,7 +588,7 @@ const germanCopy: HomePageCopy = {
   hero: {
     eyebrow: "KI-Automatisierungssysteme fuer KMU",
     headline:
-      "Automatisieren Sie KMU-Ablaeufe mit KI-Workflows, intelligenter Kundenkommunikation und verbundenen Dashboards.",
+      "KI-Automatisierung fuer reibungslosere KMU-Ablaeufe.",
     subheadline:
       "Wir konzipieren, bauen und integrieren KI-Systeme in Ihre bestehenden Tools, damit manuelle Arbeit sinkt, Reaktionszeiten besser werden und Teams klare operative Sicht bekommen.",
     proofLine: [
@@ -732,7 +777,7 @@ const germanCopy: HomePageCopy = {
   example: {
     eyebrow: "Beispielsystem",
     title:
-      "Termin- und Rendez-vous-Automatisierung ist ein Workflow-Beispiel, nicht das gesamte Angebot",
+      "Termin- und Buchungsautomatisierung ist ein Workflow-Beispiel, nicht das gesamte Angebot",
     body:
       "Wenn Sie Buchung, Erinnerungen, Freigaben, Zahlungen oder Kalender-Routing brauchen, bauen wir das in ein breiteres Betriebssystem ein. Das Kernangebot bleibt individuelle Automatisierung fuer Ihr Business.",
     tag: "Beispiel-Workflow-Block",
@@ -748,10 +793,29 @@ const germanCopy: HomePageCopy = {
       "Sehen Sie es als ein konkretes Beispiel dafuer, wie Lux AI vernetzte Systeme um einen echten operativen Ablauf baut.",
   },
   process: {
-    eyebrow: "So funktioniert's",
     title: "Ein klarer Weg vom Audit zum live arbeitenden System",
     body:
       "Starten Sie mit dem kostenlosen Audit, bestaetigen Sie den richtigen Workflow und gehen Sie dann in Design, Umsetzung und Optimierung mit klar definiertem naechsten Schritt.",
+    steps: [
+      {
+        title: "Analysieren",
+        duration: "3-5 Tage",
+        body: "Wir prüfen den Workflow, machen Reibung sichtbar und bestimmen den besten Einstieg in die Automatisierung.",
+        outputs: ["Workflow-Uebersicht", "Prioritaetenliste"],
+      },
+      {
+        title: "Konzipieren und umsetzen",
+        duration: "2-6 Wochen",
+        body: "Wir entwerfen den Zielablauf, verbinden die Systeme und bauen die Automatisierungslogik in einen nutzbaren Flow.",
+        outputs: ["Systemkonzept", "Vernetzter Ablauf"],
+      },
+      {
+        title: "Starten und verbessern",
+        duration: "Laufend",
+        body: "Wir testen, überwachen und verfeinern das Live-System, damit das Team Kontrolle und Sichtbarkeit behaelt.",
+        outputs: ["Go-live-Uebergabe", "Optimierungsplan"],
+      },
+    ],
     primary: "Kostenloses Automatisierungs-Audit",
     secondary: "So funktioniert's",
   },
@@ -771,7 +835,7 @@ const luxembourgishCopy: HomePageCopy = {
   hero: {
     eyebrow: "KI-Automatiseierungssystemer fir PMEen",
     headline:
-      "Automatiséiert PME-Operatiounen mat KI-Workflows, intelligenter Clientekommunikatioun a verbonnene Dashboards.",
+      "KI-Automatiséierung fir méi glat PME-Operatiounen.",
     subheadline:
       "Mir designen, bauen an integréieren KI-Systemer an Är bestoend Tools, fir datt manuell Aarbecht erofgeet, Reaktiounszäiten besser ginn an d'Ekipp kloer operativ Visibilitéit kritt.",
     proofLine: [
@@ -960,7 +1024,7 @@ const luxembourgishCopy: HomePageCopy = {
   example: {
     eyebrow: "Beispillsystem",
     title:
-      "Scheduling a Rendez-vous-Automatiséierung ass ee Workflow-Beispill, net déi ganz Offer",
+      "Termin- a Buchungsautomatiséierung ass ee Workflow-Beispill, net déi ganz Offer",
     body:
       "Wann Dir Buchung, Erënnerungen, Geneemegungen, Bezuelungen oder Kalenner-Routing braucht, baue mir dat an e méi breede Betribssystem an. D'Käroffer bleift moossgeschneidert Automatiséierung fir Äre Betrib.",
     tag: "Beispill-Workflow-Block",
@@ -976,10 +1040,29 @@ const luxembourgishCopy: HomePageCopy = {
       "Huelt et als e konkrete Beispill, wéi Lux AI verbonnene Systemer ronderëm e richtegen operativen Flow baut.",
   },
   process: {
-    eyebrow: "Wéi et geet",
     title: "E kloere Wee vum Audit bis zum live laafende System",
     body:
       "Fänkt mam gratis Audit un, confirméiert de richtege Workflow a gitt duerno a Design, Ëmsetzung an Optimiséierung mat engem definéierte nächste Schrëtt.",
+    steps: [
+      {
+        title: "Analyséieren",
+        duration: "3-5 Deeg",
+        body: "Mir kucken de Workflow duerch, maachen Reiwung sichtbar a definéieren dee beschten Entrée an d'Automatiséierung.",
+        outputs: ["Workflow-Iwwersiicht", "Prioritéitslëscht"],
+      },
+      {
+        title: "Entwërfen a bauen",
+        duration: "2-6 Wochen",
+        body: "Mir designen den Zil-Flow, verbannen d'Tools a bauen d'Automatiséierungslogik an e benotzbaart System.",
+        outputs: ["System-Blueprint", "Verbonnene Flow"],
+      },
+      {
+        title: "Lancéieren a verbesseren",
+        duration: "Permanent",
+        body: "Mir testen, iwwerwaachen a verfeineren de Live-System, sou datt d'Equipe Kontroll a Visibilitéit behält.",
+        outputs: ["Live-Handover", "Optimiséierungsplang"],
+      },
+    ],
     primary: "Gratis Automatiséierungs-Audit",
     secondary: "Kuckt wéi et geet",
   },

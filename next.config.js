@@ -1,11 +1,13 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+const { PHASE_DEVELOPMENT_SERVER } = require("next/constants");
+
+module.exports = (phase) => ({
   // If you later enable output: "export", note:
   // serverExternalPackages is server-only and won't matter for static export.
   // output: "export",
-
-  // serverExternalPackages: ["pdf-parse"],
-  outputFileTracing: false,
+  distDir: phase === PHASE_DEVELOPMENT_SERVER ? ".next-dev" : ".next",
+  experimental: {
+    webpackBuildWorker: true,
+  },
   images: {
     unoptimized: true,
   },
@@ -20,6 +22,4 @@ const nextConfig = {
 
     return config;
   },
-};
-
-module.exports = nextConfig;
+});

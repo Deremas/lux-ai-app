@@ -1313,30 +1313,24 @@ export default function SchedulingClient(props: Props) {
 
   const hero = (
     <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/85 p-8 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 via-blue-500 to-accent-500" />
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
-            {copy.heroEyebrow}
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">
-            {copy.heroTitle}
-          </h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            {copy.heroBody}
-          </p>
-        </div>
-        <div className="max-w-md rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm dark:border-slate-700/70 dark:bg-slate-950/50">
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary-600 dark:text-accent-400">
-            {copy.bridge.eyebrow}
-          </p>
-          <h2 className="mt-2 text-base font-semibold text-gray-900 dark:text-white">
+      <div className="mx-auto max-w-4xl text-center">
+        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+          {copy.heroEyebrow}
+        </p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-gray-900 dark:text-white sm:text-4xl">
+          {copy.heroTitle}
+        </h1>
+        <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-gray-600 dark:text-gray-300 sm:text-base">
+          {copy.heroBody}
+        </p>
+        <div className="mx-auto mt-8 max-w-2xl rounded-2xl border border-slate-200/80 bg-slate-50/85 p-5 text-left shadow-sm dark:border-slate-700/70 dark:bg-slate-950/50">
+          <p className="text-sm font-semibold text-gray-900 dark:text-white">
             {copy.bridge.title}
-          </h2>
+          </p>
           <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
             {copy.bridge.description}
           </p>
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
             <Button type="button" size="sm" asChild>
               <Link href="/contact">{copy.bridge.primaryCta}</Link>
             </Button>
@@ -1369,17 +1363,17 @@ export default function SchedulingClient(props: Props) {
     return (
       <div className="space-y-10">
         {!isAuthed ? hero : null}
-        <div className="rounded-3xl border border-amber-200/70 bg-amber-50/80 p-6 text-amber-950 shadow-[0_18px_50px_-40px_rgba(217,119,6,0.45)] backdrop-blur">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-amber-700">
+        <div className="rounded-3xl border border-amber-200/70 bg-amber-50/80 p-6 text-center text-amber-950 shadow-[0_18px_50px_-40px_rgba(217,119,6,0.45)] backdrop-blur">
+          <p className="text-sm font-medium text-amber-700">
             {copy.unavailableEyebrow}
           </p>
           <h2 className="mt-3 text-2xl font-semibold">
             {copy.unavailableTitle}
           </h2>
-          <p className="mt-3 text-sm leading-7 text-amber-900">
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-amber-900">
             {schedulingUnavailableMessage}
           </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Button type="button" asChild>
               <Link href="/contact#free-audit-form">{copy.unavailablePrimary}</Link>
             </Button>
@@ -1398,11 +1392,8 @@ export default function SchedulingClient(props: Props) {
         {hero}
 
         <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 sm:p-8">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary-600 dark:text-accent-400">
-              {copy.guest.eyebrow}
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold text-gray-900 dark:text-white">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-3xl font-semibold tracking-[-0.03em] text-gray-900 dark:text-white">
               {copy.guest.title}
             </h2>
             <p className="mt-4 text-sm leading-7 text-gray-600 dark:text-gray-300 sm:text-base">

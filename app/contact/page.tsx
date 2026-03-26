@@ -241,9 +241,9 @@ const localizedContactExtras = {
     schedulingBridge: {
       eyebrow: "Wëllt Dir amplaz direkt buchen?",
       title:
-        "Maacht d'Scheduling op, wann Dir de gratis Audit als Rendez-vous oder e Live-Gespréich wëllt.",
+        "Maacht d'Terminplanung op, wann Dir de gratis Audit als Termin oder e Live-Gespréich wëllt.",
       description:
-        "Benotzt d'Scheduling, wann Dir bereet sidd direkt eng Zäit ze wielen. Benotzt dëse Kontakt-Formulaire, wann Dir léiwer fir d'éischt de Workflow-Kontext schrëftlech schécke wëllt.",
+        "Benotzt d'Terminplanung, wann Dir bereet sidd direkt eng Zäit ze wielen. Benotzt dëse Kontakt-Formulaire, wann Dir léiwer fir d'éischt de Workflow-Kontext schrëftlech schécke wëllt.",
       bullets: [
         "Wielt eng Zäit, déi an Äre Kalenner passt",
         "Gitt no der Umeldung direkt an de gratis Audit",
@@ -255,30 +255,80 @@ const localizedContactExtras = {
   },
 } as const;
 
+const structuredFieldCopy = {
+  en: {
+    processLabel: "Current process",
+    processPlaceholder:
+      "Describe the workflow today, where it slows down, and what is still manual.",
+    toolsLabel: "Current tools and systems",
+    toolsPlaceholder:
+      "CRM, email, WhatsApp, ERP, spreadsheets, forms, internal dashboards, or any other systems involved.",
+    goalLabel: "Outcome you want",
+    goalPlaceholder:
+      "What should improve first: response times, fewer handoffs, better visibility, cleaner data flow, faster approvals, or something else?",
+    successNextTitle: "What happens next",
+    resetLabel: "Send another request",
+  },
+  fr: {
+    processLabel: "Processus actuel",
+    processPlaceholder:
+      "Decrivez le workflow aujourd'hui, ou il ralentit et ce qui reste manuel.",
+    toolsLabel: "Outils et systemes actuels",
+    toolsPlaceholder:
+      "CRM, email, WhatsApp, ERP, feuilles de calcul, formulaires, dashboards internes ou tout autre systeme implique.",
+    goalLabel: "Resultat recherche",
+    goalPlaceholder:
+      "Qu'est-ce qui doit s'ameliorer en premier : delais de reponse, moins de handoffs, meilleure visibilite, flux de donnees plus propre, validations plus rapides ou autre chose ?",
+    successNextTitle: "Ce qui se passe ensuite",
+    resetLabel: "Envoyer une autre demande",
+  },
+  de: {
+    processLabel: "Aktueller Prozess",
+    processPlaceholder:
+      "Beschreiben Sie den Workflow heute, wo er stockt und was noch manuell ist.",
+    toolsLabel: "Aktuelle Tools und Systeme",
+    toolsPlaceholder:
+      "CRM, E-Mail, WhatsApp, ERP, Tabellen, Formulare, interne Dashboards oder andere beteiligte Systeme.",
+    goalLabel: "Gewuenschtes Ergebnis",
+    goalPlaceholder:
+      "Was soll sich zuerst verbessern: Reaktionszeit, weniger Handoffs, bessere Sichtbarkeit, saubererer Datenfluss, schnellere Freigaben oder etwas anderes?",
+    successNextTitle: "Wie es weitergeht",
+    resetLabel: "Weitere Anfrage senden",
+  },
+  lb: {
+    processLabel: "Aktuelle Prozess",
+    processPlaceholder:
+      "Beschreift de Workflow haut, wou en stockt a wat nach manuell leeft.",
+    toolsLabel: "Aktuell Tools a Systemer",
+    toolsPlaceholder:
+      "CRM, E-Mail, WhatsApp, ERP, Tabellen, Formulairen, intern Dashboards oder aner involvéiert Systemer.",
+    goalLabel: "Gewënscht Resultat",
+    goalPlaceholder:
+      "Wat soll als éischt besser ginn: Reaktiounszäit, manner Handoffs, besser Visibilitéit, méi propperen Datefloss, méi séier Geneemegungen oder eppes anescht?",
+    successNextTitle: "Wat duerno geschitt",
+    resetLabel: "Eng aner Ufro schécken",
+  },
+} as const;
+
 export default function ContactPage() {
   const { lang } = useLanguage();
   const extra = localizedContactExtras[lang] ?? localizedContactExtras.en;
+  const structured = structuredFieldCopy[lang] ?? structuredFieldCopy.en;
   const copy = {
     submitError: t<string>(lang as any, "contact.modal.errorBody"),
     nameLabel: t<string>(lang as any, "contact.form.fullName"),
     emailLabel: t<string>(lang as any, "contact.form.email"),
-    confirmEmailLabel: t<string>(lang as any, "contact.form.confirmEmail"),
     phoneLabel: t<string>(lang as any, "contact.form.phone"),
     companyLabel: t<string>(lang as any, "contact.form.company"),
     submitLabel: t<string>(lang as any, "contact.form.submit"),
     sendingLabel: t<string>(lang as any, "contact.form.sending"),
     namePlaceholder: t<string>(lang as any, "contact.form.placeholders.name"),
     emailPlaceholder: t<string>(lang as any, "contact.form.placeholders.email"),
-    confirmEmailPlaceholder: t<string>(
-      lang as any,
-      "contact.form.placeholders.confirmEmail"
-    ),
     companyPlaceholder: t<string>(
       lang as any,
       "contact.form.placeholders.company"
     ),
     phonePlaceholder: t<string>(lang as any, "contact.form.placeholders.phone"),
-    emailMismatch: t<string>(lang as any, "contact.form.errors.emailMismatch"),
     phoneRequired: t<string>(lang as any, "contact.form.errors.phoneRequired"),
     phoneInvalid: t<string>(lang as any, "contact.form.errors.phoneInvalid"),
     info: {
@@ -340,14 +390,14 @@ export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    confirmEmail: "",
     phone: "",
     company: "",
-    taskDescription: "",
+    processSummary: "",
+    currentTools: "",
+    goal: "",
     website: "",
   });
   const [errors, setErrors] = useState<{
-    confirmEmail?: string;
     phone?: string;
   }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -364,12 +414,6 @@ export default function ContactPage() {
 
   const validateClient = () => {
     const next: typeof errors = {};
-
-    const email = formData.email.trim().toLowerCase();
-    const confirmEmail = formData.confirmEmail.trim().toLowerCase();
-    if (email !== confirmEmail) {
-      next.confirmEmail = copy.emailMismatch;
-    }
 
     const digits = formData.phone.replace(/\D/g, "");
     if (!formData.phone.trim()) {
@@ -390,10 +434,23 @@ export default function ContactPage() {
     setSubmitStatus("");
 
     try {
+      const taskDescription = [
+        `Current process:\n${formData.processSummary.trim()}`,
+        formData.currentTools.trim()
+          ? `Current tools:\n${formData.currentTools.trim()}`
+          : "",
+        `Outcome wanted:\n${formData.goal.trim()}`,
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          taskDescription,
+        }),
       });
 
       if (!response.ok) {
@@ -403,10 +460,11 @@ export default function ContactPage() {
       setFormData({
         name: "",
         email: "",
-        confirmEmail: "",
         phone: "",
         company: "",
-        taskDescription: "",
+        processSummary: "",
+        currentTools: "",
+        goal: "",
         website: "",
       });
       setShowAlert(true);
@@ -421,46 +479,31 @@ export default function ContactPage() {
     <div className="min-h-screen bg-white text-slate-950 transition-colors duration-300 dark:bg-slate-950 dark:text-white">
       <Header />
 
-      <AlertModal
-        open={showAlert}
-        onClose={() => setShowAlert(false)}
-        title={t<string>(lang as any, "contact.modal.title")}
-        body={t<string>(lang as any, "contact.modal.body")}
-        closeLabel={t<string>(lang as any, "contact.modal.close")}
-      />
-
       <main>
-        <section className="relative overflow-hidden bg-[linear-gradient(135deg,#0e427e_0%,#123f7a_58%,#0f172a_100%)] text-white">
-          <div className="absolute inset-0 bg-[url('/images/page-bg.jpg')] bg-cover bg-center opacity-15" />
+        <section className="relative overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_56%,#f8fafc_100%)] dark:bg-[linear-gradient(180deg,#020617_0%,#0b1120_46%,#0f172a_100%)]">
           <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 sm:py-28">
             <AnimatedSection className="mx-auto max-w-4xl text-center">
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-blue-100">
-                {t<string>(lang as any, "common.nav.contact")}
-              </p>
-              <p className="mt-5 inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-blue-100 backdrop-blur">
-                {extra.writeFirstLabel}
-              </p>
-              <h1 className="mt-4 text-4xl font-black tracking-[-0.04em] sm:text-5xl lg:text-6xl">
+              <h1 className="text-4xl font-semibold tracking-[-0.04em] text-slate-950 dark:text-white sm:text-5xl lg:text-[3.8rem]">
                 {extra.intro.title}
               </h1>
-              <p className="mt-6 text-lg leading-8 text-blue-100">
+              <p className="mt-6 text-lg leading-8 text-slate-600 dark:text-slate-300">
                 {extra.intro.subtitle}
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Link
                   href="#free-audit-form"
-                  className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-primary-700 transition-transform duration-200 hover:-translate-y-0.5"
+                  className="lux-button-primary"
                 >
                   {extra.intro.primaryCta}
                 </Link>
                 <Link
                   href="/scheduling?meetingTypeKey=free-audit"
-                  className="inline-flex items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-white/15"
+                  className="lux-button-secondary"
                 >
                   {extra.schedulingBridge.primaryCta}
                 </Link>
               </div>
-              <p className="mt-4 text-sm leading-7 text-blue-100/90">
+              <p className="mt-4 text-sm leading-7 text-slate-500 dark:text-slate-400">
                 {extra.heroHelper}
               </p>
             </AnimatedSection>
@@ -476,10 +519,7 @@ export default function ContactPage() {
                   className="scroll-mt-28 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900"
                 >
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary-600 dark:text-accent-400">
-                      {extra.form.eyebrow}
-                    </p>
-                    <h2 className="mt-4 text-3xl font-black tracking-[-0.04em]">
+                    <h2 className="text-3xl font-semibold tracking-[-0.04em]">
                       {extra.form.title}
                     </h2>
                     <p className="mt-4 text-base leading-8 text-slate-600 dark:text-slate-300">
@@ -487,6 +527,42 @@ export default function ContactPage() {
                     </p>
                   </div>
 
+                  {showAlert ? (
+                    <div className="mt-10 space-y-6 rounded-[1.5rem] border border-emerald-200 bg-emerald-50/80 p-6 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                      <div>
+                        <h3 className="text-2xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+                          {t<string>(lang as any, "contact.modal.title")}
+                        </h3>
+                        <p className="mt-3 text-sm leading-7 text-slate-700 dark:text-slate-200">
+                          {t<string>(lang as any, "contact.modal.body")}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                          {structured.successNextTitle}
+                        </p>
+                        <ol className="mt-4 space-y-3 text-sm text-slate-700 dark:text-slate-200">
+                          {extra.intro.nextSteps.map((item, index) => (
+                            <li key={item} className="flex items-start gap-3">
+                              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
+                                {index + 1}
+                              </span>
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowAlert(false)}
+                        className="lux-button-secondary"
+                      >
+                        {structured.resetLabel}
+                      </button>
+                    </div>
+                  ) : (
                   <form onSubmit={handleSubmit} className="mt-10 space-y-8">
                     <input
                       type="text"
@@ -516,21 +592,20 @@ export default function ContactPage() {
 
                       <div>
                         <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                          {copy.companyLabel}
+                          {copy.companyLabel.replace(" *", "")}
                         </label>
                         <input
                           type="text"
                           name="company"
                           value={formData.company}
                           onChange={handleInputChange}
-                          required
                           className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-accent-400 dark:focus:ring-accent-400/15"
                           placeholder={copy.companyPlaceholder}
                         />
                       </div>
                     </div>
 
-                    <div className="grid gap-6 md:grid-cols-2">
+                    <div>
                       <div>
                         <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                           {copy.emailLabel}
@@ -544,26 +619,6 @@ export default function ContactPage() {
                           className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-accent-400 dark:focus:ring-accent-400/15"
                           placeholder={copy.emailPlaceholder}
                         />
-                      </div>
-
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                          {copy.confirmEmailLabel}
-                        </label>
-                        <input
-                          type="email"
-                          name="confirmEmail"
-                          value={formData.confirmEmail}
-                          onChange={handleInputChange}
-                          required
-                          className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-accent-400 dark:focus:ring-accent-400/15"
-                          placeholder={copy.confirmEmailPlaceholder}
-                        />
-                        {errors.confirmEmail && (
-                          <p className="mt-2 text-sm text-red-600">
-                            {errors.confirmEmail}
-                          </p>
-                        )}
                       </div>
                     </div>
 
@@ -595,21 +650,46 @@ export default function ContactPage() {
 
                     <div>
                       <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                        {extra.form.taskLabel}
+                        {structured.processLabel}
                       </label>
                       <textarea
-                        name="taskDescription"
-                        value={formData.taskDescription}
+                        name="processSummary"
+                        value={formData.processSummary}
                         onChange={handleInputChange}
                         required
-                        rows={7}
-                        maxLength={500}
+                        rows={5}
                         className="w-full resize-none rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-accent-400 dark:focus:ring-accent-400/15"
-                        placeholder={extra.form.taskPlaceholder}
+                        placeholder={structured.processPlaceholder}
                       />
-                      <div className="mt-2 text-right text-xs text-slate-500 dark:text-slate-400">
-                        {formData.taskDescription.length}/500
-                      </div>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                        {structured.toolsLabel}
+                      </label>
+                      <textarea
+                        name="currentTools"
+                        value={formData.currentTools}
+                        onChange={handleInputChange}
+                        rows={4}
+                        className="w-full resize-none rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-accent-400 dark:focus:ring-accent-400/15"
+                        placeholder={structured.toolsPlaceholder}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                        {structured.goalLabel}
+                      </label>
+                      <textarea
+                        name="goal"
+                        value={formData.goal}
+                        onChange={handleInputChange}
+                        required
+                        rows={4}
+                        className="w-full resize-none rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-accent-400 dark:focus:ring-accent-400/15"
+                        placeholder={structured.goalPlaceholder}
+                      />
                     </div>
 
                     <motion.button
@@ -628,6 +708,7 @@ export default function ContactPage() {
                       </div>
                     )}
                   </form>
+                  )}
                 </div>
               </AnimatedSection>
 
@@ -666,7 +747,7 @@ export default function ContactPage() {
                   <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary-600 dark:text-accent-400">
                     {extra.schedulingBridge.eyebrow}
                   </p>
-                  <h2 className="mt-4 text-2xl font-black tracking-[-0.03em]">
+                  <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em]">
                     {extra.schedulingBridge.title}
                   </h2>
                   <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">

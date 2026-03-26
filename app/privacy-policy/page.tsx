@@ -1,153 +1,112 @@
 "use client";
 
-import React from "react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import AnimatedSection from "@/components/AnimatedSection";
+import { LegalDocumentLayout, LegalSection } from "@/components/marketing/LegalDocumentLayout";
 import { useLanguage } from "@/components/LanguageProvider";
 import { t } from "@/lib/site-copy";
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900/40 shadow-sm p-6">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-        {title}
-      </h2>
-      <div className="mt-3 text-gray-700 dark:text-gray-300 leading-relaxed space-y-3">
-        {children}
-      </div>
-    </section>
-  );
-}
+const privacyUiCopy = {
+  en: {
+    subtitle:
+      "How Lux AI handles personal data connected to contact requests, website interactions, and service delivery.",
+    summaryTitle: "Summary",
+    relatedTitle: "Related legal pages",
+  },
+  fr: {
+    subtitle:
+      "Comment Lux AI traite les donnees personnelles liees aux demandes de contact, aux interactions sur le site et a la delivery de service.",
+    summaryTitle: "Resume",
+    relatedTitle: "Pages legales liees",
+  },
+  de: {
+    subtitle:
+      "Wie Lux AI personenbezogene Daten im Zusammenhang mit Kontaktanfragen, Website-Interaktionen und Service-Delivery verarbeitet.",
+    summaryTitle: "Kurzueberblick",
+    relatedTitle: "Verwandte rechtliche Seiten",
+  },
+  lb: {
+    subtitle:
+      "Wéi Lux AI perséinlech Donnéeën am Zesummenhang mat Kontaktufroen, Website-Interaktiounen a Service-Delivery behandelt.",
+    summaryTitle: "Kuerz Iwwersiicht",
+    relatedTitle: "Verbonnen legal Säiten",
+  },
+} as const;
 
 export default function PrivacyPolicyPage() {
   const { lang } = useLanguage();
+  const ui = privacyUiCopy[lang] ?? privacyUiCopy.en;
   const s = (k: string) =>
     t<string>(lang as any, `legal.privacy.sections.${k}`);
 
   const domain = s("metaDomain");
-  const domainHref = domain.startsWith("http") ? domain : `https://${domain}`;
   const pdfHref = `/api/privacy-policy.pdf?lang=${encodeURIComponent(lang)}`;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900">
-      <Header />
+    <LegalDocumentLayout
+      title={t<string>(lang as any, "legal.privacy.title")}
+      subtitle={ui.subtitle}
+      meta={[s("metaDate"), s("metaCompany"), domain]}
+      downloadHref={pdfHref}
+      downloadLabel={s("downloadPdf")}
+      summaryTitle={ui.summaryTitle}
+      summaryBody={s("s1b")}
+      relatedTitle={ui.relatedTitle}
+      relatedLinks={[
+        {
+          href: "/legal",
+          label: t<string>(lang as any, "legal.imprint.title"),
+        },
+        {
+          href: "/cookies",
+          label: t<string>(lang as any, "legal.imprint.links.cookies"),
+        },
+        {
+          href: "/terms",
+          label: t<string>(lang as any, "legal.imprint.links.terms"),
+        },
+      ]}
+    >
+      <LegalSection title={s("s1t")}>
+        <p>{s("s1b")}</p>
+      </LegalSection>
 
-      <AnimatedSection className="py-24">
-        <div className="max-w-4xl mx-auto px-6">
-          <header className="mb-10">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-                  {t<string>(lang as any, "legal.privacy.title")}
-                </h1>
+      <LegalSection title={s("s2t")}>
+        <p>{s("s2b1")}</p>
+        <p>{s("s2b2")}</p>
+      </LegalSection>
 
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm font-bold text-gray-600 dark:text-gray-400">
-                  <span>{s("metaDate")}</span>
-                  <span>·</span>
-                  <span>{s("metaCompany")}</span>
-                  <span>·</span>
+      <LegalSection title={s("s3t")}>
+        <p>{s("s3b")}</p>
+      </LegalSection>
 
-                  <a
-                    href={domainHref}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center rounded-full px-3 py-1
-                               border border-gray-200 dark:border-slate-700
-                               bg-gray-50 dark:bg-slate-800/60
-                               text-gray-900 dark:text-white
-                               hover:opacity-80 transition"
-                    aria-label={`Open ${domain}`}
-                  >
-                    {domain}
-                  </a>
-                </div>
-              </div>
+      <LegalSection title={s("s4t")}>
+        <p>{s("s4b")}</p>
+      </LegalSection>
 
-              <a
-                href={pdfHref}
-                className="inline-flex items-center justify-center rounded-xl px-4 py-2
-                           border border-gray-200 dark:border-slate-700
-                           bg-white/80 dark:bg-slate-900/40
-                           text-gray-900 dark:text-white font-semibold
-                           hover:bg-white dark:hover:bg-slate-900/60 transition"
-              >
-                {s("downloadPdf")}
-              </a>
-            </div>
-          </header>
+      <LegalSection title={s("s5t")}>
+        <p>{s("s5b")}</p>
+      </LegalSection>
 
-          <div className="space-y-6">
-            <Section title={s("s1t")}>
-              <p>{s("s1b")}</p>
-            </Section>
+      <LegalSection title={s("s6t")}>
+        <p>{s("s6b")}</p>
+      </LegalSection>
 
-            <Section title={s("s2t")}>
-              <p>{s("s2b1")}</p>
-              <p>{s("s2b2")}</p>
-            </Section>
+      <LegalSection title={s("s7t")}>
+        <p>{s("s7b")}</p>
+      </LegalSection>
 
-            <Section title={s("s3t")}>
-              <p>{s("s3b")}</p>
-            </Section>
+      <LegalSection title={s("s8t")}>
+        <p>{s("s8b")}</p>
+        <a
+          href="mailto:molla@luxaiautomation.com"
+          className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 transition-colors duration-200 hover:border-primary-300 hover:text-primary-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-accent-400/40 dark:hover:text-accent-400"
+        >
+          molla@luxaiautomation.com
+        </a>
+      </LegalSection>
 
-            <Section title={s("s4t")}>
-              <p>{s("s4b")}</p>
-            </Section>
-
-            <Section title={s("s5t")}>
-              <p>{s("s5b")}</p>
-            </Section>
-
-            <Section title={s("s6t")}>
-              <p>{s("s6b")}</p>
-            </Section>
-
-            <Section title={s("s7t")}>
-              <p>{s("s7b")}</p>
-            </Section>
-
-            <Section title={s("s8t")}>
-              <p>{s("s8b")}</p>
-
-              <div className="mt-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 p-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {s("contactLabel")}
-                </p>
-
-                <a
-                  href="mailto:molla@luxaiautomation.com"
-                  className="mt-2 inline-flex items-center gap-2 rounded-lg px-3 py-2 font-semibold
-                             text-slate-900 dark:text-white
-                             bg-white/80 dark:bg-slate-900/40
-                             border border-gray-200 dark:border-slate-700
-                             hover:bg-white dark:hover:bg-slate-900/60
-                             hover:underline transition"
-                >
-                  molla@luxaiautomation.com
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    ({s("emailCta")})
-                  </span>
-                </a>
-              </div>
-            </Section>
-
-            <div className="pt-6 mt-6 border-t border-gray-200 dark:border-slate-700">
-              <p className="text-gray-700 dark:text-gray-300 font-medium">
-                {s("end")}
-              </p>
-            </div>
-          </div>
-        </div>
-      </AnimatedSection>
-
-      <Footer />
-    </div>
+      <div className="border-t border-slate-200 pt-6 text-sm font-medium text-slate-600 dark:border-slate-800 dark:text-slate-300">
+        {s("end")}
+      </div>
+    </LegalDocumentLayout>
   );
 }

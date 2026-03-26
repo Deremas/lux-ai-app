@@ -2038,7 +2038,7 @@ export const copy: Record<Lang, DeepRecord> = {
         visit: {
           title: "Standort",
           content: "Luxemburg (EU)",
-          description: "Remote-first · Termine nach Vereinbarung",
+          description: "Vorwiegend auf Distanz · Termine nach Vereinbarung",
         },
       },
     },
@@ -2821,7 +2821,7 @@ export const copy: Record<Lang, DeepRecord> = {
         visit: {
           title: "Baséiert zu",
           content: "Lëtzebuerg (EU)",
-          description: "Remote-first · Rendez-vous op Ufro",
+          description: "Haaptsächlech op Distanz · op Ufro",
         },
       },
     },

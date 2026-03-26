@@ -1,9 +1,6 @@
 "use client";
 
-import React from "react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import AnimatedSection from "@/components/AnimatedSection";
+import { LegalDocumentLayout, LegalSection } from "@/components/marketing/LegalDocumentLayout";
 import { useLanguage } from "@/components/LanguageProvider";
 import { t } from "@/lib/site-copy";
 
@@ -16,13 +13,13 @@ type RowProps = {
 function Row({ label, value, sub }: RowProps) {
   return (
     <div className="grid gap-2 sm:grid-cols-[220px_1fr]">
-      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
         {label}
       </div>
-      <div className="text-gray-900 dark:text-gray-100">
+      <div className="text-slate-900 dark:text-slate-100">
         <div className="font-medium">{value}</div>
         {sub ? (
-          <div className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+          <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">
             {sub}
           </div>
         ) : null}
@@ -31,32 +28,36 @@ function Row({ label, value, sub }: RowProps) {
   );
 }
 
-function Section({
-  id,
-  title,
-  children,
-}: {
-  id?: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section
-      id={id}
-      className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900/40 shadow-sm p-6"
-    >
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-        {title}
-      </h2>
-      <div className="mt-4 space-y-4 text-gray-700 dark:text-gray-300">
-        {children}
-      </div>
-    </section>
-  );
-}
+const legalUiCopy = {
+  en: {
+    subtitle:
+      "The main legal and business identity information for Lux AI Automation, including company, contact, and hosting details.",
+    summaryTitle: "Summary",
+    relatedTitle: "Related legal pages",
+  },
+  fr: {
+    subtitle:
+      "Les principales informations legales et d'identite business de Lux AI Automation, y compris l'entreprise, le contact et l'hebergement.",
+    summaryTitle: "Resume",
+    relatedTitle: "Pages legales liees",
+  },
+  de: {
+    subtitle:
+      "Die wichtigsten rechtlichen und geschaeftlichen Identitaetsangaben von Lux AI Automation, einschliesslich Unternehmen, Kontakt und Hosting.",
+    summaryTitle: "Kurzueberblick",
+    relatedTitle: "Verwandte rechtliche Seiten",
+  },
+  lb: {
+    subtitle:
+      "D'Haaptinformatiounen iwwert d'legal a business Identitéit vu Lux AI Automation, inklusiv Firma, Kontakt an Hosting.",
+    summaryTitle: "Kuerz Iwwersiicht",
+    relatedTitle: "Verbonnen legal Säiten",
+  },
+} as const;
 
 export default function LegalPage() {
   const { lang } = useLanguage();
+  const ui = legalUiCopy[lang] ?? legalUiCopy.en;
 
   const s = (k: string) => t<string>(lang as any, `legal.imprint.${k}`);
   const list = (k: string) => {
@@ -65,14 +66,10 @@ export default function LegalPage() {
   };
 
   const labels = {
-    company: s("labels.company"),
-    representative: s("labels.representative"),
-    address: s("labels.address"),
-    email: s("labels.email"),
-    phone: s("labels.phone"),
     authorization: s("labels.authorization"),
     rcs: s("labels.rcs"),
     vat: s("labels.vat"),
+    email: s("labels.email"),
     supportEmail: s("labels.supportEmail"),
     officeHours: s("labels.officeHours"),
     hostingProvider: s("labels.hostingProvider"),
@@ -97,183 +94,126 @@ export default function LegalPage() {
     hostingRegion: s("values.hostingRegion"),
   };
 
-  const hasValue = (v: string) => v && v.trim().length > 0;
-  const hasHosting =
-    hasValue(values.hostingProvider) ||
-    hasValue(values.hostingCountry) ||
-    hasValue(values.hostingRegion);
+  const hasValue = (value: string) => value && value.trim().length > 0;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900">
-      <Header />
+    <LegalDocumentLayout
+      title={s("title")}
+      subtitle={ui.subtitle}
+      meta={[s("lastUpdatedDate"), values.company]}
+      summaryTitle={ui.summaryTitle}
+      summaryBody={s("subtitle")}
+      relatedTitle={ui.relatedTitle}
+      relatedLinks={[
+        {
+          href: "/privacy-policy",
+          label: s("links.privacy"),
+        },
+        {
+          href: "/cookies",
+          label: s("links.cookies"),
+        },
+        {
+          href: "/terms",
+          label: s("links.terms"),
+        },
+      ]}
+    >
+      <LegalSection id="legal-notice" title={s("legalNoticeTitle")}>
+        <p className="text-lg font-semibold">{values.company}</p>
+        <p className="font-medium">{values.representative}</p>
+        <p>{values.address}</p>
+        <p>
+          <a
+            href={`mailto:${values.email}`}
+            className="text-primary-600 hover:underline dark:text-accent-400"
+          >
+            {values.email}
+          </a>
+        </p>
+        <p>{values.phone}</p>
+        <p className="font-medium">{values.authorization}</p>
+      </LegalSection>
 
-      <AnimatedSection className="py-24">
-        <div className="max-w-4xl mx-auto px-6">
-          <header className="mb-10">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-              {s("title")}
-            </h1>
-            <p className="mt-2 text-gray-600 dark:text-gray-300">
-              {s("subtitle")}
-            </p>
-          </header>
+      <LegalSection id="business-identifiers" title={s("businessIdentifiersTitle")}>
+        <Row
+          label={labels.authorization}
+          value={values.authorization}
+          sub={values.authorizationNote}
+        />
+        {hasValue(values.rcs) ? <Row label={labels.rcs} value={values.rcs} /> : null}
+        {hasValue(values.vat) ? <Row label={labels.vat} value={values.vat} /> : null}
+      </LegalSection>
 
-          <div className="space-y-6">
-            <Section id="legal-notice" title={s("legalNoticeTitle")}>
-              <div className="space-y-2 text-gray-900 dark:text-gray-100">
-                <p className="text-lg font-semibold">{values.company}</p>
-                <p className="font-medium">{values.representative}</p>
-                <p>{values.address}</p>
-                <p>
-                  <a
-                    href={`mailto:${values.email}`}
-                    className="text-primary-600 dark:text-accent-500 hover:underline"
-                  >
-                    {values.email}
-                  </a>
-                </p>
-                <p>{values.phone}</p>
-                <p className="font-medium">{values.authorization}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {s("lastUpdatedLabel")}: {s("lastUpdatedDate")}
-                </p>
-              </div>
-            </Section>
-
-            <Section
-              id="business-identifiers"
-              title={s("businessIdentifiersTitle")}
+      <LegalSection id="contact-support" title={s("contactSupportTitle")}>
+        <Row
+          label={labels.email}
+          value={
+            <a
+              href={`mailto:${values.email}`}
+              className="text-primary-600 hover:underline dark:text-accent-400"
             >
-              <Row
-                label={labels.authorization}
-                value={values.authorization}
-                sub={values.authorizationNote}
-              />
-              {hasValue(values.rcs) && (
-                <Row label={labels.rcs} value={values.rcs} />
-              )}
-              {hasValue(values.vat) && (
-                <Row label={labels.vat} value={values.vat} />
-              )}
-            </Section>
+              {values.email}
+            </a>
+          }
+          sub={s("contactPrimaryNote")}
+        />
+        {hasValue(values.supportEmail) ? (
+          <Row
+            label={labels.supportEmail}
+            value={
+              <a
+                href={`mailto:${values.supportEmail}`}
+                className="text-primary-600 hover:underline dark:text-accent-400"
+              >
+                {values.supportEmail}
+              </a>
+            }
+          />
+        ) : null}
+        {hasValue(values.officeHours) ? (
+          <Row label={labels.officeHours} value={values.officeHours} />
+        ) : null}
+      </LegalSection>
 
-            <Section id="contact-support" title={s("contactSupportTitle")}>
-              <Row
-                label={labels.email}
-                value={
-                  <a
-                    href={`mailto:${values.email}`}
-                    className="text-primary-600 dark:text-accent-500 hover:underline"
-                  >
-                    {values.email}
-                  </a>
-                }
-                sub={s("contactPrimaryNote")}
-              />
-              {hasValue(values.supportEmail) && (
-                <Row
-                  label={labels.supportEmail}
-                  value={
-                    <a
-                      href={`mailto:${values.supportEmail}`}
-                      className="text-primary-600 dark:text-accent-500 hover:underline"
-                    >
-                      {values.supportEmail}
-                    </a>
-                  }
-                />
-              )}
-              {hasValue(values.officeHours) && (
-                <Row label={labels.officeHours} value={values.officeHours} />
-              )}
-            </Section>
+      {(hasValue(values.hostingProvider) ||
+        hasValue(values.hostingCountry) ||
+        hasValue(values.hostingRegion)) && (
+        <LegalSection id="hosting" title={s("hostingTitle")}>
+          {hasValue(values.hostingProvider) ? (
+            <Row label={labels.hostingProvider} value={values.hostingProvider} />
+          ) : null}
+          {hasValue(values.hostingCountry) ? (
+            <Row label={labels.hostingCountry} value={values.hostingCountry} />
+          ) : null}
+          {hasValue(values.hostingRegion) ? (
+            <Row label={labels.hostingRegion} value={values.hostingRegion} />
+          ) : null}
+        </LegalSection>
+      )}
 
-            {hasHosting && (
-              <Section id="hosting" title={s("hostingTitle")}>
-                {hasValue(values.hostingProvider) && (
-                  <Row
-                    label={labels.hostingProvider}
-                    value={values.hostingProvider}
-                  />
-                )}
-                {hasValue(values.hostingCountry) && (
-                  <Row
-                    label={labels.hostingCountry}
-                    value={values.hostingCountry}
-                  />
-                )}
-                {hasValue(values.hostingRegion) && (
-                  <Row
-                    label={labels.hostingRegion}
-                    value={values.hostingRegion}
-                  />
-                )}
-              </Section>
-            )}
+      <LegalSection id="scope" title={s("scopeTitle")}>
+        <p>{s("scopeBody")}</p>
+        <p className="font-semibold text-slate-950 dark:text-white">
+          {s("scopeDisclaimer")}
+        </p>
+      </LegalSection>
 
-            <Section id="scope" title={s("scopeTitle")}>
-              <p>{s("scopeBody")}</p>
-              <p className="font-semibold text-gray-900 dark:text-white">
-                {s("scopeDisclaimer")}
-              </p>
-            </Section>
+      <LegalSection id="disclaimers" title={s("disclaimersTitle")}>
+        <ul className="list-disc pl-6">
+          {list("disclaimers").map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      </LegalSection>
 
-            <Section id="disclaimers" title={s("disclaimersTitle")}>
-              <ul className="list-disc pl-6 space-y-2">
-                {list("disclaimers").map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </Section>
-
-            <Section id="intellectual-property" title={s("ipTitle")}>
-              <ul className="list-disc pl-6 space-y-2">
-                {list("ip").map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </Section>
-
-            <Section id="privacy-cookies" title={s("privacyTitle")}>
-              <p>{s("privacyNote")}</p>
-              <div className="flex flex-wrap gap-3 pt-2">
-                <a
-                  href="/privacy-policy"
-                  className="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold
-                             border border-gray-200 dark:border-slate-700
-                             bg-gray-50 dark:bg-slate-800/60
-                             text-gray-900 dark:text-white
-                             hover:opacity-80 transition"
-                >
-                  {s("links.privacy")}
-                </a>
-                <a
-                  href="/cookies"
-                  className="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold
-                             border border-gray-200 dark:border-slate-700
-                             bg-gray-50 dark:bg-slate-800/60
-                             text-gray-900 dark:text-white
-                             hover:opacity-80 transition"
-                >
-                  {s("links.cookies")}
-                </a>
-                <a
-                  href="/terms"
-                  className="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold
-                             border border-gray-200 dark:border-slate-700
-                             bg-gray-50 dark:bg-slate-800/60
-                             text-gray-900 dark:text-white
-                             hover:opacity-80 transition"
-                >
-                  {s("links.terms")}
-                </a>
-              </div>
-            </Section>
-          </div>
-        </div>
-      </AnimatedSection>
-
-      <Footer />
-    </div>
+      <LegalSection id="intellectual-property" title={s("ipTitle")}>
+        <ul className="list-disc pl-6">
+          {list("ip").map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      </LegalSection>
+    </LegalDocumentLayout>
   );
 }
