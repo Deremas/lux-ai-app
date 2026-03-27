@@ -92,6 +92,15 @@ export default function RootLayout({
     }
 
     function applyFix() {
+      var isMobileViewport =
+        (window.matchMedia && window.matchMedia("(max-width: 767px)").matches) ||
+        (window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+
+      if (isMobileViewport) {
+        body.style.paddingRight = "";
+        return;
+      }
+
       var computed = window.getComputedStyle(body);
       var overflowHidden =
         body.style.overflow === "hidden" ||
@@ -137,10 +146,8 @@ export default function RootLayout({
           </Providers>
         </LenisProvider>
 
-        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] flex flex-col gap-3">
-          <ScrollToTop />
-          <ChatWidget />
-        </div>
+        <ScrollToTop />
+        <ChatWidget />
       </body>
     </html>
   );

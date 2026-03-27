@@ -122,10 +122,10 @@ export default function HomePageClient({
   } = getLocalizedMarketingSharedContent(resolvedLang);
 
   return (
-    <div className="min-h-screen bg-white text-slate-950 transition-colors duration-300 dark:bg-slate-950 dark:text-white">
+    <div className="min-h-screen overflow-x-clip bg-white text-slate-950 transition-colors duration-300 dark:bg-slate-950 dark:text-white">
       <Header />
 
-      <main>
+      <main className="overflow-x-clip">
         <section className="relative overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_62%,#f8fafc_100%)] dark:bg-[linear-gradient(180deg,#020617_0%,#0b1120_48%,#0f172a_100%)]">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(14,66,126,0.06),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.05),transparent_24%)]" />
 
@@ -154,6 +154,7 @@ export default function HomePageClient({
                   primaryLabel={copy.hero.primary}
                   secondaryHref={heroSecondaryHref}
                   secondaryLabel={copy.hero.secondary}
+                  className="max-w-[22rem] sm:max-w-xl"
                 />
 
                 <p className="max-w-xl text-sm leading-7 text-slate-500 dark:text-slate-400">
@@ -382,12 +383,14 @@ export default function HomePageClient({
                 >
                   <motion.div whileHover={{ y: -4 }}>
                     <SurfaceCard subtle className="gap-4">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
-                        <i className={`${item.icon} text-xl`} />
-                      </span>
-                      <h2 className="text-lg font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
-                        {item.title}
-                      </h2>
+                      <div className="flex items-center gap-3 sm:flex-col sm:items-start sm:gap-4">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
+                          <i className={`${item.icon} text-xl`} />
+                        </span>
+                        <h2 className="text-lg font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
+                          {item.title}
+                        </h2>
+                      </div>
                       <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
                         {item.body}
                       </p>
@@ -465,15 +468,17 @@ export default function HomePageClient({
                 >
                   <motion.div whileHover={{ y: -4 }}>
                     <div className="flex h-full flex-col rounded-[2rem] border border-slate-200/80 bg-white p-8 shadow-[0_24px_55px_-40px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-slate-950">
-                      <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#ffb41f] text-2xl font-semibold text-slate-950">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-
-                      <div className="mt-10 flex flex-1 flex-col">
-                        <div className="space-y-3">
-                          <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
+                      <div className="flex flex-1 flex-col gap-8">
+                        <div className="flex items-center gap-4 sm:flex-col sm:items-start sm:gap-6">
+                          <span className="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#ffb41f] text-2xl font-semibold text-slate-950">
+                            {String(index + 1).padStart(2, "0")}
+                          </span>
+                          <h2 className="text-[1.8rem] font-semibold tracking-[-0.04em] text-slate-950 dark:text-white sm:text-[2rem]">
                             {step.step}
                           </h2>
+                        </div>
+
+                        <div className="space-y-3">
                           <p className="text-base leading-9 text-slate-600 dark:text-slate-300">
                             {step.description}
                           </p>
@@ -513,12 +518,14 @@ export default function HomePageClient({
                 >
                   <motion.div whileHover={{ y: -4 }}>
                     <SurfaceCard className="gap-4">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
-                        <i className={`${item.icon} text-xl`} />
-                      </span>
-                      <h2 className="text-xl font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
-                        {item.title}
-                      </h2>
+                      <div className="flex items-center gap-3 sm:flex-col sm:items-start sm:gap-4">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
+                          <i className={`${item.icon} text-xl`} />
+                        </span>
+                        <h2 className="text-xl font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
+                          {item.title}
+                        </h2>
+                      </div>
                       <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
                         {item.body}
                       </p>

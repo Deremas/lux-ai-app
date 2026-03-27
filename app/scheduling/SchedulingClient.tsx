@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
@@ -23,13 +23,447 @@ const localeByLanguage: Record<AppLanguage, string> = {
   lb: "lb-LU",
 };
 
+const schedulingUnavailableGuidance = {
+  en: {
+    includeTitle: "What to send instead",
+    includeItems: [
+      "The workflow bottleneck or business problem you want reviewed first.",
+      "The tools or systems involved, such as CRM, email, forms, dashboards, or internal operations tools.",
+      "The outcome you want, such as faster response, fewer handoffs, clearer visibility, or cleaner automation logic.",
+    ],
+    nextStepsTitle: "What happens next",
+    nextSteps: [
+      "We review the workflow context and identify the most practical first automation step.",
+      "We recommend whether the next move should be direct implementation, a broader audit, or written scoping first.",
+      "We follow up with practical next steps and move you into the right booking or contact path once available.",
+    ],
+    note: "You can still start the free audit process without choosing a calendar slot.",
+  },
+  fr: {
+    includeTitle: "Que nous envoyer a la place",
+    includeItems: [
+      "Le blocage workflow ou le probleme metier a examiner en premier.",
+      "Les outils ou systemes impliques, comme CRM, email, formulaires, dashboards ou outils internes.",
+      "Le resultat attendu, par exemple une reponse plus rapide, moins de handoffs, plus de visibilite ou une logique d'automatisation plus propre.",
+    ],
+    nextStepsTitle: "Ce qui se passe ensuite",
+    nextSteps: [
+      "Nous examinons le contexte du workflow et identifions la premiere etape d'automatisation la plus utile.",
+      "Nous recommandons si la suite doit etre une implementation directe, un audit plus large ou un cadrage ecrit d'abord.",
+      "Nous revenons avec des prochaines etapes concretes et vous orientons vers le bon chemin de reservation ou de contact des qu'il est disponible.",
+    ],
+    note: "Vous pouvez toujours lancer le processus d'audit gratuit sans choisir de creneau calendrier.",
+  },
+  de: {
+    includeTitle: "Was Sie stattdessen senden sollten",
+    includeItems: [
+      "Den Workflow-Engpass oder das Geschaeftsproblem, das zuerst geprueft werden soll.",
+      "Die beteiligten Tools oder Systeme, etwa CRM, E-Mail, Formulare, Dashboards oder interne Operations-Tools.",
+      "Das gewuenschte Ergebnis, zum Beispiel schnellere Reaktion, weniger Handoffs, bessere Sichtbarkeit oder sauberere Automatisierungslogik.",
+    ],
+    nextStepsTitle: "Wie es danach weitergeht",
+    nextSteps: [
+      "Wir pruefen den Workflow-Kontext und identifizieren den praktischsten ersten Automatisierungsschritt.",
+      "Wir empfehlen, ob der naechste Schritt direkte Umsetzung, ein breiteres Audit oder zuerst ein schriftliches Scoping sein sollte.",
+      "Wir melden uns mit konkreten naechsten Schritten und fuehren Sie in den passenden Buchungs- oder Kontaktweg, sobald dieser verfuegbar ist.",
+    ],
+    note: "Sie koennen den kostenlosen Audit-Prozess auch ohne Kalenderslot starten.",
+  },
+  lb: {
+    includeTitle: "Wat Dir amplaz schécke kënnt",
+    includeItems: [
+      "Den Workflow-Engpass oder de Business-Problem, deen als éischt gekuckt soll ginn.",
+      "D'Tools oder d'Systemer, déi involvéiert sinn, wéi CRM, E-Mail, Formulairen, Dashboards oder intern Operations-Tools.",
+      "Dat Resultat, dat Dir wëllt, zum Beispill méi séier Äntwerten, manner Handoffs, besser Visibilitéit oder méi propper Automatiséierungslogik.",
+    ],
+    nextStepsTitle: "Wat duerno geschitt",
+    nextSteps: [
+      "Mir préiwen de Workflow-Kontext an identifizéieren dee prakteschsten éischten Automatiséierungsschrëtt.",
+      "Mir recommandéieren, ob den nächste Schrëtt direkt Ëmsetzung, e méi breeden Audit oder fir d'éischt schrëftleche Scoping soll sinn.",
+      "Mir kommen op Iech zeréck mat konkrete nächste Schrëtt a féieren Iech an de richtege Booking- oder Kontaktwee, soubal en disponibel ass.",
+    ],
+    note: "Dir kënnt de gratis Audit-Prozess och ouni Kalenner-Slot ufänken.",
+  },
+} as const;
+
+const schedulingEntryCopy = {
+  en: {
+    heroTitle: "Choose the right booking path",
+    heroBody:
+      "Start with the free workflow audit or choose a direct live session if you already know the conversation you need.",
+    heroSupport:
+      "Choose now, sign in securely, then continue directly to booking.",
+    recommendedBadge: "Recommended",
+    freeAuditEyebrow: "Recommended starting point",
+    freeAuditTitle: "Start with the free workflow audit",
+    freeAuditBody:
+      "Best for first-time conversations when you want the clearest review of your workflow, systems, and next automation opportunities.",
+    freeAuditCardBullets: [
+      "First review of your workflow or challenge",
+      "Guidance on the best next step",
+      "No obligation",
+    ],
+    freeAuditCta: "Start with free audit",
+    freeAuditDetailsTitle: "What happens in the free audit",
+    freeAuditDetailsBody:
+      "The free audit gives you a structured first review before any deeper session is recommended.",
+    freeAuditBullets: [
+      "Quick review of your workflow or current challenge",
+      "Discussion of existing tools and blockers",
+      "Guidance on where automation or AI would help first",
+      "Recommendation for the right next service or session",
+    ],
+    freeAuditNotes: [
+      "No obligation",
+      "Best for new enquiries",
+      "Ideal if you are not sure which session fits yet",
+    ],
+    optionsEyebrow: "Direct sessions",
+    optionsTitle: "Book a direct live session",
+    optionsBody:
+      "If you already know the type of conversation you need, choose one of the active live booking options below and continue with sign-in.",
+    directSessionBullets: [
+      "Choose a live session",
+      "Sign in securely",
+      "Continue directly to booking",
+    ],
+    optionsCta: "Browse direct booking options",
+    directSectionLead:
+      "Or choose a direct session if you already know what you need",
+    howItWorksTitle: "How booking works",
+    howItWorksBody:
+      "Your selected audit or session stays saved so you continue directly into the correct booking flow after sign-in.",
+    howItWorksSteps: [
+      {
+        title: "Choose your path",
+        body: "Start with the free audit or select a direct session.",
+      },
+      {
+        title: "Sign in securely",
+        body: "Your selected booking path stays attached to your account.",
+      },
+      {
+        title: "Confirm date and time",
+        body: "Continue directly into the correct availability step.",
+      },
+    ],
+    optionsSectionTitle: "Direct live booking options",
+    optionsSectionBody:
+      "Choose a session below if you already know the conversation you want. After selection, sign in to continue directly into booking with that session already selected.",
+    previewTitle: "Choose a direct session",
+    previewBody:
+      "These live options come directly from the active meeting types in your scheduling system.",
+    previewAction: "Select and continue",
+    selectedLabel: "Selected session",
+    requestedMissingTitle: "That session is not live right now",
+    requestedMissingBody:
+      "The requested meeting type is not currently published. You can still start with the free audit or choose another live session below.",
+    bestForLabel: "Best for",
+    outcomeLabel: "You will leave with",
+    durationLabel: "Duration",
+    formatLabel: "Format",
+    priceLabel: "Price",
+    freePriceLabel: "Free",
+    noDirectOptions:
+      "No direct live sessions are active yet. You can still start with the free audit.",
+    showMoreOptions: "Show more sessions",
+    showFewerOptions: "Show fewer sessions",
+    continueTitle: "Continue to booking after sign-in",
+    continueBody:
+      "Your selected path is saved. Sign in now to view the correct availability and complete your booking without starting over.",
+    continueBullets: [
+      "Your selected session or audit stays saved",
+      "You choose the date and time after sign-in",
+      "Confirmations and updates stay linked to your account",
+    ],
+    contactNote: "Not ready to book yet?",
+    contactLink: "Use the contact form and we will guide you to the right next step.",
+  },
+  fr: {
+    heroTitle: "Choisissez le bon chemin de reservation",
+    heroBody:
+      "Commencez par l'audit workflow gratuit ou choisissez une session directe si vous savez deja quelle conversation il vous faut.",
+    heroSupport:
+      "Choisissez maintenant, connectez-vous en toute securite, puis continuez directement vers la reservation.",
+    recommendedBadge: "Recommande",
+    freeAuditEyebrow: "Point de depart recommande",
+    freeAuditTitle: "Commencez par l'audit workflow gratuit",
+    freeAuditBody:
+      "Ideal pour une premiere conversation quand vous voulez une revue claire du workflow, des systemes et des prochaines opportunites d'automatisation.",
+    freeAuditCardBullets: [
+      "Premiere revue du workflow ou du probleme",
+      "Orientation sur la bonne prochaine etape",
+      "Sans obligation",
+    ],
+    freeAuditCta: "Commencer par l'audit gratuit",
+    freeAuditDetailsTitle: "Ce qui se passe dans l'audit gratuit",
+    freeAuditDetailsBody:
+      "L'audit gratuit donne une premiere revue structuree avant toute session plus approfondie.",
+    freeAuditBullets: [
+      "Revue rapide du workflow ou du probleme actuel",
+      "Discussion des outils existants et des blocages",
+      "Orientation sur l'endroit ou l'automatisation ou l'IA aiderait d'abord",
+      "Recommandation sur le bon prochain service ou rendez-vous",
+    ],
+    freeAuditNotes: [
+      "Sans obligation",
+      "Ideal pour les nouvelles demandes",
+      "Utile si vous ne savez pas encore quelle session convient",
+    ],
+    optionsEyebrow: "Sessions directes",
+    optionsTitle: "Reserver une session directe",
+    optionsBody:
+      "Si vous connaissez deja le type de conversation dont vous avez besoin, choisissez une session active ci-dessous puis continuez avec la connexion.",
+    directSessionBullets: [
+      "Choisissez une session active",
+      "Connectez-vous",
+      "Continuez directement vers la reservation",
+    ],
+    optionsCta: "Voir les sessions directes",
+    directSectionLead:
+      "Ou choisissez une session directe si vous savez deja ce dont vous avez besoin",
+    howItWorksTitle: "Comment la reservation fonctionne",
+    howItWorksBody:
+      "Votre audit ou session selectionne reste sauvegarde afin que vous repreniez directement dans le bon flux apres connexion.",
+    howItWorksSteps: [
+      {
+        title: "Choisissez votre chemin",
+        body: "Commencez par l'audit gratuit ou selectionnez une session directe.",
+      },
+      {
+        title: "Connectez-vous",
+        body: "Le parcours choisi reste lie a votre compte.",
+      },
+      {
+        title: "Confirmez date et heure",
+        body: "Vous continuez directement vers la bonne disponibilite.",
+      },
+    ],
+    optionsSectionTitle: "Options de reservation directes",
+    optionsSectionBody:
+      "Choisissez une session ci-dessous si vous savez deja la conversation voulue. Apres selection, connectez-vous pour continuer directement dans la reservation avec cette session deja choisie.",
+    previewTitle: "Choisissez une session directe",
+    previewBody:
+      "Ces options en ligne viennent directement des types de session actifs dans votre systeme de planification.",
+    previewAction: "Selectionner et continuer",
+    selectedLabel: "Session selectionnee",
+    requestedMissingTitle: "Cette session n'est pas active pour le moment",
+    requestedMissingBody:
+      "Le type de session demande n'est pas publie actuellement. Vous pouvez quand meme commencer par l'audit gratuit ou choisir une autre session active ci-dessous.",
+    bestForLabel: "Ideal pour",
+    outcomeLabel: "Vous repartez avec",
+    durationLabel: "Duree",
+    formatLabel: "Format",
+    priceLabel: "Prix",
+    freePriceLabel: "Gratuit",
+    noDirectOptions:
+      "Aucune session directe n'est active pour le moment. Vous pouvez toujours commencer par l'audit gratuit.",
+    showMoreOptions: "Voir plus de sessions",
+    showFewerOptions: "Voir moins de sessions",
+    continueTitle: "Continuer vers la reservation apres connexion",
+    continueBody:
+      "Votre chemin selectionne est sauvegarde. Connectez-vous maintenant pour voir la bonne disponibilite et terminer la reservation sans recommencer.",
+    continueBullets: [
+      "Votre session ou audit selectionne reste sauvegarde",
+      "Vous choisissez la date et l'heure apres connexion",
+      "Les confirmations et mises a jour restent liees a votre compte",
+    ],
+    contactNote: "Pas pret a reserver maintenant ?",
+    contactLink: "Utilisez le formulaire de contact et nous vous guiderons vers la bonne suite.",
+  },
+  de: {
+    heroTitle: "Waehlen Sie den richtigen Buchungsweg",
+    heroBody:
+      "Starten Sie mit dem kostenlosen Workflow-Audit oder waehlen Sie eine direkte Live-Session, wenn Sie bereits wissen, welches Gespraech Sie brauchen.",
+    heroSupport:
+      "Jetzt waehlen, sicher anmelden und dann direkt mit der Buchung weitermachen.",
+    recommendedBadge: "Empfohlen",
+    freeAuditEyebrow: "Empfohlener Startpunkt",
+    freeAuditTitle: "Mit dem kostenlosen Workflow-Audit starten",
+    freeAuditBody:
+      "Am besten fuer erste Gespraeche, wenn Sie eine klare Pruefung Ihres Workflows, Ihrer Systeme und der naechsten Automatisierungschancen wollen.",
+    freeAuditCardBullets: [
+      "Erste Pruefung Ihres Workflows oder Problems",
+      "Hinweis auf den besten naechsten Schritt",
+      "Keine Verpflichtung",
+    ],
+    freeAuditCta: "Mit kostenlosem Audit starten",
+    freeAuditDetailsTitle: "Was im kostenlosen Audit passiert",
+    freeAuditDetailsBody:
+      "Das kostenlose Audit bietet eine strukturierte erste Pruefung, bevor eine tiefere Session empfohlen wird.",
+    freeAuditBullets: [
+      "Kurze Pruefung Ihres Workflows oder aktuellen Problems",
+      "Besprechung bestehender Tools und Blocker",
+      "Hinweis, wo Automatisierung oder KI zuerst helfen kann",
+      "Empfehlung fuer den richtigen naechsten Service oder Termin",
+    ],
+    freeAuditNotes: [
+      "Keine Verpflichtung",
+      "Ideal fuer neue Anfragen",
+      "Gut, wenn Sie noch nicht sicher sind, welche Session passt",
+    ],
+    optionsEyebrow: "Direkte Sessions",
+    optionsTitle: "Direkte Live-Session buchen",
+    optionsBody:
+      "Wenn Sie bereits wissen, welche Art von Gespraech Sie brauchen, waehlen Sie unten eine aktive Session und fahren Sie mit der Anmeldung fort.",
+    directSessionBullets: [
+      "Live-Session auswaehlen",
+      "Sicher anmelden",
+      "Direkt in die Buchung weitergehen",
+    ],
+    optionsCta: "Direkte Buchungsoptionen ansehen",
+    directSectionLead:
+      "Oder waehlen Sie eine direkte Session, wenn Sie bereits wissen, was Sie brauchen",
+    howItWorksTitle: "So funktioniert die Buchung",
+    howItWorksBody:
+      "Ihr gewaehltes Audit oder Ihre Session bleibt gespeichert, damit Sie nach der Anmeldung direkt im richtigen Buchungsablauf weitermachen.",
+    howItWorksSteps: [
+      {
+        title: "Weg waehlen",
+        body: "Mit dem kostenlosen Audit starten oder direkte Session auswaehlen.",
+      },
+      {
+        title: "Sicher anmelden",
+        body: "Der gewaehlte Buchungsweg bleibt mit Ihrem Konto verknuepft.",
+      },
+      {
+        title: "Datum und Uhrzeit bestaetigen",
+        body: "Sie gehen direkt in den passenden Verfuegbarkeitsschritt weiter.",
+      },
+    ],
+    optionsSectionTitle: "Direkte Live-Buchungsoptionen",
+    optionsSectionBody:
+      "Waehlen Sie unten eine Session, wenn Sie bereits wissen, welches Gespraech Sie wollen. Nach der Auswahl melden Sie sich an und machen direkt mit dieser Session weiter.",
+    previewTitle: "Direkte Session waehlen",
+    previewBody:
+      "Diese Live-Optionen kommen direkt aus den aktiven Meeting-Typen in Ihrem Terminplanungssystem.",
+    previewAction: "Auswaehlen und weiter",
+    selectedLabel: "Ausgewaehlte Session",
+    requestedMissingTitle: "Diese Session ist derzeit nicht live",
+    requestedMissingBody:
+      "Der angeforderte Meeting-Typ ist derzeit nicht veroeffentlicht. Sie koennen trotzdem mit dem kostenlosen Audit starten oder unten eine andere Live-Session waehlen.",
+    bestForLabel: "Am besten fuer",
+    outcomeLabel: "Sie gehen heraus mit",
+    durationLabel: "Dauer",
+    formatLabel: "Format",
+    priceLabel: "Preis",
+    freePriceLabel: "Kostenlos",
+    noDirectOptions:
+      "Noch keine direkten Live-Sessions aktiv. Sie koennen weiterhin mit dem kostenlosen Audit starten.",
+    showMoreOptions: "Mehr Sessions anzeigen",
+    showFewerOptions: "Weniger Sessions anzeigen",
+    continueTitle: "Nach der Anmeldung zur Buchung weiter",
+    continueBody:
+      "Ihr gewaehlter Weg ist gespeichert. Melden Sie sich jetzt an, um die richtige Verfuegbarkeit zu sehen und die Buchung ohne Neustart abzuschliessen.",
+    continueBullets: [
+      "Ihre gewaehlte Session oder Ihr Audit bleibt gespeichert",
+      "Datum und Uhrzeit waehlen Sie nach der Anmeldung",
+      "Bestaetigungen und Updates bleiben mit Ihrem Konto verknuepft",
+    ],
+    contactNote: "Noch nicht bereit zu buchen?",
+    contactLink: "Nutzen Sie das Kontaktformular und wir fuehren Sie zum richtigen naechsten Schritt.",
+  },
+  lb: {
+    heroTitle: "Wielt de richtege Booking-Wee",
+    heroBody:
+      "Fänkt mam gratis Workflow-Audit un oder wielt eng direkt Live-Sessioun, wann Dir schonn wësst, wéi e Gespréich Dir braucht.",
+    heroSupport:
+      "Elo wielen, sécher umellen, an da direkt mat der Booking weidergoen.",
+    recommendedBadge: "Empfohlen",
+    freeAuditEyebrow: "Empfohlene Startpunkt",
+    freeAuditTitle: "Mam gratis Workflow-Audit ufänken",
+    freeAuditBody:
+      "Am beschte fir éischt Gespréicher, wann Dir eng kloer Iwwerpréiwung vun Ärem Workflow, Äre Systemer an de nächsten Automatiséierungschancen wëllt.",
+    freeAuditCardBullets: [
+      "Éischt Iwwerpréiwung vun Ärem Workflow oder Problem",
+      "Orientatioun fir de beschte nächste Schrëtt",
+      "Keng Verpflichtung",
+    ],
+    freeAuditCta: "Mam gratis Audit ufänken",
+    freeAuditDetailsTitle: "Wat am gratis Audit geschitt",
+    freeAuditDetailsBody:
+      "De gratis Audit gëtt Iech eng strukturéiert éischt Iwwerpréiwung, ier eng méi déif Sessioun recommandéiert gëtt.",
+    freeAuditBullets: [
+      "Kuerz Iwwerpréiwung vun Ärem Workflow oder aktuelle Problem",
+      "Gespréich iwwer déi bestoend Tools an d'Blocker",
+      "Orientatioun, wou Automatiséierung oder AI als éischt hëllefe kann",
+      "Recommandatioun fir de richtege nächste Service oder Termin",
+    ],
+    freeAuditNotes: [
+      "Keng Verpflichtung",
+      "Ideal fir nei Ufroen",
+      "Gutt, wann Dir nach net sécher sidd, wéi eng Sessioun passt",
+    ],
+    optionsEyebrow: "Direkt Sessiounen",
+    optionsTitle: "Eng direkt Live-Sessioun buchen",
+    optionsBody:
+      "Wann Dir schonn d'Zort Gespréich kennt, déi Dir braucht, wielt hei drënner eng aktiv Sessioun a fuert mat der Umeldung weider.",
+    directSessionBullets: [
+      "Eng live Sessioun wielen",
+      "Sécher umellen",
+      "Direkt an d'Booking weidergoen",
+    ],
+    optionsCta: "Direkt Booking-Optiounen kucken",
+    directSectionLead:
+      "Oder wielt eng direkt Sessioun, wann Dir schonn wësst, wat Dir braucht",
+    howItWorksTitle: "Wéi d'Booking funktionéiert",
+    howItWorksBody:
+      "Ären gewielten Audit oder Är Sessioun bleift gespäichert, sou datt Dir nom Umellen direkt am richtege Booking-Flow weidermaacht.",
+    howItWorksSteps: [
+      {
+        title: "Äre Wee wielen",
+        body: "Mam gratis Audit ufänken oder eng direkt Sessioun auswielen.",
+      },
+      {
+        title: "Sécher umellen",
+        body: "De gewielte Booking-Wee bleift mat Ärem Konto verbonnen.",
+      },
+      {
+        title: "Datum an Zäit confirméieren",
+        body: "Dir gitt direkt an de richtegen Disponibilitéits-Schrëtt weider.",
+      },
+    ],
+    optionsSectionTitle: "Direkt Live-Booking-Optiounen",
+    optionsSectionBody:
+      "Wielt hei drënner eng Sessioun, wann Dir schonn d'Gespréich kennt, dat Dir wëllt. Nom Auswielen mellt Dir Iech un a gitt direkt mat där Sessioun weider.",
+    previewTitle: "Eng direkt Sessioun auswielen",
+    previewBody:
+      "Dës Live-Optioune kommen direkt vun den aktive Meeting-Typen an Ärem Scheduling-System.",
+    previewAction: "Auswielen a weider",
+    selectedLabel: "Gewielt Sessioun",
+    requestedMissingTitle: "Dës Sessioun ass elo nach net live",
+    requestedMissingBody:
+      "De gefroten Meeting-Typ ass aktuell nach net publizéiert. Dir kënnt awer mam gratis Audit ufänken oder hei drënner eng aner Live-Sessioun wielen.",
+    bestForLabel: "Am beschte fir",
+    outcomeLabel: "Dir gitt eraus mat",
+    durationLabel: "Dauer",
+    formatLabel: "Format",
+    priceLabel: "Präis",
+    freePriceLabel: "Gratis",
+    noDirectOptions:
+      "Et sinn nach keng direkt Live-Sessiounen aktiv. Dir kënnt awer mam gratis Audit ufänken.",
+    showMoreOptions: "Méi Sessioune weisen",
+    showFewerOptions: "Manner Sessioune weisen",
+    continueTitle: "No der Umeldung an d'Booking weidergoen",
+    continueBody:
+      "Äre gewielte Wee ass gespäichert. Mellt Iech elo un, fir déi richteg Disponibilitéit ze gesinn an d'Booking ouni nei unzefänken ofzeschléissen.",
+    continueBullets: [
+      "Är gewielte Sessioun oder Ären Audit bleift gespäichert",
+      "Datum an Zäit wielt Dir no der Umeldung",
+      "Confirmatiounen an Updates bleiwen un Äre Konto gebonnen",
+    ],
+    contactNote: "Nach net prett fir ze buchen?",
+    contactLink: "Benotzt de Kontakt-Formulaire a mir féieren Iech op de richtege nächste Schrëtt.",
+  },
+} as const;
+
 const schedulingCopyEn = {
   bridge: {
     eyebrow: "Need a broader workflow audit?",
     title: "Move from booking into a deeper contact and scoping discussion.",
     description:
       "If the challenge spans systems, integrations, or process redesign, send the workflow through contact so we can review the context and recommend the right next step.",
-    primaryCta: "Talk About Your Workflow",
+    primaryCta: "See Booking Options",
     secondaryCta: "Jump to Contact Form",
     guestNote:
       "Not ready to sign in and book yet? Use the contact form first and we can guide you to the right session.",
@@ -51,12 +485,14 @@ const schedulingCopyEn = {
     primaryCta: "Sign in and continue",
     secondaryCta: "Use contact instead",
   },
-  unavailableEyebrow: "Scheduling unavailable",
-  unavailableTitle: "We could not load booking availability.",
+  unavailableEyebrow: "Scheduling",
+  unavailableTitle: "Scheduling temporarily unavailable",
   unavailableFallback:
-    "Scheduling is temporarily unavailable right now. Please try again later or use the contact form.",
-  unavailablePrimary: "Open contact form",
-  unavailableSecondary: "Contact the team",
+    "We can't show booking availability right now. You can still start the audit process or send your details and we'll guide you to the next step.",
+  unavailablePrimary: "Start free audit",
+  unavailableSecondary: "Send details",
+  unavailableNote:
+    "We'll review your request and follow up with the right next step or booking once availability is restored.",
   stepLabels: { type: "Type", mode: "Mode", profile: "Profile", time: "Time", confirm: "Confirm" },
   buttons: {
     back: "Back", next: "Next", signIn: "Sign in", freeAudit: "Contact form", editDetails: "Edit details", saveProfile: "Save profile", saving: "Saving...", cancel: "Cancel", changeMeetingType: "Change meeting type", viewBookings: "View my bookings", confirmBooking: "Confirm booking", proceedToPayment: "Proceed to payment", booking: "Booking...", signInToBook: "Sign in to book", downloadIcs: "Download ICS", addToGoogleCalendar: "Add to Google Calendar", bookAnotherTime: "Book another time",
@@ -81,7 +517,7 @@ const schedulingCopyFr = {
     title: "Passez de la reservation a une discussion plus approfondie sur le cadrage et le besoin.",
     description:
       "Si le sujet touche plusieurs systemes, integrations ou une refonte de processus, utilisez le contact pour que nous analysions le contexte et recommandions la bonne suite.",
-    primaryCta: "Parler de votre workflow",
+    primaryCta: "Voir les options de reservation",
     secondaryCta: "Aller au formulaire de contact",
     guestNote:
       "Pas encore pret a vous connecter et reserver ? Utilisez d'abord le formulaire de contact et nous vous guiderons vers la bonne session.",
@@ -102,11 +538,14 @@ const schedulingCopyFr = {
     primaryCta: "Se connecter et continuer",
     secondaryCta: "Utiliser le contact",
   },
-  unavailableEyebrow: "Planification indisponible",
-  unavailableTitle: "Nous n'avons pas pu charger les disponibilites.",
-  unavailableFallback: "La planification est temporairement indisponible. Reessayez plus tard ou utilisez le formulaire de contact.",
-  unavailablePrimary: "Ouvrir le formulaire de contact",
-  unavailableSecondary: "Contacter l'equipe",
+  unavailableEyebrow: "Planification",
+  unavailableTitle: "Planification temporairement indisponible",
+  unavailableFallback:
+    "Nous ne pouvons pas afficher les disponibilites pour le moment. Vous pouvez toujours lancer l'audit ou envoyer vos details, et nous vous guiderons vers la bonne suite.",
+  unavailablePrimary: "Lancer l'audit gratuit",
+  unavailableSecondary: "Envoyer vos details",
+  unavailableNote:
+    "Nous examinerons votre demande et reviendrons vers vous avec la bonne prochaine etape ou reservation des que la disponibilite sera retablie.",
   stepLabels: { type: "Type", mode: "Mode", profile: "Profil", time: "Heure", confirm: "Confirmer" },
   buttons: {
     back: "Retour", next: "Suivant", signIn: "Se connecter", freeAudit: "Formulaire de contact", editDetails: "Modifier les informations", saveProfile: "Enregistrer le profil", saving: "Enregistrement...", cancel: "Annuler", changeMeetingType: "Changer de type de session", viewBookings: "Voir mes reservations", confirmBooking: "Confirmer la reservation", proceedToPayment: "Passer au paiement", booking: "Reservation...", signInToBook: "Se connecter pour reserver", downloadIcs: "Telecharger l'ICS", addToGoogleCalendar: "Ajouter a Google Agenda", bookAnotherTime: "Reserver un autre creneau",
@@ -130,7 +569,7 @@ const schedulingCopyDe = {
     eyebrow: "Brauchen Sie ein breiteres Workflow-Audit?",
     title: "Wechseln Sie von der Buchung in ein tieferes Kontakt- und Scoping-Gesprach.",
     description: "Wenn die Herausforderung mehrere Systeme, Integrationen oder Prozessneugestaltung betrifft, nutzen Sie das Kontaktformular. So konnen wir den Kontext prufen und den richtigen nachsten Schritt empfehlen.",
-    primaryCta: "Uber Ihren Workflow sprechen",
+    primaryCta: "Buchungsoptionen ansehen",
     secondaryCta: "Zum Kontaktformular",
     guestNote: "Noch nicht bereit, sich anzumelden und zu buchen? Nutzen Sie zuerst das Kontaktformular, und wir leiten Sie zur passenden Session.",
   },
@@ -150,11 +589,14 @@ const schedulingCopyDe = {
     primaryCta: "Anmelden und fortfahren",
     secondaryCta: "Kontakt nutzen",
   },
-  unavailableEyebrow: "Terminbuchung nicht verfugbar",
-  unavailableTitle: "Die Buchungsverfugbarkeit konnte nicht geladen werden.",
-  unavailableFallback: "Die Terminbuchung ist derzeit nicht verfugbar. Bitte versuchen Sie es spater erneut oder nutzen Sie das Kontaktformular.",
-  unavailablePrimary: "Kontaktformular offnen",
-  unavailableSecondary: "Team kontaktieren",
+  unavailableEyebrow: "Terminbuchung",
+  unavailableTitle: "Terminbuchung voruebergehend nicht verfuegbar",
+  unavailableFallback:
+    "Wir koennen die Buchungsverfuegbarkeit gerade nicht anzeigen. Sie koennen den Audit-Prozess trotzdem starten oder Ihre Angaben senden, und wir leiten Sie zum richtigen naechsten Schritt.",
+  unavailablePrimary: "Kostenloses Audit starten",
+  unavailableSecondary: "Details senden",
+  unavailableNote:
+    "Wir pruefen Ihre Anfrage und melden uns mit dem richtigen naechsten Schritt oder Termin, sobald die Verfuegbarkeit wiederhergestellt ist.",
   stepLabels: { type: "Typ", mode: "Modus", profile: "Profil", time: "Zeit", confirm: "Bestatigen" },
   buttons: {
     back: "Zuruck", next: "Weiter", signIn: "Anmelden", freeAudit: "Kontaktformular", editDetails: "Angaben bearbeiten", saveProfile: "Profil speichern", saving: "Speichert...", cancel: "Abbrechen", changeMeetingType: "Meeting-Typ andern", viewBookings: "Meine Buchungen ansehen", confirmBooking: "Buchung bestatigen", proceedToPayment: "Zur Zahlung", booking: "Bucht...", signInToBook: "Zum Buchen anmelden", downloadIcs: "ICS herunterladen", addToGoogleCalendar: "Zu Google Kalender hinzufugen", bookAnotherTime: "Anderen Termin buchen",
@@ -178,7 +620,7 @@ const schedulingCopyLb = {
     eyebrow: "Braucht Dir e méi breeden Workflow-Audit?",
     title: "Gitt vun der Buchung an eng méi déif Kontakt- a Scoping-Diskussioun.",
     description: "Wann d'Erausfuerderung iwwer Systemer, Integratiounen oder Prozess-Redesign geet, benotzt de Kontakt, fir datt mir de Kontext kënne kucken an de richtege nächste Schrëtt recommandéieren.",
-    primaryCta: "Iwwer Äre Workflow schwätzen",
+    primaryCta: "Booking-Optioune kucken",
     secondaryCta: "Bei de Kontakt-Formulaire",
     guestNote: "Nach net prett, Iech unzemellen a ze buchen? Benotzt fir d'éischt de Kontakt-Formulaire, an da féiere mir Iech op déi richteg Session.",
   },
@@ -198,11 +640,14 @@ const schedulingCopyLb = {
     primaryCta: "Umellen a weidergoen",
     secondaryCta: "Kontakt benotzen",
   },
-  unavailableEyebrow: "Planung net verfügbar",
-  unavailableTitle: "Mir konnten d'Buchungsdisponibilitéit net lueden.",
-  unavailableFallback: "D'Planung ass aktuell temporär net verfügbar. Probéiert et méi spéit nach eng Kéier oder benotzt de Kontakt-Formulaire.",
-  unavailablePrimary: "Kontakt-Formulaire opmaachen",
-  unavailableSecondary: "Equipe kontaktéieren",
+  unavailableEyebrow: "Scheduling",
+  unavailableTitle: "Scheduling temporär net disponibel",
+  unavailableFallback:
+    "Mir kënnen d'Booking-Disponibilitéit elo net weisen. Dir kënnt awer de gratis Audit ufänken oder Är Detailer schécken, a mir féieren Iech op de richtege nächste Schrëtt.",
+  unavailablePrimary: "Gratis Audit ufänken",
+  unavailableSecondary: "Detailer schécken",
+  unavailableNote:
+    "Mir préiwen Är Ufro a kommen op Iech zeréck mam richtege nächste Schrëtt oder Booking, soubal d'Disponibilitéit erëm do ass.",
   stepLabels: { type: "Typ", mode: "Modus", profile: "Profil", time: "Zäit", confirm: "Confirméieren" },
   buttons: {
     back: "Zréck", next: "Weider", signIn: "Umellen", freeAudit: "Kontakt-Formulaire", editDetails: "Detailer änneren", saveProfile: "Profil späicheren", saving: "Späichert...", cancel: "Ofbriechen", changeMeetingType: "Meeting-Typ änneren", viewBookings: "Meng Buchunge kucken", confirmBooking: "Buchung confirméieren", proceedToPayment: "Weider op Bezuelung", booking: "Bucht...", signInToBook: "Umellen fir ze buchen", downloadIcs: "ICS eroflueden", addToGoogleCalendar: "Bei Google Kalenner dobäisetzen", bookAnotherTime: "Eng aner Zäit buchen",
@@ -304,6 +749,25 @@ type BookingSummary = {
 
 type PaymentPolicy = "FREE" | "PAID";
 type SchedulingCopy = typeof schedulingCopyEn;
+type SchedulingEntryCopy = (typeof schedulingEntryCopy)[AppLanguage];
+
+const DIRECT_MEETING_PRIORITY = [
+  "discovery-call",
+  "ai-strategy-consultation",
+  "automation-audit",
+];
+const INTERNAL_MEETING_KEY_HINTS = [
+  "internal",
+  "follow-up",
+  "followup",
+  "staff",
+  "review",
+  "approval",
+  "manual",
+  "admin",
+  "partner",
+];
+const MAX_PUBLIC_DIRECT_MEETING_TYPES = 3;
 
 function cleanString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -316,7 +780,7 @@ function normalizeMeetingTypeToken(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function resolveMeetingTypeId(
+function findRequestedMeetingTypeId(
   items: MeetingType[],
   params: { meetingTypeId?: string; meetingTypeKey?: string }
 ): string {
@@ -345,6 +809,25 @@ function resolveMeetingTypeId(
     if (byKey) return byKey.id;
   }
 
+  return "";
+}
+
+function resolveMeetingTypeId(
+  items: MeetingType[],
+  params: { meetingTypeId?: string; meetingTypeKey?: string }
+): string {
+  const requestedId = findRequestedMeetingTypeId(items, params);
+  if (requestedId) return requestedId;
+
+  const hasExplicitRequest = Boolean(
+    cleanString(params.meetingTypeId) || cleanString(params.meetingTypeKey)
+  );
+
+  if (hasExplicitRequest) return "";
+  const freeAuditId = findRequestedMeetingTypeId(items, {
+    meetingTypeKey: "free-audit",
+  });
+  if (freeAuditId) return freeAuditId;
   return items[0]?.id ?? "";
 }
 
@@ -358,6 +841,57 @@ function buildSchedulingHref(params: { meetingTypeKey?: string; tz?: string }) {
 
   const query = search.toString();
   return query ? `/scheduling?${query}` : "/scheduling";
+}
+
+function isFreeAuditMeetingType(item: Pick<MeetingType, "key" | "title" | "subtitle">) {
+  const candidates = [item.key, item.title, item.subtitle ?? ""].map(
+    normalizeMeetingTypeToken
+  );
+
+  return candidates.some(
+    (candidate) =>
+      candidate === "free-audit" ||
+      candidate.includes("free-audit") ||
+      (candidate.includes("free") && candidate.includes("audit"))
+  );
+}
+
+function compareMeetingTypes(a: MeetingType, b: MeetingType) {
+  const aFreeAudit = isFreeAuditMeetingType(a);
+  const bFreeAudit = isFreeAuditMeetingType(b);
+
+  if (aFreeAudit !== bFreeAudit) {
+    return aFreeAudit ? -1 : 1;
+  }
+
+  const aPriority = DIRECT_MEETING_PRIORITY.indexOf(
+    normalizeMeetingTypeToken(a.key)
+  );
+  const bPriority = DIRECT_MEETING_PRIORITY.indexOf(
+    normalizeMeetingTypeToken(b.key)
+  );
+
+  if (aPriority !== bPriority) {
+    if (aPriority === -1) return 1;
+    if (bPriority === -1) return -1;
+    return aPriority - bPriority;
+  }
+
+  return normalizeMeetingTitle(a.title, a.durationMin).localeCompare(
+    normalizeMeetingTitle(b.title, b.durationMin)
+  );
+}
+
+function isLikelyInternalMeetingType(
+  item: Pick<MeetingType, "key" | "title" | "subtitle">
+) {
+  const candidates = [item.key, item.title, item.subtitle ?? ""].map(
+    normalizeMeetingTypeToken
+  );
+
+  return candidates.some((candidate) =>
+    INTERNAL_MEETING_KEY_HINTS.some((hint) => candidate.includes(hint))
+  );
 }
 
 const UUID_REGEX =
@@ -483,6 +1017,169 @@ function formatMeetingMode(mode: MeetingMode | "", copy: SchedulingCopy) {
     default:
       return mode;
   }
+}
+
+function MeetingTypeCard({
+  item,
+  selected,
+  locale,
+  copy,
+  footer,
+  onSelect,
+}: {
+  item: MeetingType;
+  selected?: boolean;
+  locale: string;
+  copy: SchedulingCopy;
+  footer?: ReactNode;
+  onSelect?: () => void;
+}) {
+  const priceLabel = formatPrice(item.priceCents, item.currency, locale);
+  const title = normalizeMeetingTitle(item.title, item.durationMin);
+  const modeLabels = (item.modes ?? []).map((mode) => {
+    const label = mode.details?.label?.trim();
+    return (label || formatMeetingMode(mode.mode, copy)).toUpperCase();
+  });
+  const isPaid = (item.paymentPolicy ?? "FREE") !== "FREE";
+
+  const classes = [
+    "w-full rounded-3xl border px-4 py-4 text-left transition backdrop-blur",
+    selected
+      ? "border-primary-600 bg-gradient-to-br from-primary-600 to-indigo-600 text-white shadow-[0_18px_45px_-30px_rgba(14,66,126,0.6)] dark:border-primary-400"
+      : "border-white/70 bg-white/80 text-gray-900 hover:border-primary-200 hover:bg-white dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-white",
+  ].join(" ");
+
+  const content = (
+    <>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] opacity-70">
+            {item.key}
+          </p>
+          <h3 className="mt-2 text-lg font-semibold">{title}</h3>
+          {item.subtitle && (
+            <p className="mt-1 text-sm font-medium opacity-80">
+              {item.subtitle}
+            </p>
+          )}
+        </div>
+        <span
+          className={[
+            "rounded-full px-3 py-1 text-xs font-semibold",
+            selected ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700",
+          ].join(" ")}
+        >
+          {item.durationMin} min
+        </span>
+      </div>
+      {item.description && (
+        <p className="mt-2 text-sm opacity-80">{item.description}</p>
+      )}
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
+        {modeLabels.length > 0 ? modeLabels.join(" · ") : copy.step1.modeTbd}
+      </div>
+      {isPaid && priceLabel && (
+        <div className="mt-3 text-sm font-semibold">
+          {priceLabel} {copy.step1.required}
+        </div>
+      )}
+      {footer ? <div className="mt-4">{footer}</div> : null}
+    </>
+  );
+
+  if (!onSelect) {
+    return <div className={classes}>{content}</div>;
+  }
+
+  return (
+    <button type="button" onClick={onSelect} className={classes}>
+      {content}
+    </button>
+  );
+}
+
+function PublicMeetingTypeCard({
+  item,
+  selected,
+  locale,
+  copy,
+  entryCopy,
+  href,
+}: {
+  item: MeetingType;
+  selected?: boolean;
+  locale: string;
+  copy: SchedulingCopy;
+  entryCopy: SchedulingEntryCopy;
+  href: string;
+}) {
+  const title = normalizeMeetingTitle(item.title, item.durationMin);
+  const priceLabel = formatPrice(item.priceCents, item.currency, locale);
+  const isFree = (item.paymentPolicy ?? "FREE") === "FREE";
+  const bestForText = cleanString(item.subtitle) || cleanString(item.description);
+  const modeLabels = (item.modes ?? []).map((mode) => {
+    const label = mode.details?.label?.trim();
+    return label || formatMeetingMode(mode.mode, copy);
+  });
+
+  const metadata = [
+    `${item.durationMin} min`,
+    modeLabels.length > 0 ? modeLabels.join(" / ") : copy.step1.modeTbd,
+    isFree ? entryCopy.freePriceLabel : priceLabel || copy.step1.required,
+  ];
+
+  return (
+    <div
+      className={[
+        "rounded-3xl border p-4 shadow-sm transition backdrop-blur",
+        selected
+          ? "border-primary-300 bg-primary-50/80 shadow-[0_18px_45px_-34px_rgba(14,66,126,0.35)] dark:border-primary-400/40 dark:bg-primary-500/10"
+          : "border-white/70 bg-white/80 dark:border-slate-700/60 dark:bg-slate-900/68",
+      ].join(" ")}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          {title}
+        </h3>
+        {selected ? (
+          <span className="rounded-full bg-primary-600 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white">
+            {entryCopy.selectedLabel}
+          </span>
+        ) : null}
+      </div>
+
+      {bestForText ? (
+        <p className="mt-3 text-sm leading-6 text-gray-700 dark:text-gray-200">
+          {bestForText}
+        </p>
+      ) : null}
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {metadata.map((value) => (
+          <span
+            key={value}
+            className="inline-flex items-center rounded-full border border-slate-200/80 bg-slate-50/85 px-3 py-1.5 text-xs font-medium text-gray-700 dark:border-slate-700/60 dark:bg-slate-950/40 dark:text-gray-200"
+          >
+            {value}
+          </span>
+        ))}
+      </div>
+
+      <div className="mt-4">
+        <Link
+          href={href}
+          className={[
+            "inline-flex w-full items-center justify-center rounded-full px-4 py-3 text-sm font-semibold transition-colors",
+            selected
+              ? "border border-primary-300 bg-white text-primary-700 hover:bg-primary-50 dark:border-primary-400/40 dark:bg-slate-950/40 dark:text-white"
+              : "bg-primary-600 text-white hover:bg-primary-700",
+          ].join(" ")}
+        >
+          {selected ? entryCopy.selectedLabel : entryCopy.previewAction}
+        </Link>
+      </div>
+    </div>
+  );
 }
 
 function TimezonePicker({
@@ -646,6 +1343,7 @@ function TimezonePicker({
 export default function SchedulingClient(props: Props) {
   const { lang } = useLanguage();
   const copy = localizedSchedulingCopy[lang] ?? localizedSchedulingCopy.en;
+  const entryCopy = schedulingEntryCopy[lang] ?? schedulingEntryCopy.en;
   const locale = localeByLanguage[lang] ?? localeByLanguage.en;
   // Ensure props are plain strings (protect against accidental undefined / whitespace)
   const orgId = cleanString(props.orgId);
@@ -707,13 +1405,13 @@ export default function SchedulingClient(props: Props) {
   const [fieldErrors, setFieldErrors] = useState<Partial<FormState>>({});
   const [meetingNotes, setMeetingNotes] = useState("");
   const [meetingNotesTouched, setMeetingNotesTouched] = useState(false);
-  const signInCallbackUrl = useMemo(
+  const freeAuditHref = useMemo(
     () =>
       buildSchedulingHref({
-        meetingTypeKey: initialMeetingTypeKey || "free-audit",
+        meetingTypeKey: "free-audit",
         tz: displayTz || initialTz,
       }),
-    [displayTz, initialMeetingTypeKey, initialTz]
+    [displayTz, initialTz]
   );
 
   const meetingNotesError = useMemo(
@@ -741,6 +1439,88 @@ export default function SchedulingClient(props: Props) {
   const selectedMeetingType = useMemo(
     () => meetingTypes.find((item) => item.id === selectedMeetingTypeId) ?? null,
     [meetingTypes, selectedMeetingTypeId]
+  );
+  const directMeetingTypes = useMemo(
+    () => meetingTypes.filter((item) => !isFreeAuditMeetingType(item)),
+    [meetingTypes]
+  );
+  const publicDirectMeetingTypes = useMemo(() => {
+    const filtered = directMeetingTypes.filter(
+      (item) => !isLikelyInternalMeetingType(item)
+    );
+    const prioritized = filtered.filter((item) =>
+      DIRECT_MEETING_PRIORITY.includes(normalizeMeetingTypeToken(item.key))
+    );
+    const remainder = filtered.filter(
+      (item) =>
+        !DIRECT_MEETING_PRIORITY.includes(normalizeMeetingTypeToken(item.key))
+    );
+
+    return [...prioritized, ...remainder].slice(0, MAX_PUBLIC_DIRECT_MEETING_TYPES);
+  }, [directMeetingTypes]);
+  const signInMeetingTypeKey = useMemo(() => {
+    const selectedItem =
+      meetingTypes.find((item) => item.id === selectedMeetingTypeId) ?? null;
+
+    if (selectedItem) {
+      if (isFreeAuditMeetingType(selectedItem)) return selectedItem.key;
+      if (publicDirectMeetingTypes.some((item) => item.id === selectedItem.id)) {
+        return selectedItem.key;
+      }
+    }
+
+    if (normalizeMeetingTypeToken(initialMeetingTypeKey) === "free-audit") {
+      return "free-audit";
+    }
+
+    return publicDirectMeetingTypes[0]?.key || "free-audit";
+  }, [
+    meetingTypes,
+    selectedMeetingTypeId,
+    initialMeetingTypeKey,
+    publicDirectMeetingTypes,
+  ]);
+  const signInCallbackUrl = useMemo(
+    () =>
+      buildSchedulingHref({
+        meetingTypeKey: signInMeetingTypeKey,
+        tz: displayTz || initialTz,
+      }),
+    [displayTz, signInMeetingTypeKey, initialTz]
+  );
+  const selectedPublicDirectMeetingType = useMemo(
+    () =>
+      publicDirectMeetingTypes.find((item) => item.id === selectedMeetingTypeId) ??
+      null,
+    [publicDirectMeetingTypes, selectedMeetingTypeId]
+  );
+  const freeAuditSelected = useMemo(
+    () =>
+      normalizeMeetingTypeToken(signInMeetingTypeKey) === "free-audit" ||
+      Boolean(selectedMeetingType && isFreeAuditMeetingType(selectedMeetingType)),
+    [selectedMeetingType, signInMeetingTypeKey]
+  );
+  const requestedMeetingTypeId = useMemo(
+    () =>
+      findRequestedMeetingTypeId(meetingTypes, {
+        meetingTypeId: initialMeetingTypeId,
+        meetingTypeKey: initialMeetingTypeKey,
+      }),
+    [meetingTypes, initialMeetingTypeId, initialMeetingTypeKey]
+  );
+  const requestedMeetingTypeMissing = useMemo(
+    () =>
+      Boolean(
+        meetingTypes.length > 0 &&
+          (initialMeetingTypeId || initialMeetingTypeKey) &&
+          !requestedMeetingTypeId
+      ),
+    [
+      meetingTypes.length,
+      initialMeetingTypeId,
+      initialMeetingTypeKey,
+      requestedMeetingTypeId,
+    ]
   );
   const selectedModeDetails = useMemo(
     () =>
@@ -899,7 +1679,7 @@ export default function SchedulingClient(props: Props) {
   }, []);
 
   useEffect(() => {
-    if (!orgId || !isAuthed) {
+    if (!orgId) {
       setMeetingTypes([]);
       setMeetingTypesLoading(false);
       setMeetingTypesError(null);
@@ -935,6 +1715,7 @@ export default function SchedulingClient(props: Props) {
         const items = Array.isArray(data?.items)
           ? (data.items as MeetingType[])
           : [];
+        const sortedItems = [...items].sort(compareMeetingTypes);
         const allowed = Array.isArray(data?.allowedCurrencies)
           ? data.allowedCurrencies
           : [];
@@ -942,12 +1723,12 @@ export default function SchedulingClient(props: Props) {
         if (data?.paymentPolicy) {
           setOrgPaymentPolicy(data.paymentPolicy as PaymentPolicy);
         }
-        setMeetingTypes(items);
+        setMeetingTypes(sortedItems);
         setAllowedCurrencies(allowed);
         setDefaultCurrency(defaultCur);
 
         setSelectedMeetingTypeId(
-          resolveMeetingTypeId(items, {
+          resolveMeetingTypeId(sortedItems, {
             meetingTypeId: initialMeetingTypeId,
             meetingTypeKey: initialMeetingTypeKey,
           })
@@ -967,7 +1748,6 @@ export default function SchedulingClient(props: Props) {
     };
   }, [
     orgId,
-    isAuthed,
     initialMeetingTypeId,
     initialMeetingTypeKey,
     locale,
@@ -1313,43 +2093,30 @@ export default function SchedulingClient(props: Props) {
 
   const hero = (
     <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/85 p-8 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
-      <div className="mx-auto max-w-4xl text-center">
+      <div className="mx-auto max-w-3xl text-center">
         <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
           {copy.heroEyebrow}
         </p>
         <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-gray-900 dark:text-white sm:text-4xl">
-          {copy.heroTitle}
+          {entryCopy.heroTitle}
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-gray-600 dark:text-gray-300 sm:text-base">
-          {copy.heroBody}
+          {entryCopy.heroBody}
         </p>
-        <div className="mx-auto mt-8 max-w-2xl rounded-2xl border border-slate-200/80 bg-slate-50/85 p-5 text-left shadow-sm dark:border-slate-700/70 dark:bg-slate-950/50">
-          <p className="text-sm font-semibold text-gray-900 dark:text-white">
-            {copy.bridge.title}
-          </p>
-          <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
-            {copy.bridge.description}
-          </p>
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
-            <Button type="button" size="sm" asChild>
-              <Link href="/contact">{copy.bridge.primaryCta}</Link>
-            </Button>
-            <Button type="button" size="sm" variant="outline" asChild>
-              <Link href="/contact#free-audit-form">
-                {copy.bridge.secondaryCta}
-              </Link>
-            </Button>
-          </div>
+        <div className="mt-8 flex justify-center">
+          <Button type="button" asChild>
+            <Link href={freeAuditHref}>{entryCopy.freeAuditCta}</Link>
+          </Button>
         </div>
+        <p className="mt-5 text-sm leading-7 text-gray-500 dark:text-gray-400">
+          {entryCopy.heroSupport}
+        </p>
       </div>
     </div>
   );
 
-  const schedulingUnavailableMessage =
-    availabilityError ||
-    (!orgId
-      ? copy.unavailableFallback
-      : "");
+  const schedulingUnavailable = Boolean(availabilityError || !orgId);
+  const schedulingUnavailableMessage = copy.unavailableFallback;
 
   if (isSessionLoading) {
     return (
@@ -1359,21 +2126,23 @@ export default function SchedulingClient(props: Props) {
     );
   }
 
-  if (schedulingUnavailableMessage) {
+  if (schedulingUnavailable) {
     return (
-      <div className="space-y-10">
-        {!isAuthed ? hero : null}
-        <div className="rounded-3xl border border-amber-200/70 bg-amber-50/80 p-6 text-center text-amber-950 shadow-[0_18px_50px_-40px_rgba(217,119,6,0.45)] backdrop-blur">
-          <p className="text-sm font-medium text-amber-700">
+      <div className="mx-auto max-w-3xl">
+        <div className="rounded-3xl border border-slate-200/80 bg-white/88 p-8 text-center shadow-[0_18px_50px_-40px_rgba(15,23,42,0.28)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/72 sm:p-10">
+          <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-accent-400">
+            <i className="ri-information-line text-2xl" />
+          </span>
+          <p className="mt-5 text-sm font-medium text-slate-500 dark:text-slate-400">
             {copy.unavailableEyebrow}
           </p>
-          <h2 className="mt-3 text-2xl font-semibold">
+          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-gray-900 dark:text-white">
             {copy.unavailableTitle}
-          </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-amber-900">
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-gray-600 dark:text-gray-300 sm:text-base">
             {schedulingUnavailableMessage}
           </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Button type="button" asChild>
               <Link href="/contact#free-audit-form">{copy.unavailablePrimary}</Link>
             </Button>
@@ -1381,6 +2150,9 @@ export default function SchedulingClient(props: Props) {
               <Link href="/contact">{copy.unavailableSecondary}</Link>
             </Button>
           </div>
+          <p className="mx-auto mt-5 max-w-2xl text-xs leading-6 text-slate-500 dark:text-slate-400">
+            {copy.unavailableNote}
+          </p>
         </div>
       </div>
     );
@@ -1388,49 +2160,184 @@ export default function SchedulingClient(props: Props) {
 
   if (!isAuthed) {
     return (
-      <div className="space-y-10">
+      <div className="space-y-8">
         {hero}
 
-        <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 sm:p-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl font-semibold tracking-[-0.03em] text-gray-900 dark:text-white">
-              {copy.guest.title}
+        <div
+          id="booking-paths"
+          className="grid gap-4 lg:grid-cols-[1.08fr_0.92fr]"
+        >
+          <div className="rounded-3xl border border-primary-200/80 bg-primary-50/80 p-5 shadow-[0_18px_50px_-40px_rgba(14,66,126,0.35)] backdrop-blur dark:border-primary-400/30 dark:bg-primary-500/10">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-700 dark:text-accent-400">
+                {entryCopy.freeAuditEyebrow}
+              </p>
+              <span className="rounded-full bg-primary-600 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white">
+                {entryCopy.recommendedBadge}
+              </span>
+            </div>
+            <h2 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-gray-900 dark:text-white">
+              {entryCopy.freeAuditTitle}
             </h2>
-            <p className="mt-4 text-sm leading-7 text-gray-600 dark:text-gray-300 sm:text-base">
-              {copy.guest.description}
+            <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
+              {entryCopy.freeAuditBody}
             </p>
+            <ul className="mt-4 space-y-2.5 text-sm leading-6 text-gray-700 dark:text-gray-200">
+              {entryCopy.freeAuditCardBullets.map((item) => (
+                <li key={item} className="flex items-start gap-3">
+                  <i className="ri-check-line mt-1 text-primary-600 dark:text-accent-400" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-4">
+              <Button type="button" asChild>
+                <Link href={freeAuditHref}>{entryCopy.freeAuditCta}</Link>
+              </Button>
+            </div>
           </div>
 
-          <div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5 dark:border-slate-700/60 dark:bg-slate-900/60">
-              <ul className="space-y-4 text-sm leading-7 text-gray-700 dark:text-gray-200">
-                {copy.guest.bullets.map((item) => (
-                  <li key={item} className="flex items-start gap-3">
-                    <i className="ri-check-line mt-1 text-primary-600 dark:text-accent-400" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
+          <div className="rounded-3xl border border-slate-200/80 bg-slate-50/65 p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.18)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/55">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-700 dark:text-accent-400">
+              {entryCopy.optionsEyebrow}
+            </p>
+            <h2 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-gray-900 dark:text-white">
+              {entryCopy.optionsTitle}
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
+              {entryCopy.optionsBody}
+            </p>
+            <ul className="mt-4 space-y-2.5 text-sm leading-6 text-gray-700 dark:text-gray-200">
+              {entryCopy.directSessionBullets.map((item) => (
+                <li key={item} className="flex items-start gap-3">
+                  <i className="ri-check-line mt-1 text-primary-600 dark:text-accent-400" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-4">
+              <Button type="button" variant="outline" asChild>
+                <a href="#meeting-options">{entryCopy.optionsCta}</a>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div
+          id="meeting-options"
+          className="rounded-3xl border border-slate-200/80 bg-slate-50/55 p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.18)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/55 sm:p-6"
+        >
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {entryCopy.directSectionLead}
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-gray-900 dark:text-white">
+              {entryCopy.optionsSectionTitle}
+            </h2>
+          </div>
+
+          {requestedMeetingTypeMissing && (
+            <div className="mx-auto mt-6 max-w-3xl rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-4 text-left text-amber-900 backdrop-blur">
+              <p className="text-sm font-semibold">
+                {entryCopy.requestedMissingTitle}
+              </p>
+              <p className="mt-2 text-sm leading-7">
+                {entryCopy.requestedMissingBody}
+              </p>
+            </div>
+          )}
+
+          {meetingTypesLoading && (
+            <div className="mt-8 text-center text-sm text-gray-600 dark:text-gray-300">
+              {copy.status.meetingTypes}
+            </div>
+          )}
+
+          {meetingTypesError && (
+            <div className="mx-auto mt-8 max-w-3xl rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {meetingTypesError}
+            </div>
+          )}
+
+          {!meetingTypesLoading &&
+            !meetingTypesError &&
+            publicDirectMeetingTypes.length === 0 && (
+            <div className="mt-8 text-center text-sm text-gray-600 dark:text-gray-300">
+              {entryCopy.noDirectOptions}
+            </div>
+          )}
+
+          {!meetingTypesLoading &&
+            !meetingTypesError &&
+            publicDirectMeetingTypes.length > 0 && (
+            <div className="mt-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                {publicDirectMeetingTypes.map((item) => {
+                  const optionHref = buildSchedulingHref({
+                    meetingTypeKey: item.key,
+                    tz: displayTz || initialTz,
+                  });
+                  const selected = item.id === selectedMeetingTypeId;
+
+                  return (
+                    <PublicMeetingTypeCard
+                      key={item.id}
+                      item={item}
+                      selected={selected}
+                      locale={locale}
+                      copy={copy}
+                      entryCopy={entryCopy}
+                      href={optionHref}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div
+          id="continue-booking"
+          className="rounded-3xl border border-primary-200/80 bg-primary-50/75 p-5 shadow-[0_18px_50px_-40px_rgba(14,66,126,0.28)] backdrop-blur dark:border-primary-400/25 dark:bg-primary-500/10 sm:p-6"
+        >
+          <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+            <div className="rounded-2xl border border-primary-200/80 bg-white/80 p-4 dark:border-primary-400/20 dark:bg-slate-950/30">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-700 dark:text-accent-400">
+                {entryCopy.selectedLabel}
+              </p>
+              <h2 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-gray-900 dark:text-white">
+                {freeAuditSelected
+                  ? entryCopy.freeAuditTitle
+                  : selectedPublicDirectMeetingType
+                    ? normalizeMeetingTitle(
+                        selectedPublicDirectMeetingType.title,
+                        selectedPublicDirectMeetingType.durationMin
+                      )
+                    : entryCopy.freeAuditTitle}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                {entryCopy.continueBody}
+              </p>
             </div>
 
-            <div className="rounded-2xl border border-primary-200/70 bg-primary-50/70 p-5 shadow-sm dark:border-primary-500/20 dark:bg-primary-500/10">
-              <p className="text-sm leading-7 text-gray-700 dark:text-gray-200">
-                {copy.bridge.guestNote}
-              </p>
-              <div className="mt-6 flex flex-col gap-3">
-                <Button
-                  type="button"
-                  onClick={() =>
-                    signIn(undefined, { callbackUrl: signInCallbackUrl })
-                  }
+            <div className="rounded-2xl border border-primary-300/80 bg-primary-600 p-4 text-white shadow-sm dark:border-primary-400/30 dark:bg-primary-500/20">
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                onClick={() =>
+                  signIn(undefined, { callbackUrl: signInCallbackUrl })
+                }
+              >
+                {copy.guest.primaryCta}
+              </Button>
+              <div className="mt-4 text-center text-sm">
+                <Link
+                  href="/contact#free-audit-form"
+                  className="font-medium text-white/90 underline-offset-4 hover:underline"
                 >
-                  {copy.guest.primaryCta}
-                </Button>
-                <Button type="button" variant="outline" asChild>
-                  <Link href="/contact#free-audit-form">
-                    {copy.guest.secondaryCta}
-                  </Link>
-                </Button>
+                  {copy.guest.secondaryCta}
+                </Link>
               </div>
             </div>
           </div>
@@ -1533,83 +2440,37 @@ export default function SchedulingClient(props: Props) {
                   </div>
                 )}
 
+                {requestedMeetingTypeMissing && (
+                  <div className="mt-4 rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 backdrop-blur">
+                    <p className="font-semibold">{entryCopy.requestedMissingTitle}</p>
+                    <p className="mt-1 leading-7">
+                      {entryCopy.requestedMissingBody}
+                    </p>
+                  </div>
+                )}
+
                 {meetingTypes.length > 0 && (
                   <>
                     <div className="mt-5 grid gap-4 md:grid-cols-2">
                       {meetingTypes.map((item) => {
                         const selected = item.id === selectedMeetingTypeId;
-                        const priceLabel = formatPrice(
-                          item.priceCents,
-                          item.currency,
-                          locale
-                        );
-                        const title = normalizeMeetingTitle(
-                          item.title,
-                          item.durationMin
-                        );
-                        const modeLabels = (item.modes ?? []).map((mode) => {
-                          const label = mode.details?.label?.trim();
-                          return (
-                            label || formatMeetingMode(mode.mode, copy)
-                          ).toUpperCase();
-                        });
-                        const isPaid = (item.paymentPolicy ?? "FREE") !== "FREE";
 
                         return (
-                          <button
+                          <MeetingTypeCard
                             key={item.id}
-                            type="button"
-                            onClick={() => setSelectedMeetingTypeId(item.id)}
-                            className={[
-                              "w-full rounded-3xl border px-4 py-4 text-left transition backdrop-blur",
-                              selected
-                                ? "border-primary-600 bg-gradient-to-br from-primary-600 to-indigo-600 text-white shadow-[0_18px_45px_-30px_rgba(14,66,126,0.6)]"
-                                : "border-white/70 bg-white/80 text-gray-900 hover:border-primary-200 hover:bg-white",
-                              "dark:border-slate-700/60 dark:bg-slate-900/70",
-                              selected ? "dark:border-primary-400" : "dark:text-white",
-                            ].join(" ")}
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <p className="text-sm font-semibold uppercase tracking-[0.25em] opacity-70">
-                                  {item.key}
-                                </p>
-                                <h3 className="mt-2 text-lg font-semibold">
-                                  {title}
-                                </h3>
-                                {item.subtitle && (
-                                  <p className="mt-1 text-sm font-medium opacity-80">
-                                    {item.subtitle}
-                                  </p>
-                                )}
-                              </div>
-                              <span
-                                className={[
-                                  "rounded-full px-3 py-1 text-xs font-semibold",
-                                  selected
-                                    ? "bg-white/20 text-white"
-                                    : "bg-gray-100 text-gray-700",
-                                ].join(" ")}
-                              >
-                                {item.durationMin} min
-                              </span>
-                            </div>
-                            {item.description && (
-                              <p className="mt-2 text-sm opacity-80">
-                                {item.description}
-                              </p>
-                            )}
-                            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
-                              {modeLabels.length > 0
-                                ? modeLabels.join(" · ")
-                                : copy.step1.modeTbd}
-                            </div>
-                            {isPaid && priceLabel && (
-                              <div className="mt-3 text-sm font-semibold">
-                                {priceLabel} {copy.step1.required}
-                              </div>
-                            )}
-                          </button>
+                            item={item}
+                            selected={selected}
+                            locale={locale}
+                            copy={copy}
+                            onSelect={() => setSelectedMeetingTypeId(item.id)}
+                            footer={
+                              selected ? (
+                                <span className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
+                                  {entryCopy.selectedLabel}
+                                </span>
+                              ) : null
+                            }
+                          />
                         );
                       })}
                     </div>
@@ -2358,8 +3219,8 @@ export default function SchedulingClient(props: Props) {
                     options={timezones}
                     searchPlaceholder={copy.timezonePicker.search}
                     emptyLabel={copy.timezonePicker.empty}
-                    buttonClassName="min-w-[220px]"
-                    menuClassName="w-[280px]"
+                    buttonClassName="w-full min-w-0 sm:w-auto sm:min-w-[220px]"
+                    menuClassName="w-[calc(100vw-2rem)] max-w-[280px] sm:w-[280px]"
                   />
                 </div>
               </div>

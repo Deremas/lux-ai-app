@@ -34,27 +34,18 @@ export default function ChatWidget() {
       <div
         className={[
           "fixed z-[400]",
-          // ✅ mobile: constrain BOTH sides (prevents right overflow on Duo / Fold)
           "left-[max(1rem,env(safe-area-inset-left))]",
           "right-[max(1rem,env(safe-area-inset-right))]",
-
-          // ✅ vertical position (panel sits above the button)
-          "bottom-[calc(max(1.25rem,env(safe-area-inset-bottom))+4.25rem)]",
-
-          // ✅ size (never exceed viewport)
+          "bottom-[calc(max(0.875rem,env(safe-area-inset-bottom))+3.75rem)]",
           "w-auto",
           "max-w-[40rem]",
           "h-[min(73svh,calc(100svh-9rem))]",
-
-          // ✅ desktop behavior (right aligned fixed width)
           "md:left-auto",
           "md:right-[max(1rem,env(safe-area-inset-right))]",
+          "md:bottom-[calc(max(1.25rem,env(safe-area-inset-bottom))+4.25rem)]",
           "md:w-[40rem]",
-
-          // ✅ styling
           "bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden",
           "overscroll-contain",
-
           sidebarOpen ? "pointer-events-none opacity-0" : "opacity-100",
           isOpen ? "block" : "hidden",
         ].join(" ")}
@@ -92,12 +83,11 @@ export default function ChatWidget() {
       <button
         onClick={() => setIsOpen((p) => !p)}
         className={[
-          "fixed z-40",
-          "right-[max(1.5rem,env(safe-area-inset-right))]",
-          "bottom-[max(0.5rem,env(safe-area-inset-bottom))]",
-          "flex items-center gap-2 rounded-full shadow-xl",
-          "bg-accent-500 hover:bg-amber-500 text-white px-3 py-2",
-          "max-w-[calc(100svw-2rem)]",
+          "fixed z-40 flex items-center justify-center rounded-full shadow-xl transition-all duration-200",
+          "right-[max(0.75rem,env(safe-area-inset-right))]",
+          "bottom-[max(0.875rem,env(safe-area-inset-bottom))]",
+          "h-11 w-11 bg-accent-500 text-white hover:bg-amber-500",
+          "sm:h-auto sm:w-auto sm:justify-start sm:gap-2 sm:px-3 sm:py-2",
           sidebarOpen ? "pointer-events-none opacity-0 translate-y-2" : "",
         ].join(" ")}
         aria-hidden={sidebarOpen ? "true" : "false"}
@@ -111,8 +101,9 @@ export default function ChatWidget() {
           <i className={isOpen ? "ri-close-line" : "ri-chat-1-line"} />
         </span>
 
-        {/* Always visible on all screens */}
-        <span className="text-sm font-medium leading-none">LuxAI</span>
+        <span className="hidden text-sm font-medium leading-none sm:inline">
+          LuxAI
+        </span>
       </button>
     </>
   );

@@ -345,12 +345,14 @@ export default function AboutPage() {
                 >
                   <motion.div whileHover={{ y: -4 }}>
                     <SurfaceCard subtle className="gap-4">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
-                        <i className={`${item.icon} text-xl`} />
-                      </span>
-                      <h2 className="text-xl font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
-                        {item.title}
-                      </h2>
+                      <div className="flex items-center gap-3 sm:flex-col sm:items-start sm:gap-4">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
+                          <i className={`${item.icon} text-xl`} />
+                        </span>
+                        <h2 className="text-xl font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
+                          {item.title}
+                        </h2>
+                      </div>
                       <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
                         {item.body}
                       </p>

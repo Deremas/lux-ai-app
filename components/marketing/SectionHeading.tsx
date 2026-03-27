@@ -77,16 +77,22 @@ export function CtaLinks({
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 sm:flex-row sm:flex-wrap",
+        "flex w-full max-w-full flex-col gap-3 sm:flex-row sm:flex-wrap",
         centered ? "justify-center" : "",
         className,
       )}
     >
-      <Link href={primaryHref} className="lux-button-primary">
+      <Link
+        href={primaryHref}
+        className="lux-button-primary box-border w-full max-w-full min-w-0 sm:w-auto"
+      >
         {primaryLabel}
       </Link>
       {secondaryHref && secondaryLabel ? (
-        <Link href={secondaryHref} className="lux-button-secondary">
+        <Link
+          href={secondaryHref}
+          className="lux-button-secondary box-border w-full max-w-full min-w-0 sm:w-auto"
+        >
           {secondaryLabel}
         </Link>
       ) : null}

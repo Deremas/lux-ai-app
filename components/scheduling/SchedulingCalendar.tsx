@@ -342,7 +342,7 @@ export function SchedulingCalendar(props: {
           <div className="relative" ref={tzRef}>
             <button
               type="button"
-              className="flex h-10 min-w-[260px] items-center justify-between gap-3 rounded-2xl border border-white/80 bg-white/90 px-3 text-sm leading-6 shadow-sm backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60 dark:bg-slate-900/75"
+              className="flex h-10 w-full min-w-0 items-center justify-between gap-3 rounded-2xl border border-white/80 bg-white/90 px-3 text-sm leading-6 shadow-sm backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:min-w-[260px] dark:border-slate-700/60 dark:bg-slate-900/75"
               onClick={() => setTzOpen((prev) => !prev)}
               onKeyDown={handleTzKeyDown}
               aria-haspopup="listbox"
@@ -352,7 +352,7 @@ export function SchedulingCalendar(props: {
               <span aria-hidden>▾</span>
             </button>
             {tzOpen && (
-              <div className="absolute z-20 mt-2 w-[280px] rounded-2xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
+              <div className="absolute z-20 mt-2 w-[calc(100vw-2rem)] max-w-[280px] rounded-2xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur sm:w-[280px] dark:border-slate-700/60 dark:bg-slate-900/90">
                 <input
                   className="h-9 w-full rounded-xl border border-white/70 bg-transparent px-3 text-sm leading-6 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:border-slate-700/60"
                   value={tzQuery}

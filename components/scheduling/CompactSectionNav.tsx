@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,22 +26,21 @@ type CompactSectionNavProps = {
 export default function CompactSectionNav({ items, className }: CompactSectionNavProps) {
     const [isMobile, setIsMobile] = useState(false);
 
-    // Simple mobile detection (you could use a more sophisticated approach)
-    useState(() => {
+    useEffect(() => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth < 640);
         };
         checkMobile();
         window.addEventListener("resize", checkMobile);
         return () => window.removeEventListener("resize", checkMobile);
-    });
+    }, []);
 
     const activeItem = items.find(item => item.isActive);
 
     if (isMobile) {
         return (
             <div className={cn("w-full sm:hidden", className)}>
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                     <DropdownMenuTrigger asChild>
                         <button className="flex w-full items-center justify-between rounded-xl border border-white/70 bg-white/80 px-3 py-2 text-left text-sm font-medium text-gray-900 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-white">
                             <span>{activeItem?.label || "Navigate to..."}</span>

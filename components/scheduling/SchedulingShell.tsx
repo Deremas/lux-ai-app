@@ -307,7 +307,7 @@ export default function SchedulingShell({
             Back to main site
           </Link>
         </div>
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"

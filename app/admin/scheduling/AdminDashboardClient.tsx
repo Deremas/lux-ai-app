@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { DateTime } from "luxon";
 import { signIn, useSession } from "next-auth/react";
@@ -214,19 +214,37 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
   }, [selectedNotif]);
 
   useEffect(() => {
-    const shouldLock = notifOpen || Boolean(selectedNotif);
+    const shouldLock = Boolean(selectedNotif);
     if (shouldLock) {
       if (bodyOverflowRef.current === null) {
         bodyOverflowRef.current = document.body.style.overflow;
       }
       document.body.style.overflow = "hidden";
+      document.body.setAttribute("data-scroll-locked", "true");
       return;
     }
     if (bodyOverflowRef.current !== null) {
       document.body.style.overflow = bodyOverflowRef.current;
       bodyOverflowRef.current = null;
     }
-  }, [notifOpen, selectedNotif]);
+    document.body.removeAttribute("data-scroll-locked");
+  }, [selectedNotif]);
+
+  const handleNotifListWheel = useCallback(
+    (event: React.WheelEvent<HTMLDivElement>) => {
+      const element = event.currentTarget;
+      if (element.scrollHeight <= element.clientHeight) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
+      element.scrollTop += event.deltaY;
+      event.preventDefault();
+      event.stopPropagation();
+    },
+    []
+  );
 
   useEffect(() => {
     return () => {
@@ -234,6 +252,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
         document.body.style.overflow = bodyOverflowRef.current;
         bodyOverflowRef.current = null;
       }
+      document.body.removeAttribute("data-scroll-locked");
     };
   }, []);
 
@@ -492,7 +511,12 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
   return (
     <div className="space-y-8">
       <div className="space-y-8">
-        <div className="relative overflow-visible rounded-2xl border border-white/70 bg-white/85 px-5 py-4 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.28)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+        <div
+          className={[
+            "relative overflow-visible rounded-2xl border border-white/70 bg-white/85 px-5 py-4 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.28)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70",
+            notifOpen ? "z-40" : "z-10",
+          ].join(" ")}
+        >
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 via-blue-500 to-accent-500" />
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -509,7 +533,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
                   Welcome, {displayName}
                 </span>
               )}
-              <div className="relative">
+              <div className="relative z-20">
                 <Button
                   variant="outline"
                   className="relative h-10 w-10 p-0"
@@ -530,7 +554,9 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
                 {notifOpen && (
                   <div
                     ref={notifPanelRef}
-                    className="fixed inset-x-4 z-50 mt-2 w-auto rounded-2xl border border-white/70 bg-white/95 p-4 shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96"
+                    className="fixed inset-x-4 z-[120] mt-2 flex max-h-[min(70dvh,32rem)] w-auto flex-col overflow-hidden rounded-2xl border border-white/70 bg-white/95 p-4 shadow-lg backdrop-blur overscroll-contain touch-pan-y dark:border-slate-700/60 dark:bg-slate-900/90 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96"
+                    onWheelCapture={(event) => event.stopPropagation()}
+                    onTouchMoveCapture={(event) => event.stopPropagation()}
                   >
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -560,7 +586,12 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
                       </p>
                     )}
                     {!notifLoading && !notifError && notifItems.length > 0 && (
-                      <div className="mt-3 max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+                      <div
+                        className="mt-3 min-h-0 space-y-3 overflow-y-auto overscroll-contain touch-pan-y pr-1"
+                        onWheel={handleNotifListWheel}
+                        onWheelCapture={(event) => event.stopPropagation()}
+                        onTouchMoveCapture={(event) => event.stopPropagation()}
+                      >
                         {notifItems.map((item) => {
                           const when = DateTime.fromJSDate(
                             item.createdAt instanceof Date

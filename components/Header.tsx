@@ -98,13 +98,10 @@ export default function Header() {
 
   useEffect(() => {
     const body = document.body;
-    const html = document.documentElement;
 
     if (isMenuOpen) {
-      const scrollBarWidth = window.innerWidth - html.clientWidth;
-
       body.style.overflow = "hidden";
-      body.style.paddingRight = scrollBarWidth > 0 ? `${scrollBarWidth}px` : "";
+      body.style.paddingRight = "";
       body.setAttribute("data-menu-open", "true");
     } else {
       body.style.overflow = "";
@@ -140,20 +137,23 @@ export default function Header() {
           backdropFilter: "blur(18px)",
         }}
       >
-        <div className="mx-auto w-full max-w-7xl px-3 sm:px-4 lg:px-6">
-          <div className="flex h-[var(--site-header-height)] items-center justify-between gap-2 lg:gap-2.5">
-            <Link href="/" className="flex min-w-0 items-center gap-3">
+        <div className="mx-auto w-full max-w-7xl px-2 sm:px-4 lg:px-6">
+          <div className="flex h-[var(--site-header-height)] items-center gap-2 lg:gap-3">
+            <Link
+              href="/"
+              className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2 lg:flex-none"
+            >
               <Image
                 src="/lux-logo.png"
                 alt={brand.name}
                 width={44}
                 height={44}
                 priority
-                className="h-11 w-11 shrink-0 rounded-full object-contain"
+                className="h-8 w-8 shrink-0 rounded-full object-contain min-[360px]:h-9 min-[360px]:w-9 sm:h-11 sm:w-11"
               />
 
-              <span className="min-[360px]:block min-w-0 md:hidden">
-                <span className="block max-w-[8.75rem] truncate text-[0.92rem] font-semibold leading-none tracking-[-0.02em] text-slate-950 dark:text-white">
+              <span className="block min-w-0 md:hidden">
+                <span className="block max-w-[calc(100vw-14.25rem)] truncate text-[0.76rem] font-semibold leading-none tracking-[-0.02em] text-slate-950 dark:text-white min-[360px]:max-w-[calc(100vw-15rem)] min-[360px]:text-[0.82rem]">
                   {brand.mobileName}
                 </span>
               </span>
@@ -186,12 +186,12 @@ export default function Header() {
               </div>
             </nav>
 
-            <div className="flex shrink-0 items-center gap-2 sm:gap-3 lg:gap-2.5">
+            <div className="ml-auto flex shrink-0 items-center justify-end gap-1 sm:gap-2 lg:gap-2">
               <Select
                 value={lang}
                 onValueChange={(value) => setLang(value as AppLanguage)}
               >
-                <SelectTrigger className="h-9 w-[6.25rem] rounded-full border border-slate-200 bg-white text-sm dark:border-slate-700 dark:bg-slate-900 sm:w-[8.25rem] lg:w-[7.5rem] xl:w-[160px]">
+                <SelectTrigger className="h-9 w-[5.75rem] rounded-full border border-slate-200 bg-white px-2.5 text-sm dark:border-slate-700 dark:bg-slate-900 min-[360px]:w-[6.25rem] sm:w-[8.25rem] sm:px-3 lg:w-[7.5rem] xl:w-[160px]">
                   <SelectValue placeholder="Language" />
                 </SelectTrigger>
 
@@ -217,7 +217,7 @@ export default function Header() {
 
               <button
                 onClick={toggleTheme}
-                className="rounded-full border border-slate-200 bg-slate-50 p-2.5 transition-colors duration-200 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 p-0 transition-colors duration-200 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 sm:h-11 sm:w-11"
                 aria-label="Toggle theme"
                 type="button"
               >
@@ -237,7 +237,7 @@ export default function Header() {
 
               <button
                 onClick={() => setIsMenuOpen((value) => !value)}
-                className={`rounded-full border border-slate-200 p-2.5 transition-all duration-200 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 lg:hidden ${
+                className={`inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 p-0 transition-all duration-200 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800 sm:h-11 sm:w-11 lg:hidden ${
                   isMenuOpen ? "bg-slate-100 dark:bg-slate-800" : ""
                 }`}
                 aria-label="Toggle menu"
