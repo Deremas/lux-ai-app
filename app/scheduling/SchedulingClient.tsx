@@ -1105,6 +1105,7 @@ function PublicMeetingTypeCard({
   copy,
   entryCopy,
   href,
+  onSelect,
 }: {
   item: MeetingType;
   selected?: boolean;
@@ -1112,6 +1113,7 @@ function PublicMeetingTypeCard({
   copy: SchedulingCopy;
   entryCopy: SchedulingEntryCopy;
   href: string;
+  onSelect?: () => void;
 }) {
   const title = normalizeMeetingTitle(item.title, item.durationMin);
   const priceLabel = formatPrice(item.priceCents, item.currency, locale);
@@ -1166,17 +1168,32 @@ function PublicMeetingTypeCard({
       </div>
 
       <div className="mt-4">
-        <Link
-          href={href}
-          className={[
-            "inline-flex w-full items-center justify-center rounded-full px-4 py-3 text-sm font-semibold transition-colors",
-            selected
-              ? "border border-primary-300 bg-white text-primary-700 hover:bg-primary-50 dark:border-primary-400/40 dark:bg-slate-950/40 dark:text-white"
-              : "bg-primary-600 text-white hover:bg-primary-700",
-          ].join(" ")}
-        >
-          {selected ? entryCopy.selectedLabel : entryCopy.previewAction}
-        </Link>
+        {onSelect ? (
+          <button
+            type="button"
+            onClick={onSelect}
+            className={[
+              "inline-flex w-full items-center justify-center rounded-full px-4 py-3 text-sm font-semibold transition-colors",
+              selected
+                ? "border border-primary-300 bg-white text-primary-700 hover:bg-primary-50 dark:border-primary-400/40 dark:bg-slate-950/40 dark:text-white"
+                : "bg-primary-600 text-white hover:bg-primary-700",
+            ].join(" ")}
+          >
+            {selected ? entryCopy.selectedLabel : entryCopy.previewAction}
+          </button>
+        ) : (
+          <Link
+            href={href}
+            className={[
+              "inline-flex w-full items-center justify-center rounded-full px-4 py-3 text-sm font-semibold transition-colors",
+              selected
+                ? "border border-primary-300 bg-white text-primary-700 hover:bg-primary-50 dark:border-primary-400/40 dark:bg-slate-950/40 dark:text-white"
+                : "bg-primary-600 text-white hover:bg-primary-700",
+            ].join(" ")}
+          >
+            {selected ? entryCopy.selectedLabel : entryCopy.previewAction}
+          </Link>
+        )}
       </div>
     </div>
   );
@@ -2104,8 +2121,13 @@ export default function SchedulingClient(props: Props) {
           {entryCopy.heroBody}
         </p>
         <div className="mt-8 flex justify-center">
-          <Button type="button" asChild>
-            <Link href={freeAuditHref}>{entryCopy.freeAuditCta}</Link>
+          <Button
+            type="button"
+            onClick={() => {
+              void signIn(undefined, { callbackUrl: freeAuditHref });
+            }}
+          >
+            {entryCopy.freeAuditCta}
           </Button>
         </div>
         <p className="mt-5 text-sm leading-7 text-gray-500 dark:text-gray-400">
@@ -2191,8 +2213,13 @@ export default function SchedulingClient(props: Props) {
               ))}
             </ul>
             <div className="mt-4">
-              <Button type="button" asChild>
-                <Link href={freeAuditHref}>{entryCopy.freeAuditCta}</Link>
+              <Button
+                type="button"
+                onClick={() => {
+                  void signIn(undefined, { callbackUrl: freeAuditHref });
+                }}
+              >
+                {entryCopy.freeAuditCta}
               </Button>
             </div>
           </div>
@@ -2288,6 +2315,9 @@ export default function SchedulingClient(props: Props) {
                       copy={copy}
                       entryCopy={entryCopy}
                       href={optionHref}
+                      onSelect={() => {
+                        void signIn(undefined, { callbackUrl: optionHref });
+                      }}
                     />
                   );
                 })}
