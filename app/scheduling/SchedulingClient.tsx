@@ -4,12 +4,14 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { ChevronRight, PanelLeft } from "lucide-react";
 import { DateTime } from "luxon";
 import { toast } from "sonner";
 
 import AvailabilityCalendar from "@/components/scheduling/AvailabilityCalendar";
 import { useLanguage } from "@/components/LanguageProvider";
 import Stepper from "@/components/scheduling/Stepper";
+import { useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -90,14 +92,14 @@ const schedulingEntryCopy = {
   en: {
     heroTitle: "Choose the right booking path",
     heroBody:
-      "Start with the free workflow audit or choose a direct live session if you already know the conversation you need.",
+      "Start with the free audit for a structured first review, or continue with a direct session if you already know what you need.",
     heroSupport:
-      "Choose now, sign in securely, then continue directly to booking.",
+      "We focus on practical outcomes, not generic consulting.",
     recommendedBadge: "Recommended",
     freeAuditEyebrow: "Recommended starting point",
     freeAuditTitle: "Start with the free workflow audit",
     freeAuditBody:
-      "Best for first-time conversations when you want the clearest review of your workflow, systems, and next automation opportunities.",
+      "Best for a structured first review of your workflow, systems, and next automation opportunities.",
     freeAuditCardBullets: [
       "First review of your workflow or challenge",
       "Guidance on the best next step",
@@ -121,15 +123,25 @@ const schedulingEntryCopy = {
     optionsEyebrow: "Direct sessions",
     optionsTitle: "Book a direct live session",
     optionsBody:
-      "If you already know the type of conversation you need, choose one of the active live booking options below and continue with sign-in.",
+      "If you already know the type of conversation you need, choose one of the active direct sessions below.",
     directSessionBullets: [
       "Choose a live session",
-      "Sign in securely",
-      "Continue directly to booking",
+      "See the fit, format, and price at a glance",
+      "Continue directly into booking",
     ],
     optionsCta: "Browse direct booking options",
-    directSectionLead:
-      "Or choose a direct session if you already know what you need",
+    valueTitle: "What you get from a session",
+    valueItems: [
+      "Clear understanding of your workflow bottlenecks",
+      "Practical recommendations for automation or AI opportunities",
+      "Direction on the next step, from strategy to audit or implementation",
+      "No generic advice, everything tailored to your setup",
+    ],
+    valueNote:
+      "Every session is focused on real operational improvement, not theory.",
+    valueTrust:
+      "Built for SMEs and growing businesses in Luxembourg and Europe.",
+    directSectionLead: "Choose a session and continue to secure your time.",
     howItWorksTitle: "How booking works",
     howItWorksBody:
       "Your selected audit or session stays saved so you continue directly into the correct booking flow after sign-in.",
@@ -182,14 +194,14 @@ const schedulingEntryCopy = {
   fr: {
     heroTitle: "Choisissez le bon chemin de reservation",
     heroBody:
-      "Commencez par l'audit workflow gratuit ou choisissez une session directe si vous savez deja quelle conversation il vous faut.",
+      "Commencez par l'audit gratuit pour une premiere revue structuree, ou continuez avec une session directe si vous savez deja ce qu'il vous faut.",
     heroSupport:
-      "Choisissez maintenant, connectez-vous en toute securite, puis continuez directement vers la reservation.",
+      "Nous privilegions les resultats pratiques, pas le conseil generique.",
     recommendedBadge: "Recommande",
     freeAuditEyebrow: "Point de depart recommande",
     freeAuditTitle: "Commencez par l'audit workflow gratuit",
     freeAuditBody:
-      "Ideal pour une premiere conversation quand vous voulez une revue claire du workflow, des systemes et des prochaines opportunites d'automatisation.",
+      "Ideal pour une premiere revue structuree de votre workflow, de vos systemes et des prochaines opportunites d'automatisation.",
     freeAuditCardBullets: [
       "Premiere revue du workflow ou du probleme",
       "Orientation sur la bonne prochaine etape",
@@ -213,15 +225,26 @@ const schedulingEntryCopy = {
     optionsEyebrow: "Sessions directes",
     optionsTitle: "Reserver une session directe",
     optionsBody:
-      "Si vous connaissez deja le type de conversation dont vous avez besoin, choisissez une session active ci-dessous puis continuez avec la connexion.",
+      "Si vous connaissez deja le type de conversation dont vous avez besoin, choisissez une session directe active ci-dessous.",
     directSessionBullets: [
       "Choisissez une session active",
-      "Connectez-vous",
+      "Voyez le format, la duree et le prix en un coup d'oeil",
       "Continuez directement vers la reservation",
     ],
     optionsCta: "Voir les sessions directes",
+    valueTitle: "Ce que vous obtenez d'une session",
+    valueItems: [
+      "Une vision claire de vos blocages workflow",
+      "Des recommandations concretes sur les opportunites d'automatisation ou d'IA",
+      "Une orientation sur la bonne prochaine etape, de la strategie a l'audit ou a l'implementation",
+      "Pas de conseil generique, tout est relie a votre contexte",
+    ],
+    valueNote:
+      "Chaque session vise une amelioration operationnelle reelle, pas la theorie.",
+    valueTrust:
+      "Concu pour les PME et les entreprises en croissance au Luxembourg et en Europe.",
     directSectionLead:
-      "Ou choisissez une session directe si vous savez deja ce dont vous avez besoin",
+      "Choisissez une session et continuez pour reserver votre creneau.",
     howItWorksTitle: "Comment la reservation fonctionne",
     howItWorksBody:
       "Votre audit ou session selectionne reste sauvegarde afin que vous repreniez directement dans le bon flux apres connexion.",
@@ -274,14 +297,14 @@ const schedulingEntryCopy = {
   de: {
     heroTitle: "Waehlen Sie den richtigen Buchungsweg",
     heroBody:
-      "Starten Sie mit dem kostenlosen Workflow-Audit oder waehlen Sie eine direkte Live-Session, wenn Sie bereits wissen, welches Gespraech Sie brauchen.",
+      "Starten Sie mit dem kostenlosen Audit fuer eine strukturierte erste Pruefung oder machen Sie mit einer direkten Session weiter, wenn Sie bereits wissen, was Sie brauchen.",
     heroSupport:
-      "Jetzt waehlen, sicher anmelden und dann direkt mit der Buchung weitermachen.",
+      "Wir fokussieren uns auf praktische Ergebnisse, nicht auf generische Beratung.",
     recommendedBadge: "Empfohlen",
     freeAuditEyebrow: "Empfohlener Startpunkt",
     freeAuditTitle: "Mit dem kostenlosen Workflow-Audit starten",
     freeAuditBody:
-      "Am besten fuer erste Gespraeche, wenn Sie eine klare Pruefung Ihres Workflows, Ihrer Systeme und der naechsten Automatisierungschancen wollen.",
+      "Am besten fuer eine strukturierte erste Pruefung Ihres Workflows, Ihrer Systeme und der naechsten Automatisierungschancen.",
     freeAuditCardBullets: [
       "Erste Pruefung Ihres Workflows oder Problems",
       "Hinweis auf den besten naechsten Schritt",
@@ -305,15 +328,26 @@ const schedulingEntryCopy = {
     optionsEyebrow: "Direkte Sessions",
     optionsTitle: "Direkte Live-Session buchen",
     optionsBody:
-      "Wenn Sie bereits wissen, welche Art von Gespraech Sie brauchen, waehlen Sie unten eine aktive Session und fahren Sie mit der Anmeldung fort.",
+      "Wenn Sie bereits wissen, welche Art von Gespraech Sie brauchen, waehlen Sie unten eine aktive direkte Session.",
     directSessionBullets: [
       "Live-Session auswaehlen",
-      "Sicher anmelden",
+      "Format, Dauer und Preis auf einen Blick sehen",
       "Direkt in die Buchung weitergehen",
     ],
     optionsCta: "Direkte Buchungsoptionen ansehen",
+    valueTitle: "Was Sie aus einer Session mitnehmen",
+    valueItems: [
+      "Ein klares Verstaendnis Ihrer Workflow-Engpaesse",
+      "Praktische Empfehlungen zu Automatisierungs- oder KI-Chancen",
+      "Eine klare Richtung fuer den naechsten Schritt, von Strategie bis Audit oder Umsetzung",
+      "Keine generische Beratung, sondern auf Ihr Setup zugeschnitten",
+    ],
+    valueNote:
+      "Jede Session ist auf echte operative Verbesserung ausgerichtet, nicht auf Theorie.",
+    valueTrust:
+      "Entwickelt fuer KMU und wachsende Unternehmen in Luxemburg und Europa.",
     directSectionLead:
-      "Oder waehlen Sie eine direkte Session, wenn Sie bereits wissen, was Sie brauchen",
+      "Waehlen Sie eine Session und machen Sie weiter, um Ihren Termin zu sichern.",
     howItWorksTitle: "So funktioniert die Buchung",
     howItWorksBody:
       "Ihr gewaehltes Audit oder Ihre Session bleibt gespeichert, damit Sie nach der Anmeldung direkt im richtigen Buchungsablauf weitermachen.",
@@ -366,14 +400,14 @@ const schedulingEntryCopy = {
   lb: {
     heroTitle: "Wielt de richtege Booking-Wee",
     heroBody:
-      "Fänkt mam gratis Workflow-Audit un oder wielt eng direkt Live-Sessioun, wann Dir schonn wësst, wéi e Gespréich Dir braucht.",
+      "Fänkt mam gratis Audit fir eng strukturéiert éischt Iwwerpréiwung un, oder fuert mat enger direkter Sessioun weider, wann Dir schonn wësst, wat Dir braucht.",
     heroSupport:
-      "Elo wielen, sécher umellen, an da direkt mat der Booking weidergoen.",
+      "Mir konzentréieren eis op praktesch Resultater, net op generesch Berodung.",
     recommendedBadge: "Empfohlen",
     freeAuditEyebrow: "Empfohlene Startpunkt",
     freeAuditTitle: "Mam gratis Workflow-Audit ufänken",
     freeAuditBody:
-      "Am beschte fir éischt Gespréicher, wann Dir eng kloer Iwwerpréiwung vun Ärem Workflow, Äre Systemer an de nächsten Automatiséierungschancen wëllt.",
+      "Am beschte fir eng strukturéiert éischt Iwwerpréiwung vun Ärem Workflow, Äre Systemer an den nächste Automatiséierungschancen.",
     freeAuditCardBullets: [
       "Éischt Iwwerpréiwung vun Ärem Workflow oder Problem",
       "Orientatioun fir de beschte nächste Schrëtt",
@@ -397,15 +431,26 @@ const schedulingEntryCopy = {
     optionsEyebrow: "Direkt Sessiounen",
     optionsTitle: "Eng direkt Live-Sessioun buchen",
     optionsBody:
-      "Wann Dir schonn d'Zort Gespréich kennt, déi Dir braucht, wielt hei drënner eng aktiv Sessioun a fuert mat der Umeldung weider.",
+      "Wann Dir schonn d'Zort Gespréich kennt, déi Dir braucht, wielt hei drënner eng aktiv direkt Sessioun.",
     directSessionBullets: [
       "Eng live Sessioun wielen",
-      "Sécher umellen",
+      "Format, Dauer a Präis direkt gesinn",
       "Direkt an d'Booking weidergoen",
     ],
     optionsCta: "Direkt Booking-Optiounen kucken",
+    valueTitle: "Wat Dir aus enger Sessioun kritt",
+    valueItems: [
+      "E kloert Versteesdemech vun Äre Workflow-Engpäss",
+      "Praktesch Recommandatioune fir Automatiséierungs- oder AI-Opportunitéiten",
+      "Orientatioun fir de nächste Schrëtt, vu Strategie bis Audit oder Ëmsetzung",
+      "Keng generesch Berodung, mee op Äre Setup ofgestëmmt",
+    ],
+    valueNote:
+      "All Sessioun ass op richteg operationell Verbesserung ausgeriicht, net op Theorie.",
+    valueTrust:
+      "Opgebaut fir PMEen a wuessend Betriber zu Lëtzebuerg an Europa.",
     directSectionLead:
-      "Oder wielt eng direkt Sessioun, wann Dir schonn wësst, wat Dir braucht",
+      "Wielt eng Sessioun a gitt weider, fir Äre Slot ze sécheren.",
     howItWorksTitle: "Wéi d'Booking funktionéiert",
     howItWorksBody:
       "Ären gewielten Audit oder Är Sessioun bleift gespäichert, sou datt Dir nom Umellen direkt am richtege Booking-Flow weidermaacht.",
@@ -506,7 +551,7 @@ const schedulingCopyEn = {
   step1: { title: "Step 1 · Choose a meeting type", body: "Pick the session that fits your goals.", signIn: "Sign in to choose a meeting type and continue.", modeTbd: "mode: tbd", required: "required" },
   step2: { title: "Step 2 · Choose a meeting mode", body: "Pick how you want to connect with our team.", signIn: "Sign in to choose a meeting mode.", unlock: "Select a meeting type first to unlock meeting modes.", availableModes: "Available modes", basedOn: "Based on", noModes: "No modes configured for this meeting type." },
   step3: { title: "Step 3 · Booking profile", body: "We save this once and reuse it for future bookings.", unlock: "Select a meeting type and meeting mode to unlock the booking profile.", fullName: "Full name *", phone: "Phone *", phonePlaceholder: "Enter phone number", phoneHint: "Use a WhatsApp-enabled number for booking updates.", timezone: "Timezone *", company: "Company (optional)", role: "Role in company", rolePlaceholder: "Required if company is provided", incomplete: "Fill in the required fields to save your profile.", contact: "Contact", timezoneCard: "Timezone", timezoneHint: "Used to keep your booking times consistent.", confirm: "I confirm these details are correct for this booking." },
-  step4: { title: "Step 4 · Choose a time", body: "Display timezone controls how the calendar is shown.", displayTimezone: "Display timezone", displayCurrency: "Display currency", ratesUpdated: "Rates updated", selectType: "Select a meeting type to unlock available times.", selectMode: "Select a meeting mode to unlock available times.", completeProfile: "Complete your booking profile to unlock available times.", confirmProfile: "Confirm your booking profile to unlock available times.", selectedTime: "Selected time", timeSelected: "Time selected", noTimeSelected: "No time selected yet", pickSlotPrefix: "Pick a slot to preview in", clearSelection: "Click to clear selection.", notes: "Meeting concept notes *", notesPlaceholder: "Share what you want to cover in this session.", notesUsage: "Used only for this booking." },
+  step4: { title: "Step 4 · Choose a time", body: "Display timezone controls how the calendar is shown.", displayTimezone: "Display timezone", displayCurrency: "Display currency", ratesUpdated: "Rates updated", selectType: "Select a meeting type to unlock available times.", selectMode: "Select a meeting mode to unlock available times.", completeProfile: "Complete your booking profile to unlock available times.", confirmProfile: "Confirm your booking profile to unlock available times.", selectedTime: "Selected time", timeSelected: "Time selected", noTimeSelected: "No time selected yet", pickSlotPrefix: "Pick a slot to preview in", clearSelection: "Click to clear selection.", slotRequired: "Select a time slot before continuing.", slotRequiredHint: "Choose one of the available slots from the calendar above.", notes: "Meeting concept notes *", notesPlaceholder: "Share what you want to cover in this session.", notesUsage: "Used only for this booking." },
   step5: { title: "Step 5 · Confirmation", body: "Review details before confirming your booking.", meeting: "Meeting", sessionFallback: "Session", phoneCallTo: "Phone call to", meetingLinkLater: "Meeting link will be emailed after confirmation.", time: "Time", booker: "Booker", personalBooking: "Personal booking", notes: "Notes", preferredTimezone: "Preferred timezone", payment: "Payment", paymentRequired: "Payment required", paid: "Payment: Paid", checkoutHint: "Click “Proceed to payment” to pay in Stripe before this booking can be confirmed.", approvalHint: "If the organization requires approval, your booking can still stay pending until the team approves it.", paymentLinkHint: "If redirect fails, use the payment link provided by your admin.", paymentStatus: "Payment status", notifications: "You will receive a confirmation email if notifications are enabled.", selectTimeNotice: "Select a time to review your booking details." },
   calendarText: { fileName: "luxai-booking.ics", meetingWithLuxAi: "Meeting with Lux AI", notesPrefix: "Notes", modePrefix: "Mode", meetingLinkPrefix: "Meeting link", phonePrefix: "Phone", phoneFallback: "n/a" },
 };
@@ -559,7 +604,7 @@ const schedulingCopyFr = {
   step1: { title: "Etape 1 · Choisir un type de session", body: "Choisissez la session adaptee a votre objectif.", signIn: "Connectez-vous pour choisir un type de session et continuer.", modeTbd: "mode : a definir", required: "requis" },
   step2: { title: "Etape 2 · Choisir un mode de reunion", body: "Choisissez comment vous souhaitez echanger avec notre equipe.", signIn: "Connectez-vous pour choisir un mode de reunion.", unlock: "Choisissez d'abord un type de session pour debloquer les modes de reunion.", availableModes: "Modes disponibles", basedOn: "Base sur", noModes: "Aucun mode configure pour ce type de session." },
   step3: { title: "Etape 3 · Profil de reservation", body: "Nous l'enregistrons une fois et le reutilisons pour les reservations futures.", unlock: "Choisissez un type de session et un mode de reunion pour debloquer le profil de reservation.", fullName: "Nom complet *", phone: "Telephone *", phonePlaceholder: "Saisir le numero", phoneHint: "Utilisez un numero joignable sur WhatsApp pour les mises a jour de reservation.", timezone: "Fuseau horaire *", company: "Entreprise (optionnel)", role: "Role dans l'entreprise", rolePlaceholder: "Obligatoire si une entreprise est indiquee", incomplete: "Renseignez les champs obligatoires pour enregistrer votre profil.", contact: "Contact", timezoneCard: "Fuseau horaire", timezoneHint: "Utilise pour garder des horaires de reservation coherents.", confirm: "Je confirme que ces informations sont correctes pour cette reservation." },
-  step4: { title: "Etape 4 · Choisir une heure", body: "Le fuseau horaire d'affichage controle la facon dont le calendrier est presente.", displayTimezone: "Fuseau horaire d'affichage", displayCurrency: "Devise d'affichage", ratesUpdated: "Taux mis a jour", selectType: "Choisissez un type de session pour debloquer les horaires disponibles.", selectMode: "Choisissez un mode de reunion pour debloquer les horaires disponibles.", completeProfile: "Completez votre profil de reservation pour debloquer les horaires disponibles.", confirmProfile: "Confirmez votre profil de reservation pour debloquer les horaires disponibles.", selectedTime: "Horaire selectionne", timeSelected: "Horaire selectionne", noTimeSelected: "Aucun horaire selectionne pour le moment", pickSlotPrefix: "Choisissez un creneau pour l'apercu dans", clearSelection: "Cliquez pour effacer la selection.", notes: "Notes sur l'objectif de la session *", notesPlaceholder: "Indiquez ce que vous souhaitez couvrir pendant cette session.", notesUsage: "Utilise uniquement pour cette reservation." },
+  step4: { title: "Etape 4 · Choisir une heure", body: "Le fuseau horaire d'affichage controle la facon dont le calendrier est presente.", displayTimezone: "Fuseau horaire d'affichage", displayCurrency: "Devise d'affichage", ratesUpdated: "Taux mis a jour", selectType: "Choisissez un type de session pour debloquer les horaires disponibles.", selectMode: "Choisissez un mode de reunion pour debloquer les horaires disponibles.", completeProfile: "Completez votre profil de reservation pour debloquer les horaires disponibles.", confirmProfile: "Confirmez votre profil de reservation pour debloquer les horaires disponibles.", selectedTime: "Horaire selectionne", timeSelected: "Horaire selectionne", noTimeSelected: "Aucun horaire selectionne pour le moment", pickSlotPrefix: "Choisissez un creneau pour l'apercu dans", clearSelection: "Cliquez pour effacer la selection.", slotRequired: "Selectionnez un creneau avant de continuer.", slotRequiredHint: "Choisissez l'un des creneaux disponibles dans le calendrier ci-dessus.", notes: "Notes sur l'objectif de la session *", notesPlaceholder: "Indiquez ce que vous souhaitez couvrir pendant cette session.", notesUsage: "Utilise uniquement pour cette reservation." },
   step5: { title: "Etape 5 · Confirmation", body: "Verifiez les details avant de confirmer votre reservation.", meeting: "Session", sessionFallback: "Session", phoneCallTo: "Appel vers", meetingLinkLater: "Le lien de reunion sera envoye par e-mail apres confirmation.", time: "Horaire", booker: "Reservant", personalBooking: "Reservation personnelle", notes: "Notes", preferredTimezone: "Fuseau horaire prefere", payment: "Paiement", paymentRequired: "Paiement requis", paid: "Paiement : paye", checkoutHint: "Cliquez sur « Passer au paiement » pour payer dans Stripe avant que cette reservation puisse etre confirmee.", approvalHint: "Si l'organisation exige une approbation, la reservation peut rester en attente jusqu'a validation par l'equipe.", paymentLinkHint: "Si la redirection echoue, utilisez le lien de paiement fourni par votre administrateur.", paymentStatus: "Statut du paiement", notifications: "Vous recevrez un e-mail de confirmation si les notifications sont activees.", selectTimeNotice: "Selectionnez un horaire pour verifier les details de votre reservation." },
   calendarText: { fileName: "reservation-luxai.ics", meetingWithLuxAi: "Reunion avec Lux AI", notesPrefix: "Notes", modePrefix: "Mode", meetingLinkPrefix: "Lien de reunion", phonePrefix: "Telephone", phoneFallback: "n/d" },
 };
@@ -610,7 +655,7 @@ const schedulingCopyDe = {
   step1: { title: "Schritt 1 · Meeting-Typ wahlen", body: "Wahlen Sie die Session, die zu Ihrem Ziel passt.", signIn: "Melden Sie sich an, um einen Meeting-Typ auszuwahlen und fortzufahren.", modeTbd: "Modus: offen", required: "erforderlich" },
   step2: { title: "Schritt 2 · Meeting-Modus wahlen", body: "Wahlen Sie, wie Sie mit unserem Team in Kontakt treten mochten.", signIn: "Melden Sie sich an, um einen Meeting-Modus zu wahlen.", unlock: "Wahlen Sie zuerst einen Meeting-Typ, um die Meeting-Modi freizuschalten.", availableModes: "Verfugbare Modi", basedOn: "Basierend auf", noModes: "Fur diesen Meeting-Typ sind keine Modi konfiguriert." },
   step3: { title: "Schritt 3 · Buchungsprofil", body: "Wir speichern dies einmal und verwenden es fur kunftige Buchungen wieder.", unlock: "Wahlen Sie einen Meeting-Typ und einen Meeting-Modus, um das Buchungsprofil freizuschalten.", fullName: "Vollstandiger Name *", phone: "Telefon *", phonePlaceholder: "Telefonnummer eingeben", phoneHint: "Verwenden Sie eine WhatsApp-fahige Nummer fur Buchungsupdates.", timezone: "Zeitzone *", company: "Unternehmen (optional)", role: "Rolle im Unternehmen", rolePlaceholder: "Erforderlich, wenn ein Unternehmen angegeben ist", incomplete: "Fullen Sie die Pflichtfelder aus, um Ihr Profil zu speichern.", contact: "Kontakt", timezoneCard: "Zeitzone", timezoneHint: "Dient dazu, Ihre Buchungszeiten konsistent zu halten.", confirm: "Ich bestatige, dass diese Angaben fur diese Buchung korrekt sind." },
-  step4: { title: "Schritt 4 · Zeit wahlen", body: "Die Anzeige-Zeitzone steuert, wie der Kalender dargestellt wird.", displayTimezone: "Anzeige-Zeitzone", displayCurrency: "Anzeige-Wahrung", ratesUpdated: "Kurse aktualisiert", selectType: "Wahlen Sie einen Meeting-Typ, um verfugbare Zeiten freizuschalten.", selectMode: "Wahlen Sie einen Meeting-Modus, um verfugbare Zeiten freizuschalten.", completeProfile: "Vervollstandigen Sie Ihr Buchungsprofil, um verfugbare Zeiten freizuschalten.", confirmProfile: "Bestatigen Sie Ihr Buchungsprofil, um verfugbare Zeiten freizuschalten.", selectedTime: "Gewahlte Zeit", timeSelected: "Zeit ausgewahlt", noTimeSelected: "Noch keine Zeit ausgewahlt", pickSlotPrefix: "Wahlen Sie ein Zeitfenster zur Vorschau in", clearSelection: "Klicken Sie, um die Auswahl zu loschen.", notes: "Notizen zum Sitzungsthema *", notesPlaceholder: "Teilen Sie mit, was Sie in dieser Session besprechen mochten.", notesUsage: "Wird nur fur diese Buchung verwendet." },
+  step4: { title: "Schritt 4 · Zeit wahlen", body: "Die Anzeige-Zeitzone steuert, wie der Kalender dargestellt wird.", displayTimezone: "Anzeige-Zeitzone", displayCurrency: "Anzeige-Wahrung", ratesUpdated: "Kurse aktualisiert", selectType: "Wahlen Sie einen Meeting-Typ, um verfugbare Zeiten freizuschalten.", selectMode: "Wahlen Sie einen Meeting-Modus, um verfugbare Zeiten freizuschalten.", completeProfile: "Vervollstandigen Sie Ihr Buchungsprofil, um verfugbare Zeiten freizuschalten.", confirmProfile: "Bestatigen Sie Ihr Buchungsprofil, um verfugbare Zeiten freizuschalten.", selectedTime: "Gewahlte Zeit", timeSelected: "Zeit ausgewahlt", noTimeSelected: "Noch keine Zeit ausgewahlt", pickSlotPrefix: "Wahlen Sie ein Zeitfenster zur Vorschau in", clearSelection: "Klicken Sie, um die Auswahl zu loschen.", slotRequired: "Wahlen Sie ein Zeitfenster, bevor Sie fortfahren.", slotRequiredHint: "Wahlen Sie einen der verfugbaren Slots im Kalender oben.", notes: "Notizen zum Sitzungsthema *", notesPlaceholder: "Teilen Sie mit, was Sie in dieser Session besprechen mochten.", notesUsage: "Wird nur fur diese Buchung verwendet." },
   step5: { title: "Schritt 5 · Bestatigung", body: "Prufen Sie die Details, bevor Sie Ihre Buchung bestatigen.", meeting: "Meeting", sessionFallback: "Session", phoneCallTo: "Telefonat an", meetingLinkLater: "Der Meeting-Link wird nach der Bestatigung per E-Mail gesendet.", time: "Zeit", booker: "Buchende Person", personalBooking: "Personliche Buchung", notes: "Notizen", preferredTimezone: "Bevorzugte Zeitzone", payment: "Zahlung", paymentRequired: "Zahlung erforderlich", paid: "Zahlung: bezahlt", checkoutHint: "Klicken Sie auf „Zur Zahlung“, um in Stripe zu zahlen, bevor diese Buchung bestatigt werden kann.", approvalHint: "Wenn die Organisation eine Freigabe verlangt, kann Ihre Buchung dennoch auf ausstehend bleiben, bis das Team zustimmt.", paymentLinkHint: "Falls die Weiterleitung fehlschlagt, verwenden Sie den von Ihrem Admin bereitgestellten Zahlungslink.", paymentStatus: "Zahlungsstatus", notifications: "Sie erhalten eine Bestatigungs-E-Mail, wenn Benachrichtigungen aktiviert sind.", selectTimeNotice: "Wahlen Sie eine Zeit, um die Buchungsdetails zu prufen." },
   calendarText: { fileName: "luxai-buchung.ics", meetingWithLuxAi: "Meeting mit Lux AI", notesPrefix: "Notizen", modePrefix: "Modus", meetingLinkPrefix: "Meeting-Link", phonePrefix: "Telefon", phoneFallback: "k. A." },
 };
@@ -661,7 +706,7 @@ const schedulingCopyLb = {
   step1: { title: "Schrëtt 1 · Meeting-Typ auswielen", body: "Wielt d'Session, déi am Beschte bei Äert Zil passt.", signIn: "Mellt Iech un, fir e Meeting-Typ ze wielen an weiderzefueren.", modeTbd: "Modus: nach op", required: "néideg" },
   step2: { title: "Schrëtt 2 · Meeting-Modus auswielen", body: "Wielt, wéi Dir mat eiser Equipe verbannen wëllt.", signIn: "Mellt Iech un, fir e Meeting-Modus ze wielen.", unlock: "Wielt als éischt e Meeting-Typ, fir d'Meeting-Modi fräizeginn.", availableModes: "Verfügbar Modi", basedOn: "Baséiert op", noModes: "Fir dëse Meeting-Typ si keng Modi ageriicht." },
   step3: { title: "Schrëtt 3 · Buchungsprofil", body: "Mir späicheren dat eng Kéier a benotzen et fir zukünfteg Buchungen erëm.", unlock: "Wielt e Meeting-Typ an e Meeting-Modus, fir de Buchungsprofil fräizeginn.", fullName: "Komplette Numm *", phone: "Telefon *", phonePlaceholder: "Telefonsnummer aginn", phoneHint: "Benotzt eng WhatsApp-fäheg Nummer fir Buchungsupdates.", timezone: "Zäitzon *", company: "Firma (optional)", role: "Roll an der Firma", rolePlaceholder: "Verlaangt, wann eng Firma uginn ass", incomplete: "Fëllt déi néideg Felder aus, fir Äre Profil ze späicheren.", contact: "Kontakt", timezoneCard: "Zäitzon", timezoneHint: "Dat gëtt benotzt, fir Är Buchungszäite konsequent ze halen.", confirm: "Ech confirméieren, datt dës Detailer fir dës Buchung richteg sinn." },
-  step4: { title: "Schrëtt 4 · Zäit auswielen", body: "D'Affichage-Zäitzon bestëmmt, wéi de Kalenner gewise gëtt.", displayTimezone: "Affichage-Zäitzon", displayCurrency: "Affichage-Währung", ratesUpdated: "Coursen aktualiséiert", selectType: "Wielt e Meeting-Typ, fir verfügbar Zäiten fräizeginn.", selectMode: "Wielt e Meeting-Modus, fir verfügbar Zäiten fräizeginn.", completeProfile: "Fëllt Äre Buchungsprofil aus, fir verfügbar Zäiten fräizeginn.", confirmProfile: "Confirméiert Äre Buchungsprofil, fir verfügbar Zäiten fräizeginn.", selectedTime: "Gewielte Zäit", timeSelected: "Zäit ausgewielt", noTimeSelected: "Nach keng Zäit ausgewielt", pickSlotPrefix: "Wielt e Slot fir d'Virschau an", clearSelection: "Klickt fir d'Auswiel ze läschen.", notes: "Notize fir d'Sessiounszil *", notesPlaceholder: "Deelt mat, wat Dir an dëser Session ofdecke wëllt.", notesUsage: "Nëmme fir dës Buchung benotzt." },
+  step4: { title: "Schrëtt 4 · Zäit auswielen", body: "D'Affichage-Zäitzon bestëmmt, wéi de Kalenner gewise gëtt.", displayTimezone: "Affichage-Zäitzon", displayCurrency: "Affichage-Währung", ratesUpdated: "Coursen aktualiséiert", selectType: "Wielt e Meeting-Typ, fir verfügbar Zäiten fräizeginn.", selectMode: "Wielt e Meeting-Modus, fir verfügbar Zäiten fräizeginn.", completeProfile: "Fëllt Äre Buchungsprofil aus, fir verfügbar Zäiten fräizeginn.", confirmProfile: "Confirméiert Äre Buchungsprofil, fir verfügbar Zäiten fräizeginn.", selectedTime: "Gewielte Zäit", timeSelected: "Zäit ausgewielt", noTimeSelected: "Nach keng Zäit ausgewielt", pickSlotPrefix: "Wielt e Slot fir d'Virschau an", clearSelection: "Klickt fir d'Auswiel ze läschen.", slotRequired: "Wielt eng Zäit, ier Dir weider gitt.", slotRequiredHint: "Wielt ee vun de verfügbare Slots am Kalenner uewen.", notes: "Notize fir d'Sessiounszil *", notesPlaceholder: "Deelt mat, wat Dir an dëser Session ofdecke wëllt.", notesUsage: "Nëmme fir dës Buchung benotzt." },
   step5: { title: "Schrëtt 5 · Confirmatioun", body: "Iwwerpréift d'Detailer, ier Dir Är Buchung confirméiert.", meeting: "Meeting", sessionFallback: "Session", phoneCallTo: "Telefonsgespréich un", meetingLinkLater: "De Meeting-Link gëtt no der Confirmatioun per E-Mail geschéckt.", time: "Zäit", booker: "Buchend Persoun", personalBooking: "Perséinlech Buchung", notes: "Notizen", preferredTimezone: "Bevorzucht Zäitzon", payment: "Bezuelung", paymentRequired: "Bezuelung verlaangt", paid: "Bezuelung: bezuelt", checkoutHint: "Klickt op « Weider op Bezuelung », fir an Stripe ze bezuelen, ier dës Buchung confirméiert ka ginn.", approvalHint: "Wann d'Organisatioun eng Zoustëmmung verlaangt, kann Är Buchung nach ëmmer op pending bleiwen, bis d'Equipe zoustëmmt.", paymentLinkHint: "Wann d'Weiderleedung feelt, benotzt de Bezuelungslink vun Ärem Admin.", paymentStatus: "Bezuelungsstatus", notifications: "Dir kritt eng Confirmatiouns-E-Mail, wann Notifikatiounen aktivéiert sinn.", selectTimeNotice: "Wielt eng Zäit, fir Är Buchungsdetailer ze iwwerpréiwen." },
   calendarText: { fileName: "luxai-buchung.ics", meetingWithLuxAi: "Meeting mat Lux AI", notesPrefix: "Notizen", modePrefix: "Modus", meetingLinkPrefix: "Meeting-Link", phonePrefix: "Telefon", phoneFallback: "keng Angab" },
 };
@@ -768,6 +813,59 @@ const INTERNAL_MEETING_KEY_HINTS = [
   "partner",
 ];
 const MAX_PUBLIC_DIRECT_MEETING_TYPES = 3;
+const CURATED_PUBLIC_MEETING_BEST_FOR: Record<
+  AppLanguage,
+  Record<string, string>
+> = {
+  en: {
+    "discovery-call":
+      "Understanding your current setup and identifying the right next step.",
+    "ai-strategy-consultation":
+      "Businesses that already have clear goals and need practical AI direction.",
+    "strategy-analysis":
+      "Businesses that already have clear goals and need practical AI direction.",
+    "automation-audit":
+      "A deeper review of workflows to identify automation opportunities.",
+  },
+  fr: {
+    "discovery-call":
+      "Comprendre votre situation actuelle et identifier la bonne prochaine etape.",
+    "ai-strategy-consultation":
+      "Pour les entreprises qui ont deja des objectifs clairs et ont besoin d'une direction IA pratique.",
+    "strategy-analysis":
+      "Pour les entreprises qui ont deja des objectifs clairs et ont besoin d'une direction IA pratique.",
+    "automation-audit":
+      "Une revue plus approfondie des workflows pour identifier les opportunites d'automatisation.",
+  },
+  de: {
+    "discovery-call":
+      "Ihre aktuelle Situation verstehen und den richtigen naechsten Schritt identifizieren.",
+    "ai-strategy-consultation":
+      "Fuer Unternehmen mit klaren Zielen, die praktische KI-Richtung brauchen.",
+    "strategy-analysis":
+      "Fuer Unternehmen mit klaren Zielen, die praktische KI-Richtung brauchen.",
+    "automation-audit":
+      "Eine tiefere Pruefung von Workflows, um Automatisierungschancen zu identifizieren.",
+  },
+  lb: {
+    "discovery-call":
+      "Ären aktuelle Setup verstoen an de richtege nächste Schrëtt identifizéieren.",
+    "ai-strategy-consultation":
+      "Fir Betriber mat kloren Ziler, déi praktesch AI-Richtung brauchen.",
+    "strategy-analysis":
+      "Fir Betriber mat kloren Ziler, déi praktesch AI-Richtung brauchen.",
+    "automation-audit":
+      "Eng méi déif Iwwerpréiwung vu Workflows, fir Automatiséierungschancen ze identifizéieren.",
+  },
+};
+const GENERIC_PUBLIC_BEST_FOR_HINTS = [
+  "intro-call-to-understand",
+  "understand-your-needs",
+  "explore-your-needs",
+  "learn-more-about-your-needs",
+  "conversation-to-understand",
+  "general-introduction",
+];
 
 function cleanString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -778,6 +876,34 @@ function normalizeMeetingTypeToken(value: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function isGenericPublicBestFor(value: string): boolean {
+  const token = normalizeMeetingTypeToken(value);
+  return GENERIC_PUBLIC_BEST_FOR_HINTS.some((hint) => token.includes(hint));
+}
+
+function resolvePublicMeetingBestFor(
+  item: Pick<MeetingType, "key" | "title" | "subtitle" | "description">,
+  language: AppLanguage
+): string {
+  const preferred = cleanString(item.subtitle) || cleanString(item.description);
+  if (preferred && !isGenericPublicBestFor(preferred)) {
+    return preferred;
+  }
+
+  const curated = CURATED_PUBLIC_MEETING_BEST_FOR[language] ?? CURATED_PUBLIC_MEETING_BEST_FOR.en;
+  const candidates = [item.key, item.title, item.subtitle ?? ""].map(
+    normalizeMeetingTypeToken
+  );
+
+  for (const candidate of candidates) {
+    if (curated[candidate]) {
+      return curated[candidate];
+    }
+  }
+
+  return preferred;
 }
 
 function findRequestedMeetingTypeId(
@@ -1043,7 +1169,7 @@ function MeetingTypeCard({
   const isPaid = (item.paymentPolicy ?? "FREE") !== "FREE";
 
   const classes = [
-    "w-full rounded-3xl border px-4 py-4 text-left transition backdrop-blur",
+    "w-full rounded-[1.65rem] border px-4 py-3.5 text-left transition backdrop-blur",
     selected
       ? "border-primary-600 bg-gradient-to-br from-primary-600 to-indigo-600 text-white shadow-[0_18px_45px_-30px_rgba(14,66,126,0.6)] dark:border-primary-400"
       : "border-white/70 bg-white/80 text-gray-900 hover:border-primary-200 hover:bg-white dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-white",
@@ -1053,19 +1179,19 @@ function MeetingTypeCard({
     <>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] opacity-70">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] opacity-70">
             {item.key}
           </p>
-          <h3 className="mt-2 text-lg font-semibold">{title}</h3>
+          <h3 className="mt-1.5 text-[1.05rem] font-semibold leading-6">{title}</h3>
           {item.subtitle && (
-            <p className="mt-1 text-sm font-medium opacity-80">
+            <p className="mt-1 text-[13px] font-medium leading-5 opacity-80">
               {item.subtitle}
             </p>
           )}
         </div>
         <span
           className={[
-            "rounded-full px-3 py-1 text-xs font-semibold",
+            "rounded-full px-2.5 py-1 text-[11px] font-semibold",
             selected ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700",
           ].join(" ")}
         >
@@ -1073,17 +1199,17 @@ function MeetingTypeCard({
         </span>
       </div>
       {item.description && (
-        <p className="mt-2 text-sm opacity-80">{item.description}</p>
+        <p className="mt-2 text-sm leading-6 opacity-80">{item.description}</p>
       )}
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
+      <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] opacity-80">
         {modeLabels.length > 0 ? modeLabels.join(" · ") : copy.step1.modeTbd}
       </div>
       {isPaid && priceLabel && (
-        <div className="mt-3 text-sm font-semibold">
+        <div className="mt-2.5 text-sm font-semibold">
           {priceLabel} {copy.step1.required}
         </div>
       )}
-      {footer ? <div className="mt-4">{footer}</div> : null}
+      {footer ? <div className="mt-3">{footer}</div> : null}
     </>
   );
 
@@ -1102,6 +1228,7 @@ function PublicMeetingTypeCard({
   item,
   selected,
   locale,
+  language,
   copy,
   entryCopy,
   href,
@@ -1110,6 +1237,7 @@ function PublicMeetingTypeCard({
   item: MeetingType;
   selected?: boolean;
   locale: string;
+  language: AppLanguage;
   copy: SchedulingCopy;
   entryCopy: SchedulingEntryCopy;
   href: string;
@@ -1118,7 +1246,7 @@ function PublicMeetingTypeCard({
   const title = normalizeMeetingTitle(item.title, item.durationMin);
   const priceLabel = formatPrice(item.priceCents, item.currency, locale);
   const isFree = (item.paymentPolicy ?? "FREE") === "FREE";
-  const bestForText = cleanString(item.subtitle) || cleanString(item.description);
+  const bestForText = resolvePublicMeetingBestFor(item, language);
   const modeLabels = (item.modes ?? []).map((mode) => {
     const label = mode.details?.label?.trim();
     return label || formatMeetingMode(mode.mode, copy);
@@ -1133,14 +1261,14 @@ function PublicMeetingTypeCard({
   return (
     <div
       className={[
-        "rounded-3xl border p-4 shadow-sm transition backdrop-blur",
+        "rounded-[1.65rem] border p-3.5 shadow-sm transition backdrop-blur",
         selected
           ? "border-primary-300 bg-primary-50/80 shadow-[0_18px_45px_-34px_rgba(14,66,126,0.35)] dark:border-primary-400/40 dark:bg-primary-500/10"
           : "border-white/70 bg-white/80 dark:border-slate-700/60 dark:bg-slate-900/68",
       ].join(" ")}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-[1.05rem] font-semibold leading-6 text-gray-900 dark:text-white">
           {title}
         </h3>
         {selected ? (
@@ -1151,12 +1279,15 @@ function PublicMeetingTypeCard({
       </div>
 
       {bestForText ? (
-        <p className="mt-3 text-sm leading-6 text-gray-700 dark:text-gray-200">
-          {bestForText}
+        <p className="mt-2.5 text-sm leading-6 text-gray-700 dark:text-gray-200">
+          <span className="font-semibold text-gray-900 dark:text-white">
+            {entryCopy.bestForLabel}:
+          </span>{" "}
+          <span>{bestForText}</span>
         </p>
       ) : null}
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-3 flex flex-wrap gap-2">
         {metadata.map((value) => (
           <span
             key={value}
@@ -1167,13 +1298,13 @@ function PublicMeetingTypeCard({
         ))}
       </div>
 
-      <div className="mt-4">
+      <div className="mt-3">
         {onSelect ? (
           <button
             type="button"
             onClick={onSelect}
             className={[
-              "inline-flex w-full items-center justify-center rounded-full px-4 py-3 text-sm font-semibold transition-colors",
+              "inline-flex w-full items-center justify-center rounded-full px-4 py-2.5 text-sm font-semibold transition-colors",
               selected
                 ? "border border-primary-300 bg-white text-primary-700 hover:bg-primary-50 dark:border-primary-400/40 dark:bg-slate-950/40 dark:text-white"
                 : "bg-primary-600 text-white hover:bg-primary-700",
@@ -1196,6 +1327,73 @@ function PublicMeetingTypeCard({
         )}
       </div>
     </div>
+  );
+}
+
+function SchedulingFlowHeader({
+  steps,
+}: {
+  steps: Array<{
+    id: string;
+    label: string;
+    isCompleted?: boolean;
+    isActive?: boolean;
+  }>;
+}) {
+  const { toggleSidebar, open, openMobile, isMobile } = useSidebar();
+  const isOpen = isMobile ? openMobile : open;
+  const leftColumnWidth = isOpen
+    ? "var(--sidebar-width)"
+    : "var(--sidebar-width-icon)";
+
+  return (
+    <>
+      <div
+        className="hidden items-stretch gap-4 md:grid"
+        style={{ gridTemplateColumns: `${leftColumnWidth} minmax(0, 1fr)` }}
+      >
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          aria-expanded={isOpen}
+          aria-label={isOpen ? "Close menu" : "Open menu"}
+          className={[
+            "flex min-h-[4.25rem] items-center rounded-[1.5rem] border border-white/70 bg-white/85 px-3 text-left shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur transition hover:bg-white/95 active:bg-white/90 dark:border-slate-700/60 dark:bg-slate-900/70 dark:hover:bg-slate-900/85",
+            isOpen ? "justify-between gap-3" : "justify-center px-0",
+          ].join(" ")}
+        >
+          <span
+            className={[
+              "flex items-center",
+              isOpen ? "gap-3" : "justify-center",
+            ].join(" ")}
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 shadow-sm ring-1 ring-slate-200/70 dark:text-slate-200 dark:ring-slate-700/60">
+              <PanelLeft className="h-4 w-4" />
+            </span>
+            {isOpen ? (
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                Close menu
+              </span>
+            ) : null}
+          </span>
+          {isOpen ? (
+            <ChevronRight className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+          ) : null}
+        </button>
+
+        <div className="min-w-0 rounded-[1.8rem] border border-white/70 bg-white/85 p-3.5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+          <Stepper
+            className="min-w-0 flex-nowrap justify-start overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            steps={steps}
+          />
+        </div>
+      </div>
+
+      <div className="rounded-[1.8rem] border border-white/70 bg-white/85 p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 md:hidden">
+        <Stepper className="justify-start" steps={steps} />
+      </div>
+    </>
   );
 }
 
@@ -1422,6 +1620,8 @@ export default function SchedulingClient(props: Props) {
   const [fieldErrors, setFieldErrors] = useState<Partial<FormState>>({});
   const [meetingNotes, setMeetingNotes] = useState("");
   const [meetingNotesTouched, setMeetingNotesTouched] = useState(false);
+  const [timeSelectionTouched, setTimeSelectionTouched] = useState(false);
+  const timeSelectionCardRef = useRef<HTMLButtonElement | null>(null);
   const freeAuditHref = useMemo(
     () =>
       buildSchedulingHref({
@@ -1593,6 +1793,7 @@ export default function SchedulingClient(props: Props) {
     return `${start.toFormat("ccc, LLL dd · HH:mm")} - ${end.toFormat("HH:mm")}`;
   }, [selectedSlot, displayTz, locale]);
   const hasSelectedSlot = Boolean(selectedSlot);
+  const showTimeSelectionError = canProceedToTime && timeSelectionTouched && !hasSelectedSlot;
   const [activeStep, setActiveStep] = useState(1);
   const canAdvanceStep = useMemo(
     () => ({
@@ -1636,12 +1837,20 @@ export default function SchedulingClient(props: Props) {
     setBookingSummary(null);
     setSelectedSlot(null);
     setBookingError(null);
+    setTimeSelectionTouched(false);
   }, [selectedMeetingTypeId, selectedMode, showForm, confirmed]);
 
   useEffect(() => {
     setMeetingNotes("");
     setMeetingNotesTouched(false);
+    setTimeSelectionTouched(false);
   }, [selectedMeetingTypeId, selectedMode]);
+
+  useEffect(() => {
+    if (selectedSlot) {
+      setTimeSelectionTouched(false);
+    }
+  }, [selectedSlot]);
 
   useEffect(() => {
     if (!selectedMeetingType) {
@@ -2032,15 +2241,6 @@ export default function SchedulingClient(props: Props) {
           toast.error(message);
           return;
         }
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem(
-            "pendingBooking",
-            JSON.stringify({
-              ...payload,
-              paymentSessionId: json.sessionId,
-            })
-          );
-        }
         if (json?.url) {
           window.location.href = json.url as string;
           return;
@@ -2250,6 +2450,39 @@ export default function SchedulingClient(props: Props) {
           </div>
         </div>
 
+        <div className="rounded-3xl border border-slate-200/80 bg-white/78 p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.18)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/62 sm:p-6">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-2xl font-semibold tracking-[-0.03em] text-gray-900 dark:text-white">
+              {entryCopy.valueTitle}
+            </h2>
+            {entryCopy.valueNote ? (
+              <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                {entryCopy.valueNote}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {entryCopy.valueItems.map((item) => (
+              <div
+                key={item}
+                className="rounded-2xl border border-slate-200/75 bg-slate-50/80 px-4 py-3 text-sm leading-6 text-gray-700 dark:border-slate-700/60 dark:bg-slate-950/35 dark:text-gray-200"
+              >
+                <div className="flex items-start gap-3">
+                  <i className="ri-check-line mt-1 text-primary-600 dark:text-accent-400" />
+                  <span>{item}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {entryCopy.valueTrust ? (
+            <p className="mt-5 text-center text-sm text-gray-500 dark:text-gray-400">
+              {entryCopy.valueTrust}
+            </p>
+          ) : null}
+        </div>
+
         <div
           id="meeting-options"
           className="rounded-3xl border border-slate-200/80 bg-slate-50/55 p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.18)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/55 sm:p-6"
@@ -2258,7 +2491,7 @@ export default function SchedulingClient(props: Props) {
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {entryCopy.directSectionLead}
             </p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-gray-900 dark:text-white">
+            <h2 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-gray-900 dark:text-white sm:text-2xl">
               {entryCopy.optionsSectionTitle}
             </h2>
           </div>
@@ -2312,6 +2545,7 @@ export default function SchedulingClient(props: Props) {
                       item={item}
                       selected={selected}
                       locale={locale}
+                      language={lang}
                       copy={copy}
                       entryCopy={entryCopy}
                       href={optionHref}
@@ -2376,42 +2610,40 @@ export default function SchedulingClient(props: Props) {
     );
   }
 
+  const stepItems = [
+    {
+      id: "1",
+      label: copy.stepLabels.type,
+      isActive: activeStep === 1,
+    },
+    {
+      id: "2",
+      label: copy.stepLabels.mode,
+      isActive: activeStep === 2,
+    },
+    {
+      id: "3",
+      label: copy.stepLabels.profile,
+      isActive: activeStep === 3,
+    },
+    {
+      id: "4",
+      label: copy.stepLabels.time,
+      isActive: activeStep === 4,
+    },
+    {
+      id: "5",
+      label: copy.stepLabels.confirm,
+      isActive: activeStep === 5,
+    },
+  ];
+
   return (
-    <div className="space-y-10">
-      <div className="rounded-3xl border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
-        <Stepper
-          steps={[
-            {
-              id: "1",
-              label: copy.stepLabels.type,
-              isActive: activeStep === 1,
-            },
-            {
-              id: "2",
-              label: copy.stepLabels.mode,
-              isActive: activeStep === 2,
-            },
-            {
-              id: "3",
-              label: copy.stepLabels.profile,
-              isActive: activeStep === 3,
-            },
-            {
-              id: "4",
-              label: copy.stepLabels.time,
-              isActive: activeStep === 4,
-            },
-            {
-              id: "5",
-              label: copy.stepLabels.confirm,
-              isActive: activeStep === 5,
-            },
-          ]}
-        />
-      </div>
+    <div className="space-y-8 lg:space-y-9">
+      <SchedulingFlowHeader steps={stepItems} />
 
       {activeStep === 1 && (
-        <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+        <div className="rounded-[1.8rem] border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 lg:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -2481,7 +2713,7 @@ export default function SchedulingClient(props: Props) {
 
                 {meetingTypes.length > 0 && (
                   <>
-                    <div className="mt-5 grid gap-4 md:grid-cols-2">
+                    <div className="mt-4 grid gap-3 md:grid-cols-2">
                       {meetingTypes.map((item) => {
                         const selected = item.id === selectedMeetingTypeId;
 
@@ -2509,7 +2741,7 @@ export default function SchedulingClient(props: Props) {
                 )}
             </>
           )}
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
             <Button type="button" variant="outline" disabled>
               {copy.buttons.back}
             </Button>
@@ -2525,7 +2757,7 @@ export default function SchedulingClient(props: Props) {
       )}
 
       {activeStep === 2 && (
-        <div className="rounded-3xl border border-white/70 bg-white/85 p-6 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+        <div className="rounded-[1.8rem] border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 lg:p-6">
           <div id="step-2" className="mb-6" />
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -2634,7 +2866,7 @@ export default function SchedulingClient(props: Props) {
               )}
             </>
           )}
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
             <Button type="button" variant="outline" onClick={() => setActiveStep(1)}>
               {copy.buttons.back}
             </Button>
@@ -2650,8 +2882,8 @@ export default function SchedulingClient(props: Props) {
       )}
 
       {activeStep === 3 && (
-          <div className="mt-8 space-y-6">
-            <div className="rounded-3xl border border-white/70 bg-white/80 p-6 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+          <div className="mt-6 space-y-5 lg:mt-7 lg:space-y-6">
+            <div className="rounded-[1.8rem] border border-white/70 bg-white/80 p-5 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 lg:p-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -2904,7 +3136,7 @@ export default function SchedulingClient(props: Props) {
                   </label>
                 </div>
               )}
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
                 <Button type="button" variant="outline" onClick={() => setActiveStep(2)}>
                   {copy.buttons.back}
                 </Button>
@@ -3342,15 +3574,19 @@ export default function SchedulingClient(props: Props) {
               {canProceedToTime && (
                 <div className="mt-4 grid gap-4">
                   <button
+                    ref={timeSelectionCardRef}
                     type="button"
                     disabled={!hasSelectedSlot}
                     onClick={() => {
                       if (!hasSelectedSlot) return;
                       setSelectedSlot(null);
+                      setTimeSelectionTouched(false);
                     }}
                     className={[
                       "rounded-2xl border px-4 py-3 text-left text-sm shadow-sm backdrop-blur transition",
-                      hasSelectedSlot
+                      showTimeSelectionError
+                        ? "border-red-300/80 bg-red-50/90 text-red-900 shadow-[0_0_0_3px_rgba(248,113,113,0.14)]"
+                        : hasSelectedSlot
                         ? "border-emerald-200/70 bg-emerald-50/80 text-emerald-900 hover:bg-emerald-100/80 cursor-pointer"
                         : "border-slate-200/80 bg-slate-50/70 text-slate-600 cursor-default",
                     ].join(" ")}
@@ -3359,7 +3595,11 @@ export default function SchedulingClient(props: Props) {
                     <p
                       className={[
                         "text-xs font-semibold uppercase tracking-[0.25em]",
-                        hasSelectedSlot ? "text-emerald-600" : "text-slate-500",
+                        showTimeSelectionError
+                          ? "text-red-600"
+                          : hasSelectedSlot
+                            ? "text-emerald-600"
+                            : "text-slate-500",
                       ].join(" ")}
                     >
                       {copy.step4.selectedTime}
@@ -3367,7 +3607,11 @@ export default function SchedulingClient(props: Props) {
                     <p
                       className={[
                         "mt-2 text-base font-semibold",
-                        hasSelectedSlot ? "text-emerald-900" : "text-slate-600",
+                        showTimeSelectionError
+                          ? "text-red-900"
+                          : hasSelectedSlot
+                            ? "text-emerald-900"
+                            : "text-slate-600",
                       ].join(" ")}
                     >
                       {hasSelectedSlot
@@ -3377,13 +3621,27 @@ export default function SchedulingClient(props: Props) {
                     <p
                       className={[
                         "text-xs",
-                        hasSelectedSlot ? "text-emerald-700" : "text-slate-500",
+                        showTimeSelectionError
+                          ? "text-red-700"
+                          : hasSelectedSlot
+                            ? "text-emerald-700"
+                            : "text-slate-500",
                       ].join(" ")}
                     >
                       {hasSelectedSlot
                         ? displayTz
                         : `${copy.step4.pickSlotPrefix} ${displayTz}.`}
                     </p>
+                    {showTimeSelectionError && (
+                      <p className="mt-2 text-sm font-medium text-red-700">
+                        {copy.step4.slotRequired}
+                      </p>
+                    )}
+                    {showTimeSelectionError && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {copy.step4.slotRequiredHint}
+                      </p>
+                    )}
                     {hasSelectedSlot && (
                       <p className="mt-1 text-xs text-emerald-700">
                         {copy.step4.clearSelection}
@@ -3417,7 +3675,7 @@ export default function SchedulingClient(props: Props) {
                   </div>
                 </div>
               )}
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
                 <Button type="button" variant="outline" onClick={() => setActiveStep(3)}>
                   {copy.buttons.back}
                 </Button>
@@ -3425,10 +3683,18 @@ export default function SchedulingClient(props: Props) {
                   type="button"
                   onClick={() => {
                     setMeetingNotesTouched(true);
+                    if (!hasSelectedSlot) {
+                      setTimeSelectionTouched(true);
+                      timeSelectionCardRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                      });
+                      toast.error(copy.step4.slotRequired);
+                      return;
+                    }
                     if (!meetingNotesValid) return;
                     setActiveStep(5);
                   }}
-                  disabled={!canAdvanceStep[4]}
                 >
                   {copy.buttons.next}
                 </Button>

@@ -9,8 +9,8 @@ import { getOrgPolicies } from "@/lib/scheduling/policy";
 import { requireUserIdFromSession } from "@/lib/scheduling/authz";
 import { getMeetingLink } from "@/lib/scheduling/meeting-link";
 import { pickStaffForSlot } from "@/lib/scheduling/auto-assignment";
+import { getMinBookableUtc } from "@/lib/scheduling/lead-time";
 import { resolveOrgIdForRequest } from "@/lib/scheduling/org-resolver";
-import { getStripeForOrg } from "@/lib/stripe";
 import {
   isBodyTooLarge,
   isValidNotes,
@@ -24,7 +24,6 @@ type Status = "pending" | "confirmed" | "declined" | "canceled" | "completed";
 type PaymentPolicy = "FREE" | "PAID";
 
 const BUSY_STATUSES: Status[] = ["pending", "confirmed", "completed"];
-const MIN_LEAD_MIN = 180;
 
 // Buffer policy (MVP)
 const DEFAULT_BUFFER_MIN = 0;
@@ -64,8 +63,6 @@ type Body = {
   startLocal: string;
   tz?: string;
   notes?: string;
-  paymentConfirmed?: boolean;
-  paymentSessionId?: string;
 };
 
 export async function POST(req: Request) {
@@ -94,7 +91,6 @@ export async function POST(req: Request) {
   let startLocalRaw = cleanString(body.startLocal);
   let tz = cleanString(body.tz);
   const notes = cleanString(body.notes);
-  const paymentSessionId = cleanString(body.paymentSessionId);
   const allowedModes: MeetingMode[] = [
     "google_meet",
     "zoom",
@@ -109,89 +105,6 @@ export async function POST(req: Request) {
   const who = await requireUserIdFromSession();
   if (!who.ok) return NextResponse.json({ error: who.error }, { status: 401 });
   const userId = who.userId;
-
-  let stripeSession:
-    | import("stripe").Stripe.Response<import("stripe").Stripe.Checkout.Session>
-    | null = null;
-  let paymentIntentId: string | null = null;
-  let paymentSessionPaid = false;
-
-  if (paymentSessionId) {
-    const stripe = await getStripeForOrg(orgId || null);
-    if (!stripe) {
-      return NextResponse.json(
-        { error: "Stripe is not configured for this organization." },
-        { status: 409 }
-      );
-    }
-    stripeSession = await stripe.checkout.sessions.retrieve(paymentSessionId);
-    const meta = stripeSession.metadata ?? {};
-    const metaUserId = cleanString(meta.userId);
-    if (metaUserId && metaUserId !== userId) {
-      return NextResponse.json(
-        { error: "Session does not match current user." },
-        { status: 403 },
-      );
-    }
-
-    const metaOrgId = cleanString(meta.orgId);
-    const metaMeetingTypeId = cleanString(meta.meetingTypeId);
-    const metaMode = cleanString(meta.mode) as MeetingMode;
-    const metaStartLocal = cleanString(meta.startLocal);
-    const metaTz = cleanString(meta.tz);
-    const metaStaffUserId = cleanString(meta.staffUserId);
-
-    if (orgId && metaOrgId && orgId !== metaOrgId) {
-      return NextResponse.json(
-        { error: "Payment session does not match org." },
-        { status: 409 },
-      );
-    }
-    if (
-      meetingTypeId &&
-      metaMeetingTypeId &&
-      meetingTypeId !== metaMeetingTypeId
-    ) {
-      return NextResponse.json(
-        { error: "Payment session does not match meeting type." },
-        { status: 409 },
-      );
-    }
-    if (mode && metaMode && mode !== metaMode) {
-      return NextResponse.json(
-        { error: "Payment session does not match meeting mode." },
-        { status: 409 },
-      );
-    }
-    if (startLocalRaw && metaStartLocal && startLocalRaw !== metaStartLocal) {
-      return NextResponse.json(
-        { error: "Payment session does not match selected slot." },
-        { status: 409 },
-      );
-    }
-    if (tz && metaTz && tz !== metaTz) {
-      return NextResponse.json(
-        { error: "Payment session does not match timezone." },
-        { status: 409 },
-      );
-    }
-
-    orgId = metaOrgId || orgId;
-    meetingTypeId = metaMeetingTypeId || meetingTypeId;
-    mode = (metaMode || mode) as MeetingMode;
-    startLocalRaw = metaStartLocal || startLocalRaw;
-    tz = metaTz || tz;
-
-    if (metaStaffUserId) {
-      body.staffUserId = metaStaffUserId;
-    }
-
-    paymentSessionPaid = stripeSession.payment_status === "paid";
-    paymentIntentId =
-      typeof stripeSession.payment_intent === "string"
-        ? stripeSession.payment_intent
-        : null;
-  }
 
   if (!orgId) {
     orgId = await resolveOrgIdForRequest({
@@ -271,7 +184,6 @@ export async function POST(req: Request) {
       ? "PAID"
       : policies.paymentPolicy;
   const paymentRequiredByPolicy = effectivePaymentPolicy !== "FREE";
-  const paymentConfirmed = paymentRequiredByPolicy ? paymentSessionPaid : false;
 
   // Enforce payment policy at booking time
   const resolvedPriceCents =
@@ -279,27 +191,13 @@ export async function POST(req: Request) {
   const resolvedCurrency = mt.currency ?? policies.defaultCurrency ?? null;
   let paymentStatus: "not_required" | "unpaid" | "paid" = "not_required";
   if (paymentRequiredByPolicy) {
-    if (!resolvedPriceCents || !resolvedCurrency) {
-      return NextResponse.json(
-        {
-          error: "Payment is required by org policy. Please contact the admin.",
-        },
-        { status: 409 },
-      );
-    }
-    paymentStatus = paymentConfirmed ? "paid" : "unpaid";
-    if (!paymentSessionId) {
-      return NextResponse.json(
-        { error: "Missing payment session for this paid booking." },
-        { status: 409 },
-      );
-    }
-    if (!paymentConfirmed) {
-      return NextResponse.json(
-        { error: "Payment is required before this booking can be submitted." },
-        { status: 409 },
-      );
-    }
+    return NextResponse.json(
+      {
+        error:
+          "Paid bookings are confirmed only after Stripe webhook processing. Start from checkout instead of the booking endpoint.",
+      },
+      { status: 409 },
+    );
   }
 
   // 2) local -> utc
@@ -314,7 +212,7 @@ export async function POST(req: Request) {
   const startUtc = startLocal.toUTC();
   const endUtc = startUtc.plus({ minutes: durationMin });
 
-  const minBookable = DateTime.utc().plus({ minutes: MIN_LEAD_MIN });
+  const minBookable = getMinBookableUtc();
   if (startUtc < minBookable) {
     return NextResponse.json(
       { error: "Please choose a later time." },
@@ -450,12 +348,6 @@ export async function POST(req: Request) {
       : `payment_policy=${effectivePaymentPolicy}; requires_payment=${paymentRequiredByPolicy}; price_cents=${resolvedPriceCents ?? "n/a"}; currency=${resolvedCurrency ?? "n/a"}`;
 
   const bufferNote = bufferMin ? `buffer_min=${bufferMin}` : null;
-  const paymentSessionNote = paymentSessionId
-    ? `payment_session_id=${paymentSessionId}`
-    : null;
-  const paymentIntentNote = paymentIntentId
-    ? `payment_intent_id=${paymentIntentId}`
-    : null;
 
   try {
     // 7) ✅ global booking profile: query by userId only (orgId is nullable / not part of key)
@@ -529,8 +421,6 @@ export async function POST(req: Request) {
           [
             notes || null,
             paymentNote,
-            paymentSessionNote,
-            paymentIntentNote,
             bufferNote,
           ]
             .filter(Boolean)

@@ -1,0 +1,45 @@
+{
+  "generatedAtUtc": "2026-03-31T15:11:57.717Z",
+  "identity": {
+    "databaseName": "neondb",
+    "currentUser": "neondb_owner",
+    "serverVersion": "PostgreSQL 17.8 (a284a84) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit"
+  },
+  "privileges": {
+    "can_create_in_database": true,
+    "can_create_temp_tables": true,
+    "can_use_public_schema": true,
+    "can_create_in_public_schema": true
+  },
+  "ownership": [
+    {
+      "schemaname": "public",
+      "tablename": "_prisma_migrations",
+      "tableowner": "neondb_owner"
+    },
+    {
+      "schemaname": "public",
+      "tablename": "appointment",
+      "tableowner": "neondb_owner"
+    }
+  ],
+  "extensions": [
+    {
+      "name": "btree_gist",
+      "default_version": "1.7",
+      "installed_version": null
+    }
+  ],
+  "ddlProbe": {
+    "ok": true,
+    "error": null
+  },
+  "pendingMarch31MigrationsPresentInHistory": [],
+  "prismaMigrateStatus": {
+    "status": null,
+    "signal": null,
+    "stdout": "",
+    "stderr": "",
+    "error": "spawnSync npx.cmd EINVAL"
+  }
+}

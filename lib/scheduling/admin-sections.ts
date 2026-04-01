@@ -14,5 +14,6 @@ export const ADMIN_SECTION_NAV: AdminSectionNavItem[] = [
   { label: "Customers", href: "/admin/scheduling/customers" },
   { label: "Blocked time", href: "/admin/scheduling/blocked" },
   { label: "Notifications", href: "/admin/scheduling/notifications" },
+  { label: "Payment ops", href: "/admin/scheduling/ops" },
   { label: "Audit log", href: "/admin/scheduling/audit" },
 ];

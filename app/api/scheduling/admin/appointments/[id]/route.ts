@@ -121,6 +121,7 @@ export async function GET(
       orgId: appt.orgId,
       userId: appt.userId,
       staffUserId: appt.staffUserId,
+      bookingAttemptId: appt.bookingAttemptId,
       meetingTypeId: appt.meetingTypeId,
       meetingTypeKey: appt.meetingType?.key ?? null,
       durationMin: appt.meetingType?.durationMin ?? 60,
@@ -142,6 +143,12 @@ export async function GET(
       userFullName: profile?.fullName ?? null,
       userCompany: profile?.company ?? null,
       userCompanyRole: profile?.companyRole ?? null,
+      manualPaymentUpdatesAllowed: false,
+      paymentControlMessage: payment.requiresPayment
+        ? appt.bookingAttemptId
+          ? "Payment status for this paid booking is controlled by Stripe webhooks and cannot be changed manually."
+          : "Manual payment updates are disabled for paid bookings until an audited offline payment flow exists."
+        : null,
     },
     history: audit,
   });

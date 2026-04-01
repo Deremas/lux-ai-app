@@ -58,6 +58,36 @@ enum PaymentStatus {
   @@map("payment_status")
 }
 
+enum BookingAttemptStatus {
+  payment_pending
+  payment_processing
+  paid
+  booking_confirmed
+  booking_failed
+  payment_failed
+  expired
+  cancelled
+
+  @@map("booking_attempt_status")
+}
+
+enum SlotReservationStatus {
+  active
+  consumed
+  expired
+  released
+
+  @@map("slot_reservation_status")
+}
+
+enum StripeEventStatus {
+  processing
+  processed
+  failed
+
+  @@map("stripe_event_status")
+}
+
 enum MeetingMode {
   google_meet
   zoom
@@ -93,6 +123,9 @@ model AppUser {
   blockedTimes      BlockedTime[]
   appointments      Appointment[]   @relation("AppointmentUser")
   staffAppointments Appointment[]   @relation("AppointmentStaff")
+  bookingAttempts      BookingAttempt[] @relation("BookingAttemptUser")
+  staffBookingAttempts BookingAttempt[] @relation("BookingAttemptStaff")
+  staffSlotReservations SlotReservation[] @relation("SlotReservationStaff")
   passwordResets    PasswordReset[]
   auditLogsAsActor  AuditLog[]      @relation("AuditLogActor")
 
@@ -115,6 +148,10 @@ model Org {
   staffCalendars  StaffCalendar[]
   blockedTimes    BlockedTime[]
   appointments    Appointment[]
+  bookingAttempts BookingAttempt[]
+  slotReservations SlotReservation[]
+  payments        PaymentRecord[]
+  stripeEvents    StripeEvent[]
   notificationTemplates NotificationTemplate[]
   auditLogs       AuditLog[]
 
@@ -279,6 +316,8 @@ model MeetingType {
   translations MeetingTypeTranslation[]
   modes        MeetingTypeMode[]
   appointments Appointment[]
+  bookingAttempts BookingAttempt[]
+  slotReservations SlotReservation[]
 
   @@unique([orgId, key], map: "meeting_type_org_key_unique")
   @@index([orgId], map: "meeting_type_org_idx")
@@ -349,11 +388,119 @@ model BlockedTime {
   @@map("blocked_time")
 }
 
+model BookingAttempt {
+  id                String               @id @db.Uuid
+  orgId             String               @map("org_id") @db.Uuid
+  userId            String               @map("user_id") @db.Uuid
+  staffUserId       String?              @map("staff_user_id") @db.Uuid
+  meetingTypeId     String               @map("meeting_type_id") @db.Uuid
+  checkoutKey       String               @map("checkout_key") @db.Text
+  mode              MeetingMode
+  status            BookingAttemptStatus @default(payment_pending)
+  paymentStatus     PaymentStatus        @default(unpaid) @map("payment_status")
+  paymentRequired   Boolean              @default(true) @map("payment_required")
+  priceCents        Int                  @map("price_cents")
+  currency          String               @db.Text
+  startLocal        String               @map("start_local") @db.Text
+  requestedTimezone String               @map("requested_timezone") @db.Text
+  startAtUtc        DateTime             @map("start_at_utc") @db.Timestamptz(6)
+  endAtUtc          DateTime             @map("end_at_utc") @db.Timestamptz(6)
+  reservedUntil     DateTime?            @map("reserved_until") @db.Timestamptz(6)
+  failureReason     String?              @map("failure_reason") @db.Text
+  notes             String?              @db.Text
+  createdAt         DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  org         Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user        AppUser     @relation("BookingAttemptUser", fields: [userId], references: [id], onDelete: Cascade)
+  staff       AppUser?    @relation("BookingAttemptStaff", fields: [staffUserId], references: [id], onDelete: SetNull)
+  meetingType MeetingType @relation(fields: [meetingTypeId], references: [id], onDelete: Restrict)
+  reservation SlotReservation?
+  payments    PaymentRecord[]
+  appointment Appointment?
+
+  @@index([orgId, status, startAtUtc], map: "booking_attempt_org_status_start_idx")
+  @@index([userId, createdAt], map: "booking_attempt_user_created_idx")
+  @@index([meetingTypeId, startAtUtc], map: "booking_attempt_meeting_type_start_idx")
+  @@index([checkoutKey, createdAt], map: "booking_attempt_checkout_key_created_idx")
+  @@map("booking_attempt")
+}
+
+model SlotReservation {
+  id               String                @id @db.Uuid
+  orgId            String                @map("org_id") @db.Uuid
+  bookingAttemptId String                @unique(map: "slot_reservation_booking_attempt_id_unique") @map("booking_attempt_id") @db.Uuid
+  meetingTypeId    String                @map("meeting_type_id") @db.Uuid
+  staffUserId      String?               @map("staff_user_id") @db.Uuid
+  startAtUtc       DateTime              @map("start_at_utc") @db.Timestamptz(6)
+  endAtUtc         DateTime              @map("end_at_utc") @db.Timestamptz(6)
+  reservedUntil    DateTime              @map("reserved_until") @db.Timestamptz(6)
+  status           SlotReservationStatus @default(active)
+  createdAt        DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  org            Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  bookingAttempt BookingAttempt @relation(fields: [bookingAttemptId], references: [id], onDelete: Cascade)
+  meetingType    MeetingType    @relation(fields: [meetingTypeId], references: [id], onDelete: Restrict)
+  staff          AppUser?       @relation("SlotReservationStaff", fields: [staffUserId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, status, reservedUntil], map: "slot_reservation_org_status_reserved_until_idx")
+  @@index([meetingTypeId, startAtUtc], map: "slot_reservation_meeting_type_start_idx")
+  @@index([staffUserId, startAtUtc], map: "slot_reservation_staff_start_idx")
+  @@map("slot_reservation")
+}
+
+model PaymentRecord {
+  id                    String    @id @db.Uuid
+  orgId                 String    @map("org_id") @db.Uuid
+  bookingAttemptId      String    @unique(map: "payment_booking_attempt_id_unique") @map("booking_attempt_id") @db.Uuid
+  provider              String    @db.Text
+  status                String    @db.Text
+  amountCents           Int       @map("amount_cents")
+  currency              String    @db.Text
+  stripeCheckoutSessionId String? @unique(map: "payment_stripe_checkout_session_id_unique") @map("stripe_checkout_session_id") @db.Text
+  stripePaymentIntentId String?   @unique(map: "payment_stripe_payment_intent_id_unique") @map("stripe_payment_intent_id") @db.Text
+  lastStripeEventId     String?   @map("last_stripe_event_id") @db.Text
+  metadata              Json?     @map("metadata") @db.JsonB
+  webhookConfirmedAt    DateTime? @map("webhook_confirmed_at") @db.Timestamptz(6)
+  paidAt                DateTime? @map("paid_at") @db.Timestamptz(6)
+  failedAt              DateTime? @map("failed_at") @db.Timestamptz(6)
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  org            Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  bookingAttempt BookingAttempt @relation(fields: [bookingAttemptId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, createdAt], map: "payment_org_created_idx")
+  @@index([bookingAttemptId], map: "payment_booking_attempt_idx")
+  @@map("payment")
+}
+
+model StripeEvent {
+  id          String    @id @db.Uuid
+  orgId       String    @map("org_id") @db.Uuid
+  eventId     String    @unique(map: "stripe_event_event_id_unique") @map("event_id") @db.Text
+  eventType   String    @map("event_type") @db.Text
+  status      StripeEventStatus @default(processing)
+  livemode    Boolean
+  payload     Json?     @db.JsonB
+  lastError   String?   @map("last_error") @db.Text
+  processedAt DateTime? @map("processed_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, eventType, createdAt], map: "stripe_event_org_type_created_idx")
+  @@map("stripe_event")
+}
+
 model Appointment {
   id            String            @id @db.Uuid
   orgId         String            @map("org_id") @db.Uuid
   userId        String            @map("user_id") @db.Uuid
   staffUserId   String?           @map("staff_user_id") @db.Uuid
+  bookingAttemptId String?        @unique(map: "appointment_booking_attempt_id_unique") @map("booking_attempt_id") @db.Uuid
   meetingTypeId String            @map("meeting_type_id") @db.Uuid
   status        AppointmentStatus @default(pending)
   mode          MeetingMode
@@ -371,6 +518,7 @@ model Appointment {
 
   org         Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
   meetingType MeetingType @relation(fields: [meetingTypeId], references: [id], onDelete: Restrict)
+  bookingAttempt BookingAttempt? @relation(fields: [bookingAttemptId], references: [id], onDelete: SetNull)
 
   user  AppUser  @relation("AppointmentUser", fields: [userId], references: [id], onDelete: Cascade)
   staff AppUser? @relation("AppointmentStaff", fields: [staffUserId], references: [id], onDelete: SetNull)

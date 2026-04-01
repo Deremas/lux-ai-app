@@ -13,6 +13,7 @@ type Booking = {
   orgId: string;
   userId: string;
   staffUserId: string | null;
+  bookingAttemptId?: string | null;
   meetingTypeId: string;
   meetingTypeKey: string | null;
   durationMin: number | null;
@@ -34,6 +35,8 @@ type Booking = {
   userPhone?: string | null;
   userCompany?: string | null;
   userCompanyRole?: string | null;
+  manualPaymentUpdatesAllowed?: boolean;
+  paymentControlMessage?: string | null;
 };
 
 type BookingDetail = {
@@ -295,41 +298,6 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
     }
   }
 
-  async function runPaymentUpdate(nextStatus: "paid" | "unpaid") {
-    if (!orgId || !appointmentId) return;
-    setActioning(true);
-    setError(null);
-    setNotice(null);
-    try {
-      const res = await fetch(
-        `/api/scheduling/admin/appointments/${appointmentId}/payment?orgId=${orgId}`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ status: nextStatus }),
-        }
-      );
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(data?.error ?? "Payment update failed");
-        return;
-      }
-      setNotice(nextStatus === "paid" ? "Marked as paid." : "Marked as unpaid.");
-      setDetail((prev) =>
-        prev
-          ? {
-              ...prev,
-              appointment: { ...prev.appointment, paymentStatus: nextStatus },
-            }
-          : prev
-      );
-    } catch {
-      setError("Payment update failed");
-    } finally {
-      setActioning(false);
-    }
-  }
-
   if (status !== "authenticated") {
     return (
       <div className="space-y-8">
@@ -368,8 +336,6 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
     : null;
   const paymentStatus = appointment?.paymentStatus ?? "not_required";
   const paymentRequired = Boolean(appointment?.requiresPayment);
-  const canMarkPaid = paymentRequired && paymentStatus !== "paid";
-  const canMarkUnpaid = paymentRequired && paymentStatus === "paid";
   const paymentSession = appointment
     ? extractNoteValue(appointment.notes, "payment_session_id")
     : null;
@@ -535,19 +501,15 @@ export default function BookingDetailClient({ orgId, appointmentId, tz }: Props)
                 {priceLabel && <p>Price: {priceLabel}</p>}
                 {paymentSession && <p>Session: {paymentSession}</p>}
                 {paymentIntent && <p>Intent: {paymentIntent}</p>}
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {canMarkPaid && (
-                  <Button size="sm" onClick={() => runPaymentUpdate("paid")} disabled={actioning}>
-                    Mark paid
-                  </Button>
-                )}
-                {canMarkUnpaid && (
-                  <Button size="sm" variant="outline" onClick={() => runPaymentUpdate("unpaid")} disabled={actioning}>
-                    Mark unpaid
-                  </Button>
+                {appointment.bookingAttemptId && (
+                  <p>Booking attempt: {appointment.bookingAttemptId}</p>
                 )}
               </div>
+              {paymentRequired && appointment.paymentControlMessage && (
+                <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                  {appointment.paymentControlMessage}
+                </div>
+              )}
             </div>
           </div>
         )}

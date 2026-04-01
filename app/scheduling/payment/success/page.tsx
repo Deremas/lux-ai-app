@@ -2,42 +2,72 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { DateTime } from "luxon";
 import { signIn, useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 
-type Status = "idle" | "verifying" | "booking" | "done" | "error";
+type ViewStatus = "idle" | "polling" | "done" | "error";
 
-type PendingBooking = {
-  orgId: string;
-  meetingTypeId: string;
-  mode: string;
-  startLocal: string;
-  tz?: string;
-  staffUserId?: string;
-  meetingTitle?: string;
-  durationMin?: number;
-  displayTz?: string;
-  notes?: string;
-};
-
-type BookingResponse = {
-  appointment?: {
+type StatusResponse = {
+  bookingAttempt: {
+    id: string;
+    status:
+      | "payment_pending"
+      | "payment_processing"
+      | "paid"
+      | "booking_confirmed"
+      | "booking_failed"
+      | "payment_failed"
+      | "expired"
+      | "cancelled";
+    paymentStatus: "unpaid" | "paid" | "not_required";
+    mode: string;
+    startLocal: string;
+    requestedTimezone: string;
+    startAtUtc: string;
+    endAtUtc: string;
+    priceCents: number;
+    currency: string;
+    reservedUntil: string | null;
+    failureReason: string | null;
+    canResumePayment: boolean;
+    notes: string | null;
+    meetingType: {
+      id: string;
+      key: string;
+      durationMin: number;
+    } | null;
+    reservation: {
+      id: string;
+      status: string;
+      staffUserId: string | null;
+      reservedUntil: string;
+      startAtUtc: string;
+      endAtUtc: string;
+    } | null;
+  };
+  payment: {
+    status: string;
+    amountCents: number;
+    currency: string;
+    stripeCheckoutSessionId: string | null;
+    stripePaymentIntentId: string | null;
+    paidAt: string | null;
+    failedAt: string | null;
+  } | null;
+  appointment: {
     id: string;
     status: string;
     startAtUtc: string;
     endAtUtc: string;
     mode: string;
-    paymentStatus?: string | null;
-  };
-  meetingLink?: string | null;
-  payment?: {
-    status: string;
+    paymentStatus: string | null;
     priceCents: number | null;
     currency: string | null;
-  };
+    meetingLink: string | null;
+  } | null;
 };
 
 function formatPrice(priceCents: number | null, currency: string | null) {
@@ -63,7 +93,7 @@ function buildIcsContent(args: {
   endUtc: string;
 }) {
   const uid = `${crypto.randomUUID()}@luxai`;
-  const lines = [
+  return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     "PRODID:-//Lux AI//Scheduling//EN",
@@ -77,8 +107,7 @@ function buildIcsContent(args: {
     `DESCRIPTION:${args.description}`,
     "END:VEVENT",
     "END:VCALENDAR",
-  ];
-  return lines.join("\r\n");
+  ].join("\r\n");
 }
 
 function buildGoogleCalendarUrl(args: {
@@ -87,13 +116,11 @@ function buildGoogleCalendarUrl(args: {
   startUtc: string;
   endUtc: string;
 }) {
-  const start = formatIcsUtc(args.startUtc);
-  const end = formatIcsUtc(args.endUtc);
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: args.title,
     details: args.details,
-    dates: `${start}/${end}`,
+    dates: `${formatIcsUtc(args.startUtc)}/${formatIcsUtc(args.endUtc)}`,
   });
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
@@ -101,170 +128,181 @@ function buildGoogleCalendarUrl(args: {
 export default function PaymentSuccessPage() {
   const { status: authStatus } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const attemptId = (searchParams.get("attempt_id") ?? "").trim();
   const isAuthed = authStatus === "authenticated";
-  const [status, setStatus] = useState<Status>("idle");
-  const [message, setMessage] = useState<string>(
-    "Preparing payment confirmation…"
-  );
-  const [pending, setPending] = useState<PendingBooking | null>(null);
-  const [booking, setBooking] = useState<BookingResponse | null>(null);
+
+  const [status, setStatus] = useState<ViewStatus>("idle");
+  const [message, setMessage] = useState("Preparing payment status…");
+  const [data, setData] = useState<StatusResponse | null>(null);
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
   useEffect(() => {
     if (authStatus === "loading") return;
+
     if (!isAuthed) {
       setStatus("error");
-      setMessage("Please sign in to finalize your booking.");
+      setMessage("Please sign in to view your payment status.");
       return;
     }
 
-    const run = async () => {
-      setStatus("verifying");
+    if (!attemptId) {
+      setStatus("error");
+      setMessage("Missing booking attempt. Please contact support.");
+      return;
+    }
+
+    let cancelled = false;
+    let timer: number | null = null;
+
+    const poll = async () => {
+      setStatus((current) => (current === "done" ? current : "polling"));
       setErrorDetail(null);
-      const url = new URL(window.location.href);
-      const sessionId = url.searchParams.get("session_id");
-      if (!sessionId) {
-        setStatus("error");
-        setMessage("Missing payment session. Please try again.");
-        return;
-      }
 
-      const pendingRaw = sessionStorage.getItem("pendingBooking");
-      const parsed = pendingRaw ? (JSON.parse(pendingRaw) as PendingBooking) : null;
-      if (parsed) setPending(parsed);
-      const pendingNotes = parsed?.notes?.trim();
-
-      const verifyRes = await fetch("/api/scheduling/payment/verify", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ sessionId, orgId: parsed?.orgId ?? "" }),
-      });
-      const verifyJson = await verifyRes.json().catch(() => ({}));
-      if (!verifyRes.ok || !verifyJson?.paid) {
-        setStatus("error");
-        setMessage("Payment is not confirmed. Please contact support.");
-        setErrorDetail(verifyJson?.error ?? null);
-        return;
-      }
-
-      const meta = (verifyJson?.metadata ?? {}) as Record<string, string>;
-      const metaOrgId = (meta.orgId ?? "").trim();
-      const metaMeetingTypeId = (meta.meetingTypeId ?? "").trim();
-      const metaMode = (meta.mode ?? "").trim();
-      const metaStartLocal = (meta.startLocal ?? "").trim();
-      const metaTz = (meta.tz ?? "").trim();
-      const metaStaffUserId = (meta.staffUserId ?? "").trim();
-
-      if (!metaOrgId || !metaMeetingTypeId || !metaMode || !metaStartLocal) {
-        setStatus("error");
-        setMessage("Missing booking details from payment session.");
-        return;
-      }
-
-      if (parsed) {
-        const mismatch =
-          (parsed.orgId && parsed.orgId !== metaOrgId) ||
-          (parsed.meetingTypeId && parsed.meetingTypeId !== metaMeetingTypeId) ||
-          (parsed.mode && parsed.mode !== metaMode) ||
-          (parsed.startLocal && parsed.startLocal !== metaStartLocal) ||
-          (parsed.tz && metaTz && parsed.tz !== metaTz) ||
-          (parsed.staffUserId && metaStaffUserId && parsed.staffUserId !== metaStaffUserId);
-        if (mismatch) {
-          setStatus("error");
-          setMessage("Payment details do not match this booking.");
-          return;
-        }
-      } else {
-        setPending({
-          orgId: metaOrgId,
-          meetingTypeId: metaMeetingTypeId,
-          mode: metaMode,
-          startLocal: metaStartLocal,
-          tz: metaTz || undefined,
-          staffUserId: metaStaffUserId || undefined,
-          meetingTitle: "Lux AI Session",
-          displayTz: metaTz || undefined,
-        });
-      }
-
-      setStatus("booking");
-      setMessage("Finalizing your booking…");
-
-      const bookingRes = await fetch("/api/scheduling/book", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          orgId: metaOrgId,
-          meetingTypeId: metaMeetingTypeId,
-          mode: metaMode,
-          startLocal: metaStartLocal,
-          tz: metaTz || undefined,
-          staffUserId: metaStaffUserId || undefined,
-          notes: pendingNotes || undefined,
-          paymentConfirmed: true,
-          paymentSessionId: sessionId,
-        }),
-      });
-
-      const bookingJson = (await bookingRes.json().catch(() => ({}))) as BookingResponse;
-      if (!bookingRes.ok) {
-        setStatus("error");
-        setMessage((bookingJson as any)?.error ?? "Booking failed.");
-        setErrorDetail((bookingJson as any)?.details ?? null);
-        return;
-      }
-
-      sessionStorage.removeItem("pendingBooking");
-      setBooking(bookingJson);
-      setStatus("done");
-      setMessage(
-        bookingJson?.appointment?.status === "pending"
-          ? "Payment received. Your booking request is pending approval."
-          : "Payment received. Your booking is confirmed."
+      const res = await fetch(
+        `/api/scheduling/payment/status?attemptId=${encodeURIComponent(attemptId)}`,
+        { cache: "no-store" }
       );
+      const json = (await res.json().catch(() => ({}))) as Partial<StatusResponse> & {
+        error?: string;
+      };
+
+      if (cancelled) return;
+
+      if (!res.ok || !json.bookingAttempt) {
+        setStatus("error");
+        setMessage(json.error ?? "Could not load booking status.");
+        return;
+      }
+
+      const next = json as StatusResponse;
+      setData(next);
+
+      if (next.bookingAttempt.status === "booking_confirmed" && next.appointment) {
+        setStatus("done");
+        setMessage(
+          next.appointment.status === "pending"
+            ? "Payment received. Your booking request is pending approval."
+            : "Payment received. Your booking is confirmed."
+        );
+        return;
+      }
+
+      if (next.bookingAttempt.status === "payment_failed") {
+        setStatus("error");
+        setMessage("Payment failed for this booking attempt.");
+        return;
+      }
+
+      if (next.bookingAttempt.status === "expired") {
+        setStatus("error");
+        setMessage("Your reservation expired before payment was completed.");
+        setErrorDetail("Please choose a slot again to continue.");
+        return;
+      }
+
+      if (next.bookingAttempt.status === "cancelled") {
+        setStatus("error");
+        setMessage("This payment attempt was cancelled.");
+        return;
+      }
+
+      if (next.bookingAttempt.status === "booking_failed") {
+        setStatus("error");
+        setMessage("Payment was received, but the booking could not be finalized.");
+        setErrorDetail(
+          next.bookingAttempt.failureReason ??
+            "Support review or a manual refund may be required."
+        );
+        return;
+      }
+
+      if (next.bookingAttempt.status === "paid") {
+        setMessage("Payment received. Finalizing your booking…");
+      } else if (next.bookingAttempt.status === "payment_processing") {
+        setMessage("Payment is processing. We are checking confirmation…");
+      } else if (next.bookingAttempt.canResumePayment) {
+        setMessage("Your slot is still reserved while Stripe confirms your payment…");
+      } else {
+        setMessage("Waiting for Stripe confirmation…");
+      }
+
+      timer = window.setTimeout(() => {
+        void poll();
+      }, 2500);
     };
 
-    void run();
-  }, [authStatus, isAuthed]);
+    void poll();
 
-  const displayTz = pending?.displayTz || pending?.tz || "Europe/Luxembourg";
-  const startUtc = booking?.appointment?.startAtUtc ?? "";
-  const endUtc = booking?.appointment?.endAtUtc ?? "";
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [attemptId, authStatus, isAuthed]);
+
+  useEffect(() => {
+    const appointmentId = data?.appointment?.id;
+    if (status !== "done" || !appointmentId) return;
+    const timer = window.setTimeout(() => {
+      router.replace(`/scheduling/my?booking=${appointmentId}`);
+    }, 4500);
+    return () => window.clearTimeout(timer);
+  }, [status, data?.appointment?.id, router]);
+
+  const displayTz =
+    data?.bookingAttempt.requestedTimezone || "Europe/Luxembourg";
+  const startUtc =
+    data?.appointment?.startAtUtc ?? data?.bookingAttempt.startAtUtc ?? "";
+  const endUtc =
+    data?.appointment?.endAtUtc ?? data?.bookingAttempt.endAtUtc ?? "";
 
   const formattedTime = useMemo(() => {
     if (!startUtc || !endUtc) return null;
     const start = DateTime.fromISO(startUtc).setZone(displayTz);
     const end = DateTime.fromISO(endUtc).setZone(displayTz);
     return `${start.toFormat("ccc, LLL dd · HH:mm")} – ${end.toFormat("HH:mm")}`;
-  }, [startUtc, endUtc, displayTz]);
+  }, [displayTz, endUtc, startUtc]);
 
   const paymentLabel = formatPrice(
-    booking?.payment?.priceCents ?? null,
-    booking?.payment?.currency ?? null
+    data?.appointment?.priceCents ??
+      data?.payment?.amountCents ??
+      data?.bookingAttempt.priceCents ??
+      null,
+    data?.appointment?.currency ??
+      data?.payment?.currency ??
+      data?.bookingAttempt.currency ??
+      null
   );
-  const appointmentStatus = booking?.appointment?.status ?? null;
+
   const completionBadgeLabel =
     status === "done"
-      ? appointmentStatus === "pending"
+      ? data?.appointment?.status === "pending"
         ? "Pending approval"
         : "Confirmed"
       : status === "error"
-      ? "Needs attention"
-      : "Processing";
+        ? "Needs attention"
+        : "Processing";
+
+  const reservationDeadline = useMemo(() => {
+    const reservedUntil = data?.bookingAttempt.reservedUntil;
+    if (!reservedUntil) return null;
+    const dt = DateTime.fromISO(reservedUntil).setZone(displayTz);
+    return dt.isValid ? dt.toFormat("ccc, LLL dd · HH:mm") : null;
+  }, [data?.bookingAttempt.reservedUntil, displayTz]);
 
   const calendarLinks = useMemo(() => {
-    if (!startUtc || !endUtc) return null;
-    const title = pending?.meetingTitle ?? "Lux AI Session";
-      const details = [
-        `Mode: ${pending?.mode ?? "tbd"}`,
-        booking?.meetingLink && booking?.appointment?.status === "confirmed"
-          ? `Meeting link: ${booking.meetingLink}`
-          : "",
-        pending?.notes ? `Notes: ${pending.notes}` : "",
-        "Lux AI booking confirmation",
-      ]
-        .filter(Boolean)
-        .join("\n");
+    if (status !== "done" || !startUtc || !endUtc) return null;
+    const title = data?.bookingAttempt.meetingType?.key ?? "Lux AI Session";
+    const details = [
+      `Mode: ${data?.appointment?.mode ?? data?.bookingAttempt.mode ?? "tbd"}`,
+      data?.appointment?.meetingLink
+        ? `Meeting link: ${data.appointment.meetingLink}`
+        : "",
+      data?.bookingAttempt.notes ? `Notes: ${data.bookingAttempt.notes}` : "",
+      "Lux AI booking confirmation",
+    ]
+      .filter(Boolean)
+      .join("\n");
     return {
       google: buildGoogleCalendarUrl({
         title,
@@ -279,16 +317,7 @@ export default function PaymentSuccessPage() {
         endUtc,
       }),
     };
-  }, [startUtc, endUtc, pending?.meetingTitle, pending?.mode, booking?.meetingLink]);
-
-  useEffect(() => {
-    const appointmentId = booking?.appointment?.id;
-    if (status !== "done" || !appointmentId) return;
-    const timer = window.setTimeout(() => {
-      router.replace(`/scheduling/my?booking=${appointmentId}`);
-    }, 4500);
-    return () => window.clearTimeout(timer);
-  }, [status, booking?.appointment?.id, router]);
+  }, [data, endUtc, startUtc, status]);
 
   return (
     <div className="min-h-[80vh] bg-gradient-to-b from-white via-emerald-50/40 to-white px-4 py-12">
@@ -309,101 +338,103 @@ export default function PaymentSuccessPage() {
             </span>
           </div>
 
-          {status === "done" && (
-            <>
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
-                  <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
-                    Meeting
-                  </p>
-                  <p className="mt-2 text-base font-semibold text-gray-900">
-                    {pending?.meetingTitle ?? "Lux AI Session"}
-                  </p>
-                  <p className="mt-1 text-xs text-gray-600">
-                    {pending?.durationMin ?? 60} min · {pending?.mode ?? "—"}
-                  </p>
-                  {booking?.meetingLink &&
-                    booking?.appointment?.status === "confirmed" && (
+          {data && (
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+                <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
+                  Meeting
+                </p>
+                <p className="mt-2 text-base font-semibold text-gray-900">
+                  {data.bookingAttempt.meetingType?.key ?? "Lux AI Session"}
+                </p>
+                <p className="mt-1 text-xs text-gray-600">
+                  {data.bookingAttempt.meetingType?.durationMin ?? 60} min ·{" "}
+                  {data.appointment?.mode ?? data.bookingAttempt.mode}
+                </p>
+                {data.appointment?.meetingLink &&
+                  data.appointment.status === "confirmed" && (
                     <a
                       className="mt-3 inline-flex text-xs font-semibold text-emerald-600"
-                      href={booking.meetingLink}
+                      href={data.appointment.meetingLink}
                       target="_blank"
                       rel="noreferrer"
                     >
                       Join meeting link
                     </a>
                   )}
-                </div>
-                <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
-                  <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
-                    Time
-                  </p>
-                  <p className="mt-2 text-base font-semibold text-gray-900">
-                    {formattedTime ?? "—"}
-                  </p>
-                  <p className="mt-1 text-xs text-gray-600">{displayTz}</p>
-                  <p className="mt-3 text-xs text-gray-500">
-                    Booking ID: {booking?.appointment?.id ?? "—"}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                  <p className="text-xs uppercase tracking-[0.25em] text-emerald-700">
-                    Payment
-                  </p>
-                  <p className="mt-2 text-base font-semibold text-emerald-900">
-                    {paymentLabel ?? "Paid"}
-                  </p>
-                  <p className="mt-1 text-xs text-emerald-700">
-                    Status: {booking?.payment?.status ?? "paid"}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                  <p className="text-xs uppercase tracking-[0.25em] text-emerald-700">
-                    Notifications
-                  </p>
-                  <p className="mt-2 text-sm text-emerald-900">
-                    {appointmentStatus === "pending"
-                      ? "Payment was received and the booking request was sent to admin/staff for approval. You will be notified once they make a decision."
-                      : "Confirmation sent in-app and by email to you. Admin/staff were also notified."}
-                  </p>
-                </div>
               </div>
+              <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
+                <p className="text-xs uppercase tracking-[0.25em] text-gray-400">
+                  Time
+                </p>
+                <p className="mt-2 text-base font-semibold text-gray-900">
+                  {formattedTime ?? "—"}
+                </p>
+                <p className="mt-1 text-xs text-gray-600">{displayTz}</p>
+                <p className="mt-3 text-xs text-gray-500">
+                  Attempt ID: {data.bookingAttempt.id}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-emerald-700">
+                  Payment
+                </p>
+                <p className="mt-2 text-base font-semibold text-emerald-900">
+                  {paymentLabel ?? "Paid"}
+                </p>
+                <p className="mt-1 text-xs text-emerald-700">
+                  Status: {data.payment?.status ?? data.bookingAttempt.paymentStatus}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                <p className="text-xs uppercase tracking-[0.25em] text-emerald-700">
+                  Booking
+                </p>
+                <p className="mt-2 text-sm text-emerald-900">
+                  Attempt: {data.bookingAttempt.status}
+                </p>
+                <p className="mt-1 text-xs text-emerald-700">
+                  Appointment: {data.appointment?.status ?? "not created yet"}
+                </p>
+                {reservationDeadline && (
+                  <p className="mt-1 text-xs text-emerald-700">
+                    Reserved until: {reservationDeadline}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
-              {calendarLinks && (
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <Button variant="outline" asChild>
-                    <a href={calendarLinks.google} target="_blank" rel="noreferrer">
-                      Add to Google Calendar
-                    </a>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      const blob = new Blob([calendarLinks.ics], {
-                        type: "text/calendar;charset=utf-8",
-                      });
-                      const url = URL.createObjectURL(blob);
-                      const link = document.createElement("a");
-                      link.href = url;
-                      link.download = "booking.ics";
-                      link.click();
-                      URL.revokeObjectURL(url);
-                    }}
-                  >
-                    Download ICS
-                  </Button>
-                </div>
-              )}
-            </>
+          {status === "done" && calendarLinks && (
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button variant="outline" asChild>
+                <a href={calendarLinks.google} target="_blank" rel="noreferrer">
+                  Add to Google Calendar
+                </a>
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const blob = new Blob([calendarLinks.ics], {
+                    type: "text/calendar;charset=utf-8",
+                  });
+                  const url = URL.createObjectURL(blob);
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.download = "booking.ics";
+                  link.click();
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                Download ICS
+              </Button>
+            </div>
           )}
 
           {status === "error" && (
             <div className="mt-6 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
               {message}
               {errorDetail && <div className="mt-1 text-[11px]">{errorDetail}</div>}
-              {message.toLowerCase().includes("slot") && (
-                <div className="mt-1">Please pick another time.</div>
-              )}
             </div>
           )}
 

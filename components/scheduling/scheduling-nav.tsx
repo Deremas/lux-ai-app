@@ -97,6 +97,11 @@ export const ADMIN_SCHEDULING_NAV: SchedulingNavSection[] = [
     label: "Operations",
     items: [
       {
+        label: "Payment Ops",
+        href: "/admin/scheduling/ops",
+        icon: CreditCard,
+      },
+      {
         label: "Audit Log",
         href: "/admin/scheduling/audit",
         icon: Shield,

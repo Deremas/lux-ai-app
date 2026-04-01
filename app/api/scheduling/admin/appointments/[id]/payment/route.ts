@@ -1,13 +1,10 @@
 // app/api/scheduling/admin/appointments/[id]/payment/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { writeAudit } from "@/lib/scheduling/audit";
 import { requireUserIdFromSession, requireOrgRole } from "@/lib/scheduling/authz";
 import { isBodyTooLarge, isValidUuid } from "@/lib/validation";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import { resolveOrgIdForRequest } from "@/lib/scheduling/org-resolver";
-
-type PaymentStatus = "paid" | "unpaid";
 
 export async function POST(
   req: Request,
@@ -66,6 +63,7 @@ export async function POST(
       where: { orgId, id },
       select: {
         id: true,
+        bookingAttemptId: true,
         paymentPolicy: true,
         paymentStatus: true,
         requiresPayment: true,
@@ -106,27 +104,10 @@ export async function POST(
     );
   }
 
-  const updated = await prisma.appointment.update({
-    where: { id: appt.id },
-    data: { paymentStatus: nextStatus },
-  });
-
-  await writeAudit({
-    orgId,
-    actorUserId: who.userId,
-    entityType: "appointment",
-    entityId: updated.id,
-    action: "payment_status_update",
-    before: appt,
-    after: updated,
-  });
-
   return NextResponse.json({
-    appointment: updated,
-    payment: {
-      status: updated.paymentStatus ?? nextStatus,
-      priceCents: updated.priceCents ?? appt.priceCents ?? meetingType?.priceCents ?? null,
-      currency: updated.currency ?? appt.currency ?? meetingType?.currency ?? null,
-    },
-  });
+    error:
+      appt.bookingAttemptId
+        ? "Manual payment updates are disabled for Stripe-paid bookings. Payment status must come from the verified webhook flow."
+        : "Manual payment updates are disabled for paid bookings. Add a separate audited offline payment flow instead of changing status directly.",
+  }, { status: 409 });
 }

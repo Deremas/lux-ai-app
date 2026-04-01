@@ -8,6 +8,7 @@
     "build": "node scripts/build-clean.js",
     "build:fast": "node --max-old-space-size=4096 ./node_modules/next/dist/bin/next build",
     "start": "next start",
+    "test": "node ./tests/run-node-tests.cjs",
     "lint": "next lint",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",

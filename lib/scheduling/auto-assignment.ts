@@ -172,13 +172,24 @@ export async function pickStaffForSlot(params: {
   const dayStartUtc = startUtc.setZone(fallbackTz).startOf("day").toUTC();
   const dayEndUtc = startUtc.setZone(fallbackTz).endOf("day").toUTC();
 
-  const [blocked, apptsOverlap, dayAppts] = await Promise.all([
+  const [blocked, apptsOverlap, activeReservations, dayAppts] = await Promise.all([
     prisma.blockedTime.findMany({
       where: {
         orgId: params.orgId,
         startAtUtc: { lt: endUtcJs },
         endAtUtc: { gt: startUtcJs },
         OR: [{ staffUserId: null }, { staffUserId: { in: staffIds } }],
+      },
+      select: { staffUserId: true, startAtUtc: true, endAtUtc: true },
+    }),
+    prisma.slotReservation.findMany({
+      where: {
+        orgId: params.orgId,
+        status: "active",
+        reservedUntil: { gt: new Date() },
+        startAtUtc: { lt: endUtcJs },
+        endAtUtc: { gt: startUtcJs },
+        OR: [{ staffUserId: { in: staffIds } }, { staffUserId: null }],
       },
       select: { staffUserId: true, startAtUtc: true, endAtUtc: true },
     }),
@@ -235,6 +246,20 @@ export async function pickStaffForSlot(params: {
       const arr = apptByStaff.get(a.staffUserId) ?? [];
       arr.push(entry);
       apptByStaff.set(a.staffUserId, arr);
+    }
+  }
+
+  for (const r of activeReservations) {
+    const entry = {
+      startMs: DateTime.fromJSDate(r.startAtUtc).toUTC().toMillis(),
+      endMs: DateTime.fromJSDate(r.endAtUtc).toUTC().toMillis(),
+    };
+    if (!r.staffUserId) {
+      apptOrg.push(entry);
+    } else {
+      const arr = apptByStaff.get(r.staffUserId) ?? [];
+      arr.push(entry);
+      apptByStaff.set(r.staffUserId, arr);
     }
   }
 

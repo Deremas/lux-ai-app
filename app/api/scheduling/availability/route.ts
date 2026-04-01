@@ -10,12 +10,12 @@ import {
   mergeIntervals,
   SafeInterval,
 } from "@/lib/scheduling/intervals";
+import { getMinBookableUtc, isBookableStartUtc } from "@/lib/scheduling/lead-time";
 import { isValidTimezone, isValidUuid } from "@/lib/validation";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import { resolveOrgIdForRequest } from "@/lib/scheduling/org-resolver";
 
 const BUSY_STATUSES = ["pending", "confirmed", "completed"] as const;
-const MIN_LEAD_MIN = 180;
 const AVAIL_CACHE_TTL_MS = 60_000;
 
 type AvailabilityPayload = {
@@ -151,14 +151,6 @@ type Slot = {
   startLocal: string;
   endLocal: string;
 };
-
-function ceilToStep(dt: DateTime, stepMin: number) {
-  if (stepMin <= 1) return dt;
-  const startOfDay = dt.startOf("day");
-  const minutes = Math.ceil(dt.diff(startOfDay, "minutes").minutes);
-  const rounded = Math.ceil(minutes / stepMin) * stepMin;
-  return startOfDay.plus({ minutes: rounded });
-}
 
 function buildSlotsForDay(args: {
   day: DateTime; // day start in staff tz
@@ -358,7 +350,28 @@ export async function GET(req: Request) {
     },
   });
 
-  // 4) Blocked time
+  // 4) Active payment reservations
+  const reservations = await prisma.slotReservation.findMany({
+    where: {
+      orgId,
+      status: "active",
+      reservedUntil: { gt: new Date() },
+      startAtUtc: { lt: toUtcJs },
+      endAtUtc: { gte: fromUtcJs },
+      ...(staffUserId
+        ? { OR: [{ staffUserId: null }, { staffUserId }] }
+        : usingOrgDefaults
+        ? {}
+        : { OR: [{ staffUserId: { in: staffIds } }, { staffUserId: null }] }),
+    },
+    select: {
+      staffUserId: true,
+      startAtUtc: true,
+      endAtUtc: true,
+    },
+  });
+
+  // 5) Blocked time
   const blocked = await prisma.blockedTime.findMany({
     where: {
       orgId,
@@ -402,6 +415,22 @@ export async function GET(req: Request) {
       continue;
     }
     addBusy(a.staffUserId, a.startAtUtc, a.endAtUtc);
+  }
+
+  for (const r of reservations) {
+    if (usingOrgDefaults) {
+      addBusy(null, r.startAtUtc, r.endAtUtc);
+      continue;
+    }
+    if (staffUserId) {
+      addBusy(r.staffUserId ?? null, r.startAtUtc, r.endAtUtc);
+      continue;
+    }
+    if (!r.staffUserId) {
+      addBusy(null, r.startAtUtc, r.endAtUtc);
+      continue;
+    }
+    addBusy(r.staffUserId, r.startAtUtc, r.endAtUtc);
   }
 
   for (const b of blocked) {
@@ -470,16 +499,11 @@ export async function GET(req: Request) {
 
     const free = subtractBusySlots(slots, mergedBusy);
 
-    // Enforce minimum lead time globally (rounded to slot step in staff tz)
-    const minBookableUtc = DateTime.utc().plus({ minutes: MIN_LEAD_MIN });
-    const minBookableLocal = ceilToStep(
-      minBookableUtc.setZone(staffTz),
-      slotStepMin
-    );
-
+    // Keep today's availability aligned with booking validation: 3 hours from now.
+    const minBookableUtc = getMinBookableUtc();
     const futureSlots = free.filter((slot) => {
-      const startLocal = DateTime.fromISO(slot.startLocal, { zone: staffTz });
-      return startLocal >= minBookableLocal;
+      const startUtc = DateTime.fromISO(slot.startUtc, { zone: "utc" });
+      return startUtc.isValid && isBookableStartUtc(startUtc, minBookableUtc);
     });
 
     results.push({

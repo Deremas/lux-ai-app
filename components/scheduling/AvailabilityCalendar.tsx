@@ -474,7 +474,7 @@ export default function AvailabilityCalendar({
               initialDate={initialDate}
               timeZone={displayTz}
               expandRows
-              contentHeight={720}
+              contentHeight={640}
               nowIndicator
               allDaySlot={false}
               slotMinTime={timeBounds.min}

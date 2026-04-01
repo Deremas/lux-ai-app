@@ -4,10 +4,10 @@ import { DateTime } from "luxon";
 import { prisma } from "@/lib/prisma";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import { requireUserIdFromSession } from "@/lib/scheduling/authz";
+import { getMinBookableUtc } from "@/lib/scheduling/lead-time";
 import { isBodyTooLarge, isValidTimezone, isValidUuid } from "@/lib/validation";
 
 const BUSY_STATUSES = ["pending", "confirmed", "completed"] as const;
-const MIN_LEAD_MIN = 180;
 
 type Body = {
   startUtc?: string;
@@ -88,7 +88,7 @@ export async function POST(
     );
   }
 
-  const minBookable = DateTime.utc().plus({ minutes: MIN_LEAD_MIN });
+  const minBookable = getMinBookableUtc();
   if (startUtc < minBookable) {
     return NextResponse.json(
       { error: "Selected time is too soon. Please choose a later slot." },
