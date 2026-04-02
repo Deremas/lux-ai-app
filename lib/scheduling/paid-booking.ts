@@ -15,6 +15,7 @@ import { getMinBookableUtc } from "@/lib/scheduling/lead-time";
 import { getMeetingLink } from "@/lib/scheduling/meeting-link";
 import { sendBookingEmails } from "@/lib/scheduling/notify";
 import { pickStaffForSlot } from "@/lib/scheduling/auto-assignment";
+import { getStripeForOrg } from "@/lib/stripe";
 import { isValidTimezone } from "@/lib/validation";
 
 const BUSY_STATUSES: AppointmentStatus[] = ["pending", "confirmed", "completed"];
@@ -274,7 +275,162 @@ async function expireAttemptIfNeeded(tx: Tx, attemptId: string, now = DateTime.u
 }
 
 export async function refreshPaidBookingAttemptState(attemptId: string) {
-  return prisma.$transaction(async (tx) => expireAttemptIfNeeded(tx, attemptId));
+  const expired = await prisma.$transaction(async (tx) =>
+    expireAttemptIfNeeded(tx, attemptId)
+  );
+
+  const attempt = await prisma.bookingAttempt.findUnique({
+    where: { id: attemptId },
+    select: {
+      id: true,
+      orgId: true,
+      status: true,
+      paymentStatus: true,
+      appointment: {
+        select: { id: true },
+      },
+      payments: {
+        take: 1,
+        orderBy: { createdAt: "asc" },
+        select: {
+          amountCents: true,
+          currency: true,
+          stripeCheckoutSessionId: true,
+          stripePaymentIntentId: true,
+          lastStripeEventId: true,
+        },
+      },
+    },
+  });
+
+  if (!attempt || attempt.appointment?.id || isAttemptTerminal(attempt.status)) {
+    return expired;
+  }
+
+  const payment = attempt.payments[0] ?? null;
+  if (!payment) return expired;
+
+  if (attempt.paymentStatus === "paid" || attempt.status === "paid") {
+    const result = await markBookingAttemptPaid({
+      attemptId: attempt.id,
+      stripeEventId:
+        payment.lastStripeEventId || `stripe_refresh:paid_attempt:${attempt.id}`,
+      stripeCheckoutSessionId: payment.stripeCheckoutSessionId,
+      stripePaymentIntentId: payment.stripePaymentIntentId,
+      amountCents: payment.amountCents,
+      currency: payment.currency,
+    });
+    return expired || result.handled;
+  }
+
+  const stripe = await getStripeForOrg(attempt.orgId);
+  if (!stripe) return expired;
+
+  let paymentIntentId = payment.stripePaymentIntentId;
+
+  if (payment.stripeCheckoutSessionId) {
+    try {
+      const session = await stripe.checkout.sessions.retrieve(
+        payment.stripeCheckoutSessionId
+      );
+      const sessionPaymentIntentId =
+        typeof session.payment_intent === "string" ? session.payment_intent : null;
+
+      paymentIntentId = paymentIntentId ?? sessionPaymentIntentId;
+
+      if (session.payment_status === "paid") {
+        const result = await markBookingAttemptPaid({
+          attemptId: attempt.id,
+          stripeEventId: `stripe_refresh:checkout_session:${session.id}`,
+          stripeCheckoutSessionId: session.id,
+          stripePaymentIntentId: sessionPaymentIntentId,
+          amountCents: session.amount_total ?? payment.amountCents,
+          currency: session.currency ?? payment.currency,
+        });
+        return expired || result.handled;
+      }
+
+      if (session.status === "complete" && attempt.status === "payment_pending") {
+        const updated = await prisma.bookingAttempt.updateMany({
+          where: {
+            id: attempt.id,
+            status: "payment_pending",
+          },
+          data: {
+            status: "payment_processing",
+            failureReason: null,
+          },
+        });
+        if (updated.count > 0) {
+          return true;
+        }
+      }
+    } catch (error) {
+      console.error("refreshPaidBookingAttemptState checkout session lookup failed", {
+        attemptId,
+        sessionId: payment.stripeCheckoutSessionId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  if (!paymentIntentId) return expired;
+
+  try {
+    const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (intent.status === "succeeded") {
+      const result = await markBookingAttemptPaid({
+        attemptId: attempt.id,
+        stripeEventId: `stripe_refresh:payment_intent:${intent.id}`,
+        stripeCheckoutSessionId: payment.stripeCheckoutSessionId,
+        stripePaymentIntentId: intent.id,
+        amountCents: intent.amount_received ?? intent.amount ?? payment.amountCents,
+        currency: intent.currency ?? payment.currency,
+      });
+      return expired || result.handled;
+    }
+
+    if (
+      intent.status === "requires_payment_method" ||
+      intent.status === "canceled"
+    ) {
+      const result = await markBookingAttemptPaymentFailed({
+        attemptId: attempt.id,
+        stripeEventId: `stripe_refresh:payment_intent:${intent.id}`,
+        stripeCheckoutSessionId: payment.stripeCheckoutSessionId,
+        stripePaymentIntentId: intent.id,
+      });
+      return expired || result.handled;
+    }
+
+    if (
+      (intent.status === "processing" || intent.status === "requires_capture") &&
+      attempt.status === "payment_pending"
+    ) {
+      const updated = await prisma.bookingAttempt.updateMany({
+        where: {
+          id: attempt.id,
+          status: "payment_pending",
+        },
+        data: {
+          status: "payment_processing",
+          failureReason: null,
+        },
+      });
+      if (updated.count > 0) {
+        return true;
+      }
+    }
+  } catch (error) {
+    console.error("refreshPaidBookingAttemptState payment intent lookup failed", {
+      attemptId,
+      paymentIntentId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  return expired;
 }
 
 async function ensureSlotCanBeReserved(tx: Tx, args: {

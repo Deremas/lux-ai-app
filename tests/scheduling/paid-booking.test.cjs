@@ -215,6 +215,9 @@ test("markBookingAttemptPaid finalizes a valid paid reservation exactly once", a
         staffUserId: null,
       })),
     },
+    "@/lib/stripe": {
+      getStripeForOrg: createAsyncSpy(async () => null),
+    },
   });
 
   const result = await markBookingAttemptPaid({
@@ -321,6 +324,9 @@ test("markBookingAttemptPaid blocks amount or currency mismatches safely", async
         staffUserId: null,
       })),
     },
+    "@/lib/stripe": {
+      getStripeForOrg: createAsyncSpy(async () => null),
+    },
   });
 
   const result = await markBookingAttemptPaid({
@@ -413,6 +419,9 @@ test("markBookingAttemptPaid keeps terminal booking_failed attempts terminal", a
         staffUserId: null,
       })),
     },
+    "@/lib/stripe": {
+      getStripeForOrg: createAsyncSpy(async () => null),
+    },
   });
 
   const result = await markBookingAttemptPaid({
@@ -433,4 +442,259 @@ test("markBookingAttemptPaid keeps terminal booking_failed attempts terminal", a
   assert.equal(bookingAttemptUpdate.calls.length, 1);
   assert.equal(bookingAttemptUpdate.calls[0][0].data.status, "booking_failed");
   assert.equal(slotReservationUpdateMany.calls.length, 1);
+});
+
+test("refreshPaidBookingAttemptState finalizes a paid checkout session when webhook state is missing", async () => {
+  const startAtUtc = new Date("2031-01-15T10:00:00.000Z");
+  const endAtUtc = new Date("2031-01-15T11:00:00.000Z");
+  const reservationDeadline = new Date("2031-01-15T10:10:00.000Z");
+
+  let txFindUniqueCount = 0;
+  const bookingAttemptUpdate = createAsyncSpy(async (args) => args);
+  const slotReservationUpdateMany = createAsyncSpy(async () => ({ count: 1 }));
+  const paymentRecordUpdate = createAsyncSpy(async (args) => ({
+    id: PAYMENT_ID,
+    ...args.data,
+  }));
+  const appointmentCreate = createAsyncSpy(async () => ({
+    id: APPOINTMENT_ID,
+    orgId: ORG_ID,
+    userId: USER_ID,
+    status: "confirmed",
+    joinLink: "https://meet.example/room",
+    startAtUtc,
+    endAtUtc,
+  }));
+  const appointmentFindUnique = createAsyncSpy(async () => ({
+    id: APPOINTMENT_ID,
+    orgId: ORG_ID,
+    userId: USER_ID,
+    status: "confirmed",
+    joinLink: "https://meet.example/room",
+    startAtUtc,
+    endAtUtc,
+  }));
+  const queryRaw = createAsyncSpy(async () => []);
+  const bookingAttemptFindUnique = createAsyncSpy(async () => ({
+    id: ATTEMPT_ID,
+    orgId: ORG_ID,
+    status: "payment_pending",
+    paymentStatus: "unpaid",
+    appointment: null,
+    payments: [
+      {
+        amountCents: 30000,
+        currency: "EUR",
+        stripeCheckoutSessionId: "cs_test_123",
+        stripePaymentIntentId: null,
+        lastStripeEventId: null,
+      },
+    ],
+  }));
+
+  const prismaMock = {
+    $transaction: async (callback) =>
+      callback({
+        $queryRawUnsafe: queryRaw,
+        bookingAttempt: {
+          findUnique: async () => {
+            txFindUniqueCount += 1;
+
+            if (txFindUniqueCount === 1) {
+              return {
+                id: ATTEMPT_ID,
+                status: "payment_pending",
+                reservedUntil: reservationDeadline,
+              };
+            }
+
+            if (txFindUniqueCount === 2) {
+              return {
+                id: ATTEMPT_ID,
+                status: "payment_pending",
+                reservedUntil: reservationDeadline,
+              };
+            }
+
+            if (txFindUniqueCount === 3) {
+              return {
+                id: ATTEMPT_ID,
+                status: "payment_pending",
+                priceCents: 30000,
+                currency: "EUR",
+              };
+            }
+
+            if (txFindUniqueCount === 4) {
+              return {
+                id: ATTEMPT_ID,
+                status: "paid",
+                reservedUntil: reservationDeadline,
+              };
+            }
+
+            return {
+              id: ATTEMPT_ID,
+              orgId: ORG_ID,
+              userId: USER_ID,
+              meetingTypeId: MEETING_TYPE_ID,
+              mode: "google_meet",
+              notes: "Please send the agenda.",
+              requestedTimezone: "UTC",
+              startAtUtc,
+              endAtUtc,
+              priceCents: 30000,
+              currency: "EUR",
+              paymentStatus: "paid",
+              status: "paid",
+              staffUserId: null,
+              appointment: null,
+              reservation: {
+                id: "reservation-1",
+                status: "active",
+                reservedUntil: reservationDeadline,
+                startAtUtc,
+                endAtUtc,
+                staffUserId: null,
+              },
+            };
+          },
+          update: bookingAttemptUpdate,
+          updateMany: createAsyncSpy(async () => ({ count: 1 })),
+        },
+        paymentRecord: {
+          findFirst: createAsyncSpy(async () => ({
+            id: PAYMENT_ID,
+            provider: "stripe",
+            bookingAttemptId: ATTEMPT_ID,
+            stripeCheckoutSessionId: "cs_test_123",
+            stripePaymentIntentId: null,
+            amountCents: 30000,
+            currency: "EUR",
+            webhookConfirmedAt: null,
+            paidAt: null,
+            failedAt: null,
+            lastStripeEventId: null,
+          })),
+          update: paymentRecordUpdate,
+        },
+        slotReservation: {
+          updateMany: slotReservationUpdateMany,
+        },
+        appointment: {
+          findFirst: createAsyncSpy(async () => null),
+          findMany: createAsyncSpy(async () => []),
+          create: appointmentCreate,
+        },
+        orgSettings: {
+          findFirst: createAsyncSpy(async () => ({
+            approvalPolicy: "AUTO_APPROVE",
+            paymentPolicy: "PAID",
+            defaultTz: "UTC",
+            defaultPaymentCents: 30000,
+            defaultCurrency: "EUR",
+            maxDailyBookings: 5,
+            workingHours: null,
+          })),
+        },
+        bookingProfile: {
+          findFirst: createAsyncSpy(async () => ({
+            userId: USER_ID,
+            fullName: "Ada Lovelace",
+            phone: "+14155550100",
+            company: "Lux",
+            companyRole: "Founder",
+            timezone: "UTC",
+            notes: "Please send the agenda.",
+          })),
+        },
+        meetingType: {
+          findFirst: createAsyncSpy(async () => ({
+            id: MEETING_TYPE_ID,
+            orgId: ORG_ID,
+            key: "strategy-call",
+            modes: [
+              {
+                mode: "google_meet",
+                details: { link: "https://meet.example/room" },
+              },
+            ],
+          })),
+        },
+        orgMember: {
+          upsert: createAsyncSpy(async () => ({})),
+        },
+        staffCalendar: {
+          findFirst: createAsyncSpy(async () => null),
+        },
+      }),
+    bookingAttempt: {
+      findUnique: bookingAttemptFindUnique,
+    },
+    appointment: {
+      findUnique: appointmentFindUnique,
+    },
+  };
+
+  const checkoutSessionRetrieve = createAsyncSpy(async () => ({
+    id: "cs_test_123",
+    status: "complete",
+    payment_status: "paid",
+    amount_total: 30000,
+    currency: "eur",
+    payment_intent: "pi_test_123",
+  }));
+  const getStripeForOrg = createAsyncSpy(async () => ({
+    checkout: {
+      sessions: {
+        retrieve: checkoutSessionRetrieve,
+      },
+    },
+    paymentIntents: {
+      retrieve: createAsyncSpy(async () => {
+        throw new Error("payment intent should not be fetched when session is already paid");
+      }),
+    },
+  }));
+  const writeAudit = createAsyncSpy(async () => undefined);
+  const sendBookingEmails = createAsyncSpy(async () => undefined);
+
+  const { refreshPaidBookingAttemptState } = loadFreshModule(
+    "@/lib/scheduling/paid-booking",
+    {
+      "@/lib/prisma": { prisma: prismaMock },
+      "@/lib/scheduling/audit": { writeAudit },
+      "@/lib/scheduling/notify": { sendBookingEmails },
+      "@/lib/scheduling/meeting-link": {
+        getMeetingLink: () => "https://meet.example/room",
+      },
+      "@/lib/scheduling/auto-assignment": {
+        pickStaffForSlot: createAsyncSpy(async () => ({
+          noStaffCalendars: false,
+          noStaffAvailable: false,
+          staffUserId: null,
+        })),
+      },
+      "@/lib/stripe": { getStripeForOrg },
+    }
+  );
+
+  const changed = await refreshPaidBookingAttemptState(ATTEMPT_ID);
+
+  assert.equal(changed, true);
+  assert.equal(bookingAttemptFindUnique.calls.length, 1);
+  assert.equal(getStripeForOrg.calls.length, 1);
+  assert.equal(checkoutSessionRetrieve.calls.length, 1);
+  assert.equal(paymentRecordUpdate.calls.length, 1);
+  assert.equal(paymentRecordUpdate.calls[0][0].data.status, "paid");
+  assert.equal(paymentRecordUpdate.calls[0][0].data.stripePaymentIntentId, "pi_test_123");
+  assert.equal(bookingAttemptUpdate.calls.length, 2);
+  assert.equal(bookingAttemptUpdate.calls[0][0].data.status, "paid");
+  assert.equal(bookingAttemptUpdate.calls[1][0].data.status, "booking_confirmed");
+  assert.equal(slotReservationUpdateMany.calls.length, 1);
+  assert.equal(slotReservationUpdateMany.calls[0][0].data.status, "consumed");
+  assert.equal(appointmentCreate.calls.length, 1);
+  assert.equal(appointmentFindUnique.calls.length, 1);
+  assert.equal(writeAudit.calls.length, 1);
+  assert.equal(sendBookingEmails.calls.length, 1);
 });
