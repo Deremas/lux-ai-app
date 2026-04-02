@@ -5,6 +5,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import { requireUserIdFromSession, requireOrgRole } from "@/lib/scheduling/authz";
+import { isPrismaSchemaCompatibilityError } from "@/lib/scheduling/prisma-compat";
 import { isValidUuid } from "@/lib/validation";
 
 function cleanString(value: string | null): string {
@@ -16,6 +17,9 @@ function parsePositiveInt(value: string | null, fallback: number) {
   if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
   return parsed;
 }
+
+const AUDIT_COMPATIBILITY_WARNING =
+  "Audit history is unavailable until the latest database migrations are applied.";
 
 export async function GET(req: Request) {
   const limit = await applyRateLimit(req, RATE_LIMIT_RULES.scheduling);
@@ -89,23 +93,47 @@ export async function GET(req: Request) {
     ];
   }
 
-  const [total, rows] = await Promise.all([
-    prisma.auditLog.count({ where }),
-    prisma.auditLog.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      include: {
-        actor: { select: { id: true, name: true, email: true } },
-      },
-    }),
-  ]);
+  let total = 0;
+  let rows: Awaited<ReturnType<typeof prisma.auditLog.findMany>> = [];
+  let warning: string | undefined;
+
+  try {
+    [total, rows] = await Promise.all([
+      prisma.auditLog.count({ where }),
+      prisma.auditLog.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          actor: { select: { id: true, name: true, email: true } },
+        },
+      }),
+    ]);
+  } catch (error) {
+    if (isPrismaSchemaCompatibilityError(error)) {
+      console.warn(
+        "[admin/audit] audit_log is unavailable until database migrations are applied",
+        error
+      );
+      warning = AUDIT_COMPATIBILITY_WARNING;
+    } else {
+      console.error("[admin/audit] failed to load audit log", error);
+      return NextResponse.json(
+        {
+          error:
+            "Audit log unavailable. Please run database migrations and reload.",
+        },
+        { status: 500 }
+      );
+    }
+  }
 
   return NextResponse.json({
     items: rows,
     total,
     page,
     pageSize,
+    warning,
   });
 }

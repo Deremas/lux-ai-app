@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import {
@@ -199,7 +200,7 @@ export async function GET(req: Request) {
     };
   });
 
-  return NextResponse.json({ orgId, locale, items });
+  return NextResponse.json({ orgId, locale, role: authz.role, items });
 }
 
 export async function POST(req: Request) {
@@ -312,59 +313,76 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Key already exists" }, { status: 409 });
   }
 
-  const mt = await prisma.meetingType.create({
-    data: {
-      id: crypto.randomUUID(),
-      orgId,
-      key,
-      durationMin,
-      paymentPolicy,
-      requiresPayment,
-      priceCents,
-      currency,
-      isActive: body.isActive ?? true,
-    },
-  });
+  try {
+    const mt = await prisma.meetingType.create({
+      data: {
+        id: crypto.randomUUID(),
+        orgId,
+        key,
+        durationMin,
+        paymentPolicy,
+        requiresPayment,
+        priceCents,
+        currency,
+        isActive: body.isActive ?? true,
+      },
+    });
 
-  await prisma.meetingTypeTranslation.create({
-    data: {
-      id: crypto.randomUUID(),
-      meetingTypeId: mt.id,
-      locale,
-      title,
-      subtitle: subtitle || null,
-      description: description || null,
-    },
-  });
-
-  if (modes.length) {
-    const modeDetails = parseModeDetails(body.modeDetails);
-    await prisma.meetingTypeMode.createMany({
-      data: modes.map((mode) => ({
+    await prisma.meetingTypeTranslation.create({
+      data: {
         id: crypto.randomUUID(),
         meetingTypeId: mt.id,
-        mode,
-        details: modeDetails[mode],
-      })),
+        locale,
+        title,
+        subtitle: subtitle || null,
+        description: description || null,
+      },
     });
+
+    if (modes.length) {
+      const modeDetails = parseModeDetails(body.modeDetails);
+      await prisma.meetingTypeMode.createMany({
+        data: modes.map((mode) => ({
+          id: crypto.randomUUID(),
+          meetingTypeId: mt.id,
+          mode,
+          details: modeDetails[mode],
+        })),
+      });
+    }
+
+    const full = await prisma.meetingType.findFirst({
+      where: { id: mt.id, orgId },
+      include: {
+        modes: true,
+        translations: true,
+      },
+    });
+    await writeAudit({
+      orgId,
+      actorUserId: who.userId,
+      entityType: "meeting_type",
+      entityId: mt.id,
+      action: "create",
+      before: null,
+      after: full ?? mt,
+    });
+
+    return NextResponse.json({ item: mt }, { status: 201 });
+  } catch (err: unknown) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === "P2002") {
+        return NextResponse.json(
+          { error: "A meeting type with this title already exists." },
+          { status: 409 }
+        );
+      }
+    }
+
+    console.error("[admin/meeting-types] create failed", err);
+    return NextResponse.json(
+      { error: "Failed to create meeting type." },
+      { status: 500 }
+    );
   }
-
-  const full = await prisma.meetingType.findFirst({
-    where: { id: mt.id, orgId },
-    include: {
-      modes: true,
-      translations: true,
-    },
-  });
-  await writeAudit({
-    orgId,
-    actorUserId: who.userId,
-    entityType: "meeting_type",
-    entityId: mt.id,
-    action: "create",
-    before: null,
-    after: full ?? mt,
-  });
-
-  return NextResponse.json({ item: mt }, { status: 201 });
 }

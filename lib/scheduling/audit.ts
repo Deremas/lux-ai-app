@@ -2,6 +2,7 @@
 import crypto from "crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { isPrismaSchemaCompatibilityError } from "@/lib/scheduling/prisma-compat";
 
 function toJsonValue(
   value: unknown | undefined
@@ -24,16 +25,28 @@ export async function writeAudit(params: {
   before?: unknown;
   after?: unknown;
 }) {
-  await prisma.auditLog.create({
-    data: {
-      id: crypto.randomUUID(),
-      orgId: params.orgId,
-      actorUserId: params.actorUserId ?? null,
-      action: params.action,
-      entityType: params.entityType,
-      entityId: params.entityId,
-      before: toJsonValue(params.before),
-      after: toJsonValue(params.after),
-    },
-  });
+  try {
+    await prisma.auditLog.create({
+      data: {
+        id: crypto.randomUUID(),
+        orgId: params.orgId,
+        actorUserId: params.actorUserId ?? null,
+        action: params.action,
+        entityType: params.entityType,
+        entityId: params.entityId,
+        before: toJsonValue(params.before),
+        after: toJsonValue(params.after),
+      },
+    });
+  } catch (error) {
+    if (isPrismaSchemaCompatibilityError(error)) {
+      console.warn(
+        "[audit] audit_log is unavailable until database migrations are applied",
+        error
+      );
+      return;
+    }
+
+    throw error;
+  }
 }

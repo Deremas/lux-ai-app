@@ -20,6 +20,8 @@ type Props = {
   orgId: string;
 };
 
+type OrgRole = "admin" | "staff";
+
 type MeetingType = {
   id: string;
   key: string;
@@ -114,6 +116,7 @@ function formatModeLabel(mode: string) {
 export default function MeetingTypesClient({ orgId }: Props) {
   const { status } = useSession();
   const [items, setItems] = useState<MeetingType[]>([]);
+  const [role, setRole] = useState<OrgRole | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -143,6 +146,7 @@ export default function MeetingTypesClient({ orgId }: Props) {
   ]);
   const orgDefaultPriceAmount =
     orgDefaultPaymentCents === null ? "" : String(orgDefaultPaymentCents / 100);
+  const canManageTypes = role === "admin";
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -190,7 +194,12 @@ export default function MeetingTypesClient({ orgId }: Props) {
           return;
         }
         const list = (typesRes.data?.items ?? []) as MeetingType[];
+        const nextRole =
+          typesRes.data?.role === "admin" || typesRes.data?.role === "staff"
+            ? (typesRes.data.role as OrgRole)
+            : null;
         setItems(list);
+        setRole(nextRole);
         if (settingsRes.ok) {
           const settings = settingsRes.data?.settings;
           const raw = settings?.allowedCurrencies ?? "";
@@ -278,6 +287,10 @@ export default function MeetingTypesClient({ orgId }: Props) {
   }
 
   function openCreateEditor() {
+    if (!canManageTypes) {
+      setError("Only admins can create meeting types.");
+      return;
+    }
     resetForm();
     setEditorOpen(true);
   }
@@ -297,6 +310,10 @@ export default function MeetingTypesClient({ orgId }: Props) {
   }
 
   function openDeleteDialog(item: MeetingType) {
+    if (!canManageTypes) {
+      setError("Only admins can delete meeting types.");
+      return;
+    }
     setDeleteTarget(item);
   }
 
@@ -305,6 +322,10 @@ export default function MeetingTypesClient({ orgId }: Props) {
   }
 
   async function handleDeleteConfirmed() {
+    if (!canManageTypes) {
+      setError("Only admins can delete meeting types.");
+      return;
+    }
     if (!orgId || !deleteTarget) return;
     const item = deleteTarget;
     setSaving(true);
@@ -345,6 +366,10 @@ export default function MeetingTypesClient({ orgId }: Props) {
   }
 
   async function handleToggleActive(item: MeetingType) {
+    if (!canManageTypes) {
+      setError("Only admins can activate or deactivate meeting types.");
+      return;
+    }
     if (!orgId) return;
     setSaving(true);
     setError(null);
@@ -391,6 +416,10 @@ export default function MeetingTypesClient({ orgId }: Props) {
   }
 
   async function handleSave() {
+    if (!canManageTypes) {
+      setError("Only admins can create or edit meeting types from this screen.");
+      return;
+    }
     if (!orgId) return;
     setSaving(true);
     setError(null);
@@ -495,13 +524,21 @@ export default function MeetingTypesClient({ orgId }: Props) {
             <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
               Meeting types
             </h1>
-            <Button size="sm" onClick={openCreateEditor}>
-              New meeting type
-            </Button>
+            {canManageTypes ? (
+              <Button size="sm" onClick={openCreateEditor}>
+                New meeting type
+              </Button>
+            ) : null}
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-300">
             Create and update booking types used across the scheduling system.
           </p>
+          {role === "staff" && (
+            <p className="text-sm text-amber-700 dark:text-amber-300">
+              This session has staff-level access. Meeting type creation, deletion,
+              and lifecycle changes require an admin account.
+            </p>
+          )}
         </div>
 
         {loading && (
@@ -585,34 +622,40 @@ export default function MeetingTypesClient({ orgId }: Props) {
                               </span>
                             </div>
                           </div>
-                          <div className="flex max-w-full flex-nowrap items-center gap-2 overflow-x-auto pb-1 md:pb-0">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openEditEditor(item)}
-                              className="shrink-0"
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={saving}
-                              onClick={() => handleToggleActive(item)}
-                              className="shrink-0"
-                            >
-                              {item.isActive ? "Deactivate" : "Activate"}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              disabled={saving}
-                              onClick={() => openDeleteDialog(item)}
-                              className="shrink-0"
-                            >
-                              Delete
-                            </Button>
-                          </div>
+                          {canManageTypes ? (
+                            <div className="flex max-w-full flex-nowrap items-center gap-2 overflow-x-auto pb-1 md:pb-0">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openEditEditor(item)}
+                                className="shrink-0"
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={saving}
+                                onClick={() => handleToggleActive(item)}
+                                className="shrink-0"
+                              >
+                                {item.isActive ? "Deactivate" : "Activate"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                disabled={saving}
+                                onClick={() => openDeleteDialog(item)}
+                                className="shrink-0"
+                              >
+                                Delete
+                              </Button>
+                            </div>
+                          ) : role === "staff" ? (
+                            <div className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                              Read-only for staff
+                            </div>
+                          ) : null}
                         </div>
                       </div>
                     );

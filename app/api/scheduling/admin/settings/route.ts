@@ -17,10 +17,13 @@ import { getUserOrgContext } from "@/lib/scheduling/org-context";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import { encryptSecret, hasSecret } from "@/lib/security/secret-crypto";
 import { writeAudit } from "@/lib/scheduling/audit";
+import { isPrismaSchemaCompatibilityError } from "@/lib/scheduling/prisma-compat";
 
 const LOCALES = ["en", "fr", "de", "lb"] as const;
 const APPROVAL_POLICIES = ["AUTO_APPROVE", "REQUIRES_APPROVAL"] as const;
 const PAYMENT_POLICIES = ["FREE", "PAID"] as const;
+const SECRET_STORAGE_WARNING =
+  "Secret-backed integration fields are unavailable until the latest database migrations are applied.";
 
 type Body = {
   orgId?: string;
@@ -163,6 +166,100 @@ function toNotifyString(raw: string[] | null | undefined): string | null {
   return raw.join(", ");
 }
 
+type SecretStatusPayload = {
+  metaTokenConfigured: boolean;
+  metaPhoneConfigured: boolean;
+  metaConfigured: boolean;
+  twilioSidConfigured: boolean;
+  twilioTokenConfigured: boolean;
+  twilioFromConfigured: boolean;
+  twilioConfigured: boolean;
+  telnyxApiKeyConfigured: boolean;
+  telnyxFromConfigured: boolean;
+  telnyxConfigured: boolean;
+  stripeSecretConfigured: boolean;
+  stripePublishableConfigured: boolean;
+  stripeWebhookConfigured: boolean;
+};
+
+function buildSecretStatus(secretRow?: {
+  metaWhatsappTokenEnc?: string | null;
+  metaWhatsappPhoneIdEnc?: string | null;
+  twilioAccountSidEnc?: string | null;
+  twilioAuthTokenEnc?: string | null;
+  twilioWhatsappFromEnc?: string | null;
+  telnyxApiKeyEnc?: string | null;
+  telnyxWhatsappFromEnc?: string | null;
+  stripeSecretKeyEnc?: string | null;
+  stripePublishableKeyEnc?: string | null;
+  stripeWebhookSecretEnc?: string | null;
+} | null): {
+  stripeConfigured: boolean;
+  secretStatus: SecretStatusPayload;
+} {
+  const metaTokenConfigured = hasSecret(secretRow?.metaWhatsappTokenEnc);
+  const metaPhoneConfigured = hasSecret(secretRow?.metaWhatsappPhoneIdEnc);
+  const twilioSidConfigured = hasSecret(secretRow?.twilioAccountSidEnc);
+  const twilioTokenConfigured = hasSecret(secretRow?.twilioAuthTokenEnc);
+  const twilioFromConfigured = hasSecret(secretRow?.twilioWhatsappFromEnc);
+  const telnyxApiKeyConfigured = hasSecret(secretRow?.telnyxApiKeyEnc);
+  const telnyxFromConfigured = hasSecret(secretRow?.telnyxWhatsappFromEnc);
+  const stripeSecretConfigured =
+    hasSecret(secretRow?.stripeSecretKeyEnc) ||
+    Boolean(process.env.STRIPE_SECRET_KEY);
+  const stripePublishableConfigured = hasSecret(secretRow?.stripePublishableKeyEnc);
+  const stripeWebhookConfigured =
+    hasSecret(secretRow?.stripeWebhookSecretEnc) ||
+    Boolean(process.env.STRIPE_WEBHOOK_SECRET);
+
+  return {
+    stripeConfigured: stripeSecretConfigured,
+    secretStatus: {
+      metaTokenConfigured,
+      metaPhoneConfigured,
+      metaConfigured: metaTokenConfigured && metaPhoneConfigured,
+      twilioSidConfigured,
+      twilioTokenConfigured,
+      twilioFromConfigured,
+      twilioConfigured:
+        twilioSidConfigured && twilioTokenConfigured && twilioFromConfigured,
+      telnyxApiKeyConfigured,
+      telnyxFromConfigured,
+      telnyxConfigured: telnyxApiKeyConfigured && telnyxFromConfigured,
+      stripeSecretConfigured,
+      stripePublishableConfigured,
+      stripeWebhookConfigured,
+    },
+  };
+}
+
+async function loadSecretStatus(orgId: string): Promise<{
+  stripeConfigured: boolean;
+  secretStatus: SecretStatusPayload;
+  warning?: string;
+}> {
+  try {
+    const secretRow = await prisma.orgSecret.findFirst({
+      where: { orgId },
+    });
+
+    return buildSecretStatus(secretRow);
+  } catch (error) {
+    if (isPrismaSchemaCompatibilityError(error)) {
+      console.warn(
+        "[settings] org_secret is unavailable until database migrations are applied",
+        error
+      );
+      return {
+        ...buildSecretStatus(null),
+        warning: SECRET_STORAGE_WARNING,
+      };
+    }
+
+    throw error;
+  }
+}
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const orgIdParam = cleanString(url.searchParams.get("orgId"));
@@ -219,25 +316,23 @@ export async function GET(req: Request) {
       { status: 500 }
     );
   }
-  const secretRow = await prisma.orgSecret.findFirst({ where: { orgId } });
-
   if (!row) {
     return NextResponse.json({ error: "Settings not found" }, { status: 404 });
   }
 
-  const metaTokenConfigured = hasSecret(secretRow?.metaWhatsappTokenEnc);
-  const metaPhoneConfigured = hasSecret(secretRow?.metaWhatsappPhoneIdEnc);
-  const twilioSidConfigured = hasSecret(secretRow?.twilioAccountSidEnc);
-  const twilioTokenConfigured = hasSecret(secretRow?.twilioAuthTokenEnc);
-  const twilioFromConfigured = hasSecret(secretRow?.twilioWhatsappFromEnc);
-  const telnyxApiKeyConfigured = hasSecret(secretRow?.telnyxApiKeyEnc);
-  const telnyxFromConfigured = hasSecret(secretRow?.telnyxWhatsappFromEnc);
-  const stripeSecretConfigured =
-    hasSecret(secretRow?.stripeSecretKeyEnc) || Boolean(process.env.STRIPE_SECRET_KEY);
-  const stripePublishableConfigured = hasSecret(secretRow?.stripePublishableKeyEnc);
-  const stripeWebhookConfigured =
-    hasSecret(secretRow?.stripeWebhookSecretEnc) ||
-    Boolean(process.env.STRIPE_WEBHOOK_SECRET);
+  let secretPayload: Awaited<ReturnType<typeof loadSecretStatus>>;
+  try {
+    secretPayload = await loadSecretStatus(orgId);
+  } catch (error) {
+    console.error("[settings] failed to load org secret status", error);
+    return NextResponse.json(
+      {
+        error:
+          "Settings unavailable. Please run database migrations and reload.",
+      },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json(
     {
@@ -251,23 +346,7 @@ export async function GET(req: Request) {
           ? JSON.stringify(row.workingHours, null, 2)
           : null,
       },
-      stripeConfigured: stripeSecretConfigured,
-      secretStatus: {
-        metaTokenConfigured,
-        metaPhoneConfigured,
-        metaConfigured: metaTokenConfigured && metaPhoneConfigured,
-        twilioSidConfigured,
-        twilioTokenConfigured,
-        twilioFromConfigured,
-        twilioConfigured:
-          twilioSidConfigured && twilioTokenConfigured && twilioFromConfigured,
-        telnyxApiKeyConfigured,
-        telnyxFromConfigured,
-        telnyxConfigured: telnyxApiKeyConfigured && telnyxFromConfigured,
-        stripeSecretConfigured,
-        stripePublishableConfigured,
-        stripeWebhookConfigured,
-      },
+      ...secretPayload,
     },
     { status: 200 }
   );
@@ -510,18 +589,37 @@ export async function POST(req: Request) {
   }
 
   if (wantsSecretUpdate && Object.keys(secretUpdates).length > 0) {
-    await prisma.orgSecret.upsert({
-      where: { orgId },
-      create: {
-        id: crypto.randomUUID(),
-        orgId,
-        ...secretUpdates,
-      },
-      update: {
-        ...secretUpdates,
-        updatedAt: new Date(),
-      },
-    });
+    try {
+      await prisma.orgSecret.upsert({
+        where: { orgId },
+        create: {
+          id: crypto.randomUUID(),
+          orgId,
+          ...secretUpdates,
+        },
+        update: {
+          ...secretUpdates,
+          updatedAt: new Date(),
+        },
+      });
+    } catch (error) {
+      if (isPrismaSchemaCompatibilityError(error)) {
+        console.warn(
+          "[settings] cannot persist org secrets until database migrations are applied",
+          error
+        );
+        return NextResponse.json(
+          { error: SECRET_STORAGE_WARNING },
+          { status: 503 }
+        );
+      }
+
+      console.error("[settings] failed to persist org secret values", error);
+      return NextResponse.json(
+        { error: "Failed to save secret-backed settings." },
+        { status: 500 }
+      );
+    }
 
     await writeAudit({
       orgId,
@@ -535,20 +633,21 @@ export async function POST(req: Request) {
   }
 
   const row = await prisma.orgSettings.findFirst({ where: { orgId } });
-  const secretRow = await prisma.orgSecret.findFirst({ where: { orgId } });
-  const metaTokenConfigured = hasSecret(secretRow?.metaWhatsappTokenEnc);
-  const metaPhoneConfigured = hasSecret(secretRow?.metaWhatsappPhoneIdEnc);
-  const twilioSidConfigured = hasSecret(secretRow?.twilioAccountSidEnc);
-  const twilioTokenConfigured = hasSecret(secretRow?.twilioAuthTokenEnc);
-  const twilioFromConfigured = hasSecret(secretRow?.twilioWhatsappFromEnc);
-  const telnyxApiKeyConfigured = hasSecret(secretRow?.telnyxApiKeyEnc);
-  const telnyxFromConfigured = hasSecret(secretRow?.telnyxWhatsappFromEnc);
-  const stripeSecretConfigured =
-    hasSecret(secretRow?.stripeSecretKeyEnc) || Boolean(process.env.STRIPE_SECRET_KEY);
-  const stripePublishableConfigured = hasSecret(secretRow?.stripePublishableKeyEnc);
-  const stripeWebhookConfigured =
-    hasSecret(secretRow?.stripeWebhookSecretEnc) ||
-    Boolean(process.env.STRIPE_WEBHOOK_SECRET);
+
+  let secretPayload: Awaited<ReturnType<typeof loadSecretStatus>>;
+  try {
+    secretPayload = await loadSecretStatus(orgId);
+  } catch (error) {
+    console.error("[settings] failed to load org secret status", error);
+    return NextResponse.json(
+      {
+        error:
+          "Settings unavailable. Please run database migrations and reload.",
+      },
+      { status: 500 }
+    );
+  }
+
   return NextResponse.json(
     {
       settings: row
@@ -563,23 +662,7 @@ export async function POST(req: Request) {
               : null,
           }
         : null,
-      stripeConfigured: stripeSecretConfigured,
-      secretStatus: {
-        metaTokenConfigured,
-        metaPhoneConfigured,
-        metaConfigured: metaTokenConfigured && metaPhoneConfigured,
-        twilioSidConfigured,
-        twilioTokenConfigured,
-        twilioFromConfigured,
-        twilioConfigured:
-          twilioSidConfigured && twilioTokenConfigured && twilioFromConfigured,
-        telnyxApiKeyConfigured,
-        telnyxFromConfigured,
-        telnyxConfigured: telnyxApiKeyConfigured && telnyxFromConfigured,
-        stripeSecretConfigured,
-        stripePublishableConfigured,
-        stripeWebhookConfigured,
-      },
+      ...secretPayload,
     },
     { status: 200 }
   );

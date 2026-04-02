@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
+import { getPaymentReservationTimeoutMinutes } from "@/lib/scheduling/payment-reservation";
 import { resolveOrgIdForRequest } from "@/lib/scheduling/org-resolver";
 import { getSchedulingRuntimeErrorMessage } from "@/lib/scheduling/runtime-errors";
 
@@ -147,6 +148,7 @@ export async function GET(req: Request) {
       requestedLocale,
       orgDefaultLocale,
       paymentPolicy: orgPaymentPolicy,
+      reservationHoldMinutes: getPaymentReservationTimeoutMinutes(),
       allowedCurrencies: settings?.allowedCurrencies ?? [],
       defaultCurrency: settings?.defaultCurrency ?? null,
       items,

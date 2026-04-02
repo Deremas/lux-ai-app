@@ -56,6 +56,7 @@ export default function AuditLogClient({ orgId, orgName, tz }: Props) {
   const [items, setItems] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
 
   // MRT uses 0-based pageIndex; API uses 1-based page
   const [pageIndex, setPageIndex] = useState(0);
@@ -121,6 +122,7 @@ export default function AuditLogClient({ orgId, orgName, tz }: Props) {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setWarning(null);
 
     const url = new URL("/api/scheduling/admin/audit", window.location.origin);
     url.searchParams.set("orgId", orgId);
@@ -144,6 +146,11 @@ export default function AuditLogClient({ orgId, orgName, tz }: Props) {
         }
         setItems((data?.items ?? []) as AuditRow[]);
         setTotal(Number(data?.total ?? 0));
+        setWarning(
+          typeof data?.warning === "string" && data.warning.trim()
+            ? data.warning
+            : null
+        );
       })
       .catch(() => {
         if (!cancelled) setError("Failed to load audit log");
@@ -296,6 +303,12 @@ export default function AuditLogClient({ orgId, orgName, tz }: Props) {
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
+        </div>
+      )}
+
+      {warning && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          {warning}
         </div>
       )}
 

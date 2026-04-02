@@ -13,8 +13,11 @@ import { isBodyTooLarge, isValidUuid } from "@/lib/validation";
 import { decryptSecret, encryptSecret } from "@/lib/security/secret-crypto";
 import { inferStripeMode } from "@/lib/stripe";
 import { getPublicBaseUrl } from "@/lib/public-url";
+import { isPrismaSchemaCompatibilityError } from "@/lib/scheduling/prisma-compat";
 
 const MAX_BODY = 4096;
+const STRIPE_COMPATIBILITY_WARNING =
+  "Saved Stripe keys or webhook history are unavailable until the latest database migrations are applied.";
 
 type StripeStatus = {
   secretKeyConfigured: boolean;
@@ -54,15 +57,37 @@ function last4(value: string | null) {
   return trimmed.length <= 4 ? trimmed : trimmed.slice(-4);
 }
 
-async function getStripeStatus(orgId: string, req: Request): Promise<StripeStatus> {
-  const secretRow = await prisma.orgSecret.findFirst({
-    where: { orgId },
-    select: {
-      stripeSecretKeyEnc: true,
-      stripePublishableKeyEnc: true,
-      stripeWebhookSecretEnc: true,
-    },
-  });
+async function getStripeStatus(
+  orgId: string,
+  req: Request
+): Promise<{ stripe: StripeStatus; warning?: string }> {
+  let warning: string | undefined;
+  let secretRow: {
+    stripeSecretKeyEnc: string | null;
+    stripePublishableKeyEnc: string | null;
+    stripeWebhookSecretEnc: string | null;
+  } | null = null;
+
+  try {
+    secretRow = await prisma.orgSecret.findFirst({
+      where: { orgId },
+      select: {
+        stripeSecretKeyEnc: true,
+        stripePublishableKeyEnc: true,
+        stripeWebhookSecretEnc: true,
+      },
+    });
+  } catch (error) {
+    if (isPrismaSchemaCompatibilityError(error)) {
+      console.warn(
+        "[admin/stripe] org_secret is unavailable until database migrations are applied",
+        error
+      );
+      warning = STRIPE_COMPATIBILITY_WARNING;
+    } else {
+      throw error;
+    }
+  }
 
   const orgSecretKey = safeDecrypt(secretRow?.stripeSecretKeyEnc);
   const orgPublishableKey = safeDecrypt(secretRow?.stripePublishableKeyEnc);
@@ -78,33 +103,61 @@ async function getStripeStatus(orgId: string, req: Request): Promise<StripeStatu
       ? "env"
       : "none";
 
-  const lastWebhook = await prisma.auditLog.findFirst({
-    where: { orgId, entityType: "stripe_webhook" },
-    orderBy: { createdAt: "desc" },
-  });
+  let lastWebhook: {
+    entityId: string;
+    action: string;
+    createdAt: Date;
+    after: unknown;
+  } | null = null;
+
+  try {
+    lastWebhook = await prisma.auditLog.findFirst({
+      where: { orgId, entityType: "stripe_webhook" },
+      orderBy: { createdAt: "desc" },
+      select: {
+        entityId: true,
+        action: true,
+        createdAt: true,
+        after: true,
+      },
+    });
+  } catch (error) {
+    if (isPrismaSchemaCompatibilityError(error)) {
+      console.warn(
+        "[admin/stripe] audit_log is unavailable until database migrations are applied",
+        error
+      );
+      warning = warning ?? STRIPE_COMPATIBILITY_WARNING;
+    } else {
+      throw error;
+    }
+  }
 
   return {
-    secretKeyConfigured: Boolean(effectiveSecretKey),
-    publishableKeyConfigured: Boolean(orgPublishableKey),
-    webhookSecretConfigured: Boolean(effectiveWebhookSecret),
-    secretKeySource,
-    webhookSecretSource,
-    secretKeyLast4: last4(effectiveSecretKey),
-    publishableKeyLast4: last4(orgPublishableKey),
-    webhookSecretLast4: last4(effectiveWebhookSecret),
-    mode: inferStripeMode(effectiveSecretKey),
-    webhookEndpoint: `${getPublicBaseUrl(req)}/api/scheduling/webhooks/stripe/${orgId}`,
-    lastWebhookEvent: lastWebhook
-      ? {
-          id: lastWebhook.entityId,
-          type: lastWebhook.action,
-          createdAt: lastWebhook.createdAt.toISOString(),
-          livemode:
-            typeof (lastWebhook.after as any)?.livemode === "boolean"
-              ? ((lastWebhook.after as any).livemode as boolean)
-              : null,
-        }
-      : null,
+    stripe: {
+      secretKeyConfigured: Boolean(effectiveSecretKey),
+      publishableKeyConfigured: Boolean(orgPublishableKey),
+      webhookSecretConfigured: Boolean(effectiveWebhookSecret),
+      secretKeySource,
+      webhookSecretSource,
+      secretKeyLast4: last4(effectiveSecretKey),
+      publishableKeyLast4: last4(orgPublishableKey),
+      webhookSecretLast4: last4(effectiveWebhookSecret),
+      mode: inferStripeMode(effectiveSecretKey),
+      webhookEndpoint: `${getPublicBaseUrl(req)}/api/scheduling/webhooks/stripe/${orgId}`,
+      lastWebhookEvent: lastWebhook
+        ? {
+            id: lastWebhook.entityId,
+            type: lastWebhook.action,
+            createdAt: lastWebhook.createdAt.toISOString(),
+            livemode:
+              typeof (lastWebhook.after as any)?.livemode === "boolean"
+                ? ((lastWebhook.after as any).livemode as boolean)
+                : null,
+          }
+        : null,
+    },
+    warning,
   };
 }
 
@@ -142,8 +195,19 @@ export async function GET(req: Request) {
     );
   }
 
-  const stripe = await getStripeStatus(orgId, req);
-  return NextResponse.json({ stripe }, { status: 200 });
+  try {
+    const result = await getStripeStatus(orgId, req);
+    return NextResponse.json(result, { status: 200 });
+  } catch (error) {
+    console.error("[admin/stripe] failed to load Stripe status", error);
+    return NextResponse.json(
+      {
+        error:
+          "Stripe status unavailable. Please run database migrations and reload.",
+      },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req: Request) {
@@ -234,18 +298,37 @@ export async function POST(req: Request) {
   }
 
   if (Object.keys(secretUpdates).length > 0) {
-    await prisma.orgSecret.upsert({
-      where: { orgId },
-      create: {
-        id: crypto.randomUUID(),
-        orgId,
-        ...secretUpdates,
-      },
-      update: {
-        ...secretUpdates,
-        updatedAt: new Date(),
-      },
-    });
+    try {
+      await prisma.orgSecret.upsert({
+        where: { orgId },
+        create: {
+          id: crypto.randomUUID(),
+          orgId,
+          ...secretUpdates,
+        },
+        update: {
+          ...secretUpdates,
+          updatedAt: new Date(),
+        },
+      });
+    } catch (error) {
+      if (isPrismaSchemaCompatibilityError(error)) {
+        console.warn(
+          "[admin/stripe] cannot persist Stripe secrets until database migrations are applied",
+          error
+        );
+        return NextResponse.json(
+          { error: STRIPE_COMPATIBILITY_WARNING },
+          { status: 503 }
+        );
+      }
+
+      console.error("[admin/stripe] failed to persist Stripe secrets", error);
+      return NextResponse.json(
+        { error: "Failed to save Stripe settings." },
+        { status: 500 }
+      );
+    }
 
     await writeAudit({
       orgId,
@@ -258,6 +341,17 @@ export async function POST(req: Request) {
     });
   }
 
-  const stripe = await getStripeStatus(orgId, req);
-  return NextResponse.json({ stripe }, { status: 200 });
+  try {
+    const result = await getStripeStatus(orgId, req);
+    return NextResponse.json(result, { status: 200 });
+  } catch (error) {
+    console.error("[admin/stripe] failed to load Stripe status", error);
+    return NextResponse.json(
+      {
+        error:
+          "Stripe status unavailable. Please run database migrations and reload.",
+      },
+      { status: 500 }
+    );
+  }
 }

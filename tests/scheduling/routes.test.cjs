@@ -239,6 +239,9 @@ test("status route only marks active payment_pending attempts as resumable", asy
     "@/lib/scheduling/paid-booking": {
       refreshPaidBookingAttemptState: createAsyncSpy(async () => false),
     },
+    "@/lib/scheduling/payment-reservation": {
+      getPaymentReservationTimeoutMinutes: () => 30,
+    },
     "@/lib/validation": {
       isValidUuid: () => true,
     },
@@ -254,6 +257,7 @@ test("status route only marks active payment_pending attempts as resumable", asy
   assert.equal(res.status, 200);
   assert.equal(json.bookingAttempt.id, ATTEMPT_ID);
   assert.equal(json.bookingAttempt.canResumePayment, true);
+  assert.equal(json.reservationHoldMinutes, 30);
 });
 
 test("resume route rejects expired attempts", async () => {

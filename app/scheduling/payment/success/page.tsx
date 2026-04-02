@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 type ViewStatus = "idle" | "polling" | "done" | "error";
 
 type StatusResponse = {
+  reservationHoldMinutes: number;
   bookingAttempt: {
     id: string;
     status:
@@ -197,7 +198,11 @@ export default function PaymentSuccessPage() {
       if (next.bookingAttempt.status === "expired") {
         setStatus("error");
         setMessage("Your reservation expired before payment was completed.");
-        setErrorDetail("Please choose a slot again to continue.");
+        setErrorDetail(
+          next.reservationHoldMinutes
+            ? `Please choose a slot again to continue. Unpaid slot holds expire after ${next.reservationHoldMinutes} minutes.`
+            : "Please choose a slot again to continue."
+        );
         return;
       }
 
@@ -289,6 +294,13 @@ export default function PaymentSuccessPage() {
     const dt = DateTime.fromISO(reservedUntil).setZone(displayTz);
     return dt.isValid ? dt.toFormat("ccc, LLL dd · HH:mm") : null;
   }, [data?.bookingAttempt.reservedUntil, displayTz]);
+  const reservationWindowHint = useMemo(() => {
+    const holdMinutes = data?.reservationHoldMinutes;
+    if (typeof holdMinutes !== "number" || !Number.isFinite(holdMinutes)) {
+      return null;
+    }
+    return `We hold this slot for up to ${holdMinutes} minutes while payment is being confirmed.`;
+  }, [data?.reservationHoldMinutes]);
 
   const calendarLinks = useMemo(() => {
     if (status !== "done" || !startUtc || !endUtc) return null;
@@ -332,6 +344,12 @@ export default function PaymentSuccessPage() {
                 Payment confirmation
               </h1>
               <p className="mt-2 text-sm text-gray-600">{message}</p>
+              {reservationWindowHint && (
+                <p className="mt-2 text-xs text-gray-500">
+                  {reservationWindowHint}
+                  {reservationDeadline ? ` Current hold ends ${reservationDeadline}.` : ""}
+                </p>
+              )}
             </div>
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
               {completionBadgeLabel}

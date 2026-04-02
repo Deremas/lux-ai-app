@@ -36,6 +36,7 @@ export default function WhatsAppIntegrationClient({ orgId }: Props) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const [secretStatus, setSecretStatus] = useState<SecretStatus | null>(null);
 
   const [metaTokenInput, setMetaTokenInput] = useState("");
@@ -76,6 +77,7 @@ export default function WhatsAppIntegrationClient({ orgId }: Props) {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setWarning(null);
 
     const url = orgId
       ? `/api/scheduling/admin/settings?orgId=${orgId}`
@@ -93,6 +95,11 @@ export default function WhatsAppIntegrationClient({ orgId }: Props) {
           return;
         }
         setSecretStatus((data?.secretStatus ?? null) as SecretStatus | null);
+        setWarning(
+          typeof data?.warning === "string" && data.warning.trim()
+            ? data.warning
+            : null
+        );
       })
       .catch(() => {
         if (!cancelled) setError("Failed to load integrations");
@@ -134,6 +141,11 @@ export default function WhatsAppIntegrationClient({ orgId }: Props) {
       if (data?.secretStatus) {
         setSecretStatus(data.secretStatus as SecretStatus);
       }
+      setWarning(
+        typeof data?.warning === "string" && data.warning.trim()
+          ? data.warning
+          : null
+      );
       setMetaTokenInput("");
       setMetaPhoneIdInput("");
       setTwilioSidInput("");
@@ -191,6 +203,12 @@ export default function WhatsAppIntegrationClient({ orgId }: Props) {
       {error && (
         <div className="mt-6 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
+        </div>
+      )}
+
+      {warning && (
+        <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          {warning}
         </div>
       )}
 

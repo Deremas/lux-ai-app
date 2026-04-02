@@ -15,15 +15,13 @@ import { getMinBookableUtc } from "@/lib/scheduling/lead-time";
 import { getMeetingLink } from "@/lib/scheduling/meeting-link";
 import { sendBookingEmails } from "@/lib/scheduling/notify";
 import { pickStaffForSlot } from "@/lib/scheduling/auto-assignment";
+import { getPaymentReservationTimeoutMinutes } from "@/lib/scheduling/payment-reservation";
 import { getStripeForOrg } from "@/lib/stripe";
 import { isValidTimezone } from "@/lib/validation";
 
 const BUSY_STATUSES: AppointmentStatus[] = ["pending", "confirmed", "completed"];
 const DEFAULT_BUFFER_MIN = 0;
 const MAX_BUFFER_MIN = 0;
-const DEFAULT_RESERVATION_TIMEOUT_MIN = 10;
-const MIN_RESERVATION_TIMEOUT_MIN = 5;
-const MAX_RESERVATION_TIMEOUT_MIN = 30;
 const EXPIRABLE_ATTEMPT_STATUSES: BookingAttemptStatus[] = [
   "payment_pending",
   "payment_processing",
@@ -143,20 +141,8 @@ function buildCheckoutKey(args: {
     .digest("hex");
 }
 
-function getReservationTimeoutMinutes() {
-  const configured = Number(
-    process.env.SCHEDULING_PAYMENT_RESERVATION_MINUTES ??
-      DEFAULT_RESERVATION_TIMEOUT_MIN.toString()
-  );
-  if (!Number.isFinite(configured)) return DEFAULT_RESERVATION_TIMEOUT_MIN;
-  return Math.min(
-    MAX_RESERVATION_TIMEOUT_MIN,
-    Math.max(MIN_RESERVATION_TIMEOUT_MIN, Math.round(configured))
-  );
-}
-
 function getReservationDeadline(now = DateTime.utc()) {
-  return now.plus({ minutes: getReservationTimeoutMinutes() });
+  return now.plus({ minutes: getPaymentReservationTimeoutMinutes() });
 }
 
 function isAttemptTerminal(status: BookingAttemptStatus) {

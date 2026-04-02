@@ -9,6 +9,7 @@ import { signIn, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 
 type StatusResponse = {
+  reservationHoldMinutes: number;
   bookingAttempt: {
     id: string;
     status:
@@ -103,7 +104,11 @@ export default function PaymentCancelPage() {
       }
 
       if (next.bookingAttempt.status === "expired") {
-        setMessage("Your reservation expired before payment was completed.");
+        setMessage(
+          next.reservationHoldMinutes
+            ? `Your reservation expired because payment was not completed within ${next.reservationHoldMinutes} minutes.`
+            : "Your reservation expired before payment was completed."
+        );
         return;
       }
 
@@ -141,6 +146,13 @@ export default function PaymentCancelPage() {
     const dt = DateTime.fromISO(reservedUntil).setZone(zone);
     return dt.isValid ? `${dt.toFormat("ccc, LLL dd · HH:mm")} (${zone})` : null;
   }, [data?.bookingAttempt.requestedTimezone, data?.bookingAttempt.reservedUntil]);
+  const reservationWindowHint = useMemo(() => {
+    const holdMinutes = data?.reservationHoldMinutes;
+    if (typeof holdMinutes !== "number" || !Number.isFinite(holdMinutes)) {
+      return null;
+    }
+    return `We hold payment slots for up to ${holdMinutes} minutes before releasing them.`;
+  }, [data?.reservationHoldMinutes]);
 
   async function handleResume() {
     if (!attemptId || resuming) return;
@@ -178,6 +190,9 @@ export default function PaymentCancelPage() {
             Payment canceled
           </h1>
           <p className="mt-2 text-sm text-gray-600">{message}</p>
+          {reservationWindowHint && (
+            <p className="mt-2 text-xs text-gray-500">{reservationWindowHint}</p>
+          )}
 
           {!attemptId && (
             <div className="mt-6">
