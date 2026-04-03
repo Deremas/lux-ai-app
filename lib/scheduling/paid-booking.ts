@@ -1072,7 +1072,7 @@ async function updatePaymentFromStripe(tx: Tx, args: {
 
 async function createAppointmentForAttempt(tx: Tx, attemptId: string) {
   await tx.$queryRawUnsafe(
-    'SELECT "id" FROM "booking_attempt" WHERE "id" = $1 FOR UPDATE',
+    'SELECT "id" FROM "booking_attempt" WHERE "id" = $1::uuid FOR UPDATE',
     attemptId
   );
 

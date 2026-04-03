@@ -48,7 +48,19 @@ function getRedisUrl(): string | null {
   if (typeof value !== "string") return null;
 
   const url = value.trim();
-  return url ? url : null;
+  if (!url) return null;
+
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "redis:" && parsed.protocol !== "rediss:") {
+      console.warn("Rate limit Redis URL ignored due to unsupported protocol.");
+      return null;
+    }
+    return url;
+  } catch {
+    console.warn("Rate limit Redis URL ignored because it is invalid.");
+    return null;
+  }
 }
 
 async function getRedisClient(): Promise<RedisClient | null> {
