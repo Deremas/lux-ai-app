@@ -131,6 +131,7 @@ export default function PaymentSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const attemptId = (searchParams.get("attempt_id") ?? "").trim();
+  const sessionId = (searchParams.get("session_id") ?? "").trim();
   const isAuthed = authStatus === "authenticated";
 
   const [status, setStatus] = useState<ViewStatus>("idle");
@@ -161,7 +162,9 @@ export default function PaymentSuccessPage() {
       setErrorDetail(null);
 
       const res = await fetch(
-        `/api/scheduling/payment/status?attemptId=${encodeURIComponent(attemptId)}`,
+        `/api/scheduling/payment/status?attemptId=${encodeURIComponent(attemptId)}${
+          sessionId ? `&sessionId=${encodeURIComponent(sessionId)}` : ""
+        }`,
         { cache: "no-store" }
       );
       const json = (await res.json().catch(() => ({}))) as Partial<StatusResponse> & {
@@ -243,7 +246,7 @@ export default function PaymentSuccessPage() {
       cancelled = true;
       if (timer) window.clearTimeout(timer);
     };
-  }, [attemptId, authStatus, isAuthed]);
+  }, [attemptId, authStatus, isAuthed, sessionId]);
 
   useEffect(() => {
     const appointmentId = data?.appointment?.id;

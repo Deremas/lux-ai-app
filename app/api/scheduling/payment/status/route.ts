@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
 import { requireUserIdFromSession } from "@/lib/scheduling/authz";
-import { refreshPaidBookingAttemptState } from "@/lib/scheduling/paid-booking";
+import {
+  refreshPaidBookingAttemptState,
+  syncPaidBookingAttemptFromCheckoutSession,
+} from "@/lib/scheduling/paid-booking";
 import { getPaymentReservationTimeoutMinutes } from "@/lib/scheduling/payment-reservation";
 import { isValidUuid } from "@/lib/validation";
 
@@ -21,8 +24,17 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const attemptId = (url.searchParams.get("attemptId") ?? "").trim();
+  const sessionId =
+    (url.searchParams.get("sessionId") ?? url.searchParams.get("session_id") ?? "").trim();
   if (!attemptId || !isValidUuid(attemptId)) {
     return NextResponse.json({ error: "Invalid attemptId" }, { status: 400 });
+  }
+
+  if (sessionId) {
+    await syncPaidBookingAttemptFromCheckoutSession({
+      attemptId,
+      sessionId,
+    });
   }
 
   await refreshPaidBookingAttemptState(attemptId);

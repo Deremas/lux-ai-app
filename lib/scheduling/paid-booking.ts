@@ -419,6 +419,114 @@ export async function refreshPaidBookingAttemptState(attemptId: string) {
   return expired;
 }
 
+export async function syncPaidBookingAttemptFromCheckoutSession(args: {
+  attemptId: string;
+  sessionId: string;
+}) {
+  const sessionId = cleanString(args.sessionId);
+  if (!sessionId) return false;
+
+  const attempt = await prisma.bookingAttempt.findUnique({
+    where: { id: args.attemptId },
+    select: {
+      id: true,
+      orgId: true,
+      status: true,
+      paymentStatus: true,
+      appointment: {
+        select: { id: true },
+      },
+      payments: {
+        take: 1,
+        orderBy: { createdAt: "asc" },
+        select: {
+          amountCents: true,
+          currency: true,
+          stripeCheckoutSessionId: true,
+          stripePaymentIntentId: true,
+          lastStripeEventId: true,
+        },
+      },
+    },
+  });
+
+  if (!attempt || attempt.appointment?.id || isAttemptTerminal(attempt.status)) {
+    return false;
+  }
+
+  const payment = attempt.payments[0] ?? null;
+  if (!payment) return false;
+
+  const stripe = await getStripeForOrg(attempt.orgId);
+  if (!stripe) return false;
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const metadataAttemptId = cleanString(session.metadata?.bookingAttemptId);
+    const sessionPaymentIntentId =
+      typeof session.payment_intent === "string" ? session.payment_intent : null;
+    const matchesAttempt =
+      metadataAttemptId === attempt.id ||
+      payment.stripeCheckoutSessionId === session.id ||
+      (sessionPaymentIntentId &&
+        payment.stripePaymentIntentId === sessionPaymentIntentId);
+
+    if (!matchesAttempt) {
+      console.warn("syncPaidBookingAttemptFromCheckoutSession mismatch", {
+        attemptId: attempt.id,
+        sessionId: session.id,
+        metadataAttemptId,
+      });
+      return false;
+    }
+
+    await prisma.paymentRecord.updateMany({
+      where: {
+        bookingAttemptId: attempt.id,
+        provider: "stripe",
+      },
+      data: {
+        stripeCheckoutSessionId: session.id,
+        stripePaymentIntentId: sessionPaymentIntentId,
+      },
+    });
+
+    if (session.payment_status === "paid") {
+      const result = await markBookingAttemptPaid({
+        attemptId: attempt.id,
+        stripeEventId: `stripe_refresh:checkout_session:${session.id}`,
+        stripeCheckoutSessionId: session.id,
+        stripePaymentIntentId: sessionPaymentIntentId,
+        amountCents: session.amount_total ?? payment.amountCents,
+        currency: session.currency ?? payment.currency,
+      });
+      return result.handled;
+    }
+
+    if (session.status === "complete" && attempt.status === "payment_pending") {
+      const updated = await prisma.bookingAttempt.updateMany({
+        where: {
+          id: attempt.id,
+          status: "payment_pending",
+        },
+        data: {
+          status: "payment_processing",
+          failureReason: null,
+        },
+      });
+      return updated.count > 0;
+    }
+  } catch (error) {
+    console.error("syncPaidBookingAttemptFromCheckoutSession failed", {
+      attemptId: args.attemptId,
+      sessionId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  return false;
+}
+
 async function ensureSlotCanBeReserved(tx: Tx, args: {
   orgId: string;
   bookingAttemptId?: string;
@@ -968,8 +1076,6 @@ async function createAppointmentForAttempt(tx: Tx, attemptId: string) {
     attemptId
   );
 
-  await expireAttemptIfNeeded(tx, attemptId);
-
   const attempt = await tx.bookingAttempt.findUnique({
     where: { id: attemptId },
     include: {
@@ -992,7 +1098,7 @@ async function createAppointmentForAttempt(tx: Tx, attemptId: string) {
     };
   }
 
-  if (attempt.status === "payment_failed") {
+  if (attempt.status === "payment_failed" && attempt.paymentStatus !== "paid") {
     return {
       handled: true as const,
       success: false as const,
@@ -1001,7 +1107,10 @@ async function createAppointmentForAttempt(tx: Tx, attemptId: string) {
     };
   }
 
-  if (attempt.status === "expired" || attempt.status === "cancelled") {
+  if (
+    (attempt.status === "expired" || attempt.status === "cancelled") &&
+    attempt.paymentStatus !== "paid"
+  ) {
     return markAttemptFailure(tx, {
       attemptId,
       error: "Reservation expired before booking could be finalized.",
@@ -1011,7 +1120,7 @@ async function createAppointmentForAttempt(tx: Tx, attemptId: string) {
     });
   }
 
-  if (attempt.status === "booking_failed") {
+  if (attempt.status === "booking_failed" && attempt.paymentStatus !== "paid") {
     return {
       handled: true as const,
       success: false as const,
@@ -1031,28 +1140,6 @@ async function createAppointmentForAttempt(tx: Tx, attemptId: string) {
   }
 
   const reservation = attempt.reservation;
-  const now = DateTime.utc();
-  if (
-    !reservation ||
-    !isReservationActive({
-      status: reservation.status,
-      reservedUntil: reservation.reservedUntil,
-      now,
-    })
-  ) {
-    return markAttemptFailure(tx, {
-      attemptId,
-      error: "Payment succeeded after the reservation was no longer active.",
-      nextStatus: "booking_failed",
-      paymentStatus: "paid",
-      reservationStatus:
-        reservation?.status === "expired" ||
-        (reservation?.reservedUntil &&
-          DateTime.fromJSDate(reservation.reservedUntil).toUTC() <= now)
-          ? "expired"
-          : "released",
-    });
-  }
 
   const [settings, profile, mt] = await Promise.all([
     getOrgSettings(tx, attempt.orgId),
@@ -1103,9 +1190,12 @@ async function createAppointmentForAttempt(tx: Tx, attemptId: string) {
   }
 
   if (
-    reservation.startAtUtc.getTime() !== attempt.startAtUtc.getTime() ||
-    reservation.endAtUtc.getTime() !== attempt.endAtUtc.getTime() ||
-    reservation.staffUserId !== attempt.staffUserId
+    reservation &&
+    (
+      reservation.startAtUtc.getTime() !== attempt.startAtUtc.getTime() ||
+      reservation.endAtUtc.getTime() !== attempt.endAtUtc.getTime() ||
+      reservation.staffUserId !== attempt.staffUserId
+    )
   ) {
     return markAttemptFailure(tx, {
       attemptId,
@@ -1302,7 +1392,7 @@ async function createAppointmentForAttempt(tx: Tx, attemptId: string) {
     await tx.slotReservation.updateMany({
       where: {
         bookingAttemptId: attempt.id,
-        status: "active",
+        status: { in: ["active", "expired", "released"] },
       },
       data: {
         status: "consumed",
@@ -1343,8 +1433,6 @@ export async function markBookingAttemptPaid(args: {
   currency: string;
 }): Promise<FinalizePaidBookingAttemptResult> {
   const txResult = await prisma.$transaction(async (tx) => {
-    await expireAttemptIfNeeded(tx, args.attemptId);
-
     const attempt = await tx.bookingAttempt.findUnique({
       where: { id: args.attemptId },
       select: {
@@ -1381,22 +1469,6 @@ export async function markBookingAttemptPaid(args: {
         nextStatus: "booking_failed",
         paymentStatus: "paid",
         reservationStatus: "released",
-      });
-    }
-
-    if (
-      attempt.status === "booking_failed" ||
-      attempt.status === "expired" ||
-      attempt.status === "cancelled" ||
-      attempt.status === "payment_failed"
-    ) {
-      return markAttemptFailure(tx, {
-        attemptId: args.attemptId,
-        error: "Payment succeeded after the booking attempt had already ended.",
-        nextStatus: "booking_failed",
-        paymentStatus: "paid",
-        reservationStatus:
-          attempt.status === "expired" ? "expired" : "released",
       });
     }
 
