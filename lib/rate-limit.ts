@@ -36,15 +36,23 @@ type RedisClient = ReturnType<typeof createClient>;
 
 type RedisGlobal = {
   __redisClient?: RedisClient;
-  __redisClientPromise?: Promise<RedisClient>;
+  __redisClientPromise?: Promise<RedisClient | null>;
 };
 
 function getGlobal(): RedisGlobal {
   return globalThis as unknown as RedisGlobal;
 }
 
+function getRedisUrl(): string | null {
+  const value = process.env.REDIS_URL;
+  if (typeof value !== "string") return null;
+
+  const url = value.trim();
+  return url ? url : null;
+}
+
 async function getRedisClient(): Promise<RedisClient | null> {
-  const url = process.env.REDIS_URL;
+  const url = getRedisUrl();
   if (!url) return null;
 
   const globalRef = getGlobal();
@@ -52,10 +60,29 @@ async function getRedisClient(): Promise<RedisClient | null> {
   if (globalRef.__redisClientPromise) return globalRef.__redisClientPromise;
 
   const client = createClient({ url });
-  globalRef.__redisClientPromise = client.connect().then(() => client);
-  const connected = await globalRef.__redisClientPromise;
-  globalRef.__redisClient = connected;
-  return connected;
+  globalRef.__redisClientPromise = client
+    .connect()
+    .then(() => {
+      globalRef.__redisClient = client;
+      return client;
+    })
+    .catch(async (error) => {
+      console.error("Rate limit Redis connect error:", error);
+      globalRef.__redisClientPromise = undefined;
+      globalRef.__redisClient = undefined;
+
+      if (client.isOpen) {
+        try {
+          await client.quit();
+        } catch {
+          // Ignore cleanup failures and fail open.
+        }
+      }
+
+      return null;
+    });
+
+  return globalRef.__redisClientPromise;
 }
 
 function getClientIp(req: Request): string {
@@ -84,7 +111,14 @@ export async function applyRateLimit(
   rule: RateLimitRule,
   options?: { identity?: string; methodGroup?: string }
 ): Promise<RateLimitResult> {
-  const client = await getRedisClient();
+  let client: RedisClient | null = null;
+
+  try {
+    client = await getRedisClient();
+  } catch (error) {
+    console.error("Rate limit client init error:", error);
+  }
+
   if (!client) {
     return {
       ok: true,
