@@ -59,17 +59,18 @@
 //   // 2b) Seed admin + staff users and org membership
 //   const adminEmail = (
 //     process.env.SEED_ADMIN_EMAIL ??
-//     process.env.CONTACT_TO_EMAIL ??
-//     "admin@luxai.test"
+//     "derejemasresha27@gmail.com"
 //   )
 //     .trim()
 //     .toLowerCase();
-//   const staffEmail = (process.env.SEED_STAFF_EMAIL ?? "staff@luxai.test")
+//   const staffEmail = (
+//     process.env.SEED_STAFF_EMAIL ?? "molla@luxaiautomation.com"
+//   )
 //     .trim()
 //     .toLowerCase();
-//   const defaultPassword = process.env.SEED_PASSWORD ?? "LuxAI@1234";
-//   const adminName = process.env.SEED_ADMIN_NAME ?? "Lux AI Admin";
-//   const staffName = process.env.SEED_STAFF_NAME ?? "Lux AI Staff";
+//   const defaultPassword = process.env.SEED_PASSWORD ?? "Luxai@123";
+//   const adminName = process.env.SEED_ADMIN_NAME ?? "Dereje Masresha";
+//   const staffName = process.env.SEED_STAFF_NAME ?? "Molla Sisay Jemere";
 
 //   async function upsertUser(email: string, name: string) {
 //     const existingUser = await prisma.appUser.findFirst({
@@ -117,7 +118,7 @@
 //   }
 
 //   await upsertMember(adminUser.id, "admin");
-//   await upsertMember(staffUser.id, "staff");
+//   await upsertMember(staffUser.id, "admin");
 
 //   const DEFAULT_WORKING_HOURS = {
 //     timezone: "Europe/Luxembourg",

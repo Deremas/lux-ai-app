@@ -10,7 +10,7 @@
 // const STAFF_EMAIL = (process.env.SEED_STAFF_EMAIL ?? "staff@luxai.test")
 //   .trim()
 //   .toLowerCase();
-// const DEFAULT_PASSWORD = process.env.SEED_PASSWORD ?? "LuxAI@1234";
+// const DEFAULT_PASSWORD = process.env.SEED_PASSWORD ?? "Luxai@123";
 // const STAFF_NAME = process.env.SEED_STAFF_NAME ?? "Lux AI Staff";
 
 // const WORKING_HOURS = {

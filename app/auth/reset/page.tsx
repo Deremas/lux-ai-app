@@ -111,7 +111,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="auth-font relative min-h-screen overflow-hidden bg-[#f7f4f0]">
+    <div className="auth-font relative min-h-screen overflow-hidden bg-[#f7f4f0] text-gray-900">
       <div className="mx-auto flex min-h-screen w-full max-w-lg items-center px-4 py-12">
         <div className="w-full rounded-3xl border border-gray-200 bg-white/90 p-8 shadow-xl backdrop-blur">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500">
@@ -137,7 +137,8 @@ export default function ResetPasswordPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     autoComplete="new-password"
-                    className="pr-10"
+                    className="!bg-white pr-10 !text-gray-900 placeholder:!text-gray-400"
+                    style={{ color: "#111827", WebkitTextFillColor: "#111827" }}
                   />
                   <button
                     type="button"
@@ -167,7 +168,8 @@ export default function ResetPasswordPage() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     autoComplete="new-password"
-                    className="pr-10"
+                    className="!bg-white pr-10 !text-gray-900 placeholder:!text-gray-400"
+                    style={{ color: "#111827", WebkitTextFillColor: "#111827" }}
                   />
                   <button
                     type="button"
@@ -203,6 +205,8 @@ export default function ResetPasswordPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
+                  className="!bg-white !text-gray-900 placeholder:!text-gray-400"
+                  style={{ color: "#111827", WebkitTextFillColor: "#111827" }}
                 />
               </div>
               <Button type="submit" className="w-full" disabled={submitting}>

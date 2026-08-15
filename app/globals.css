@@ -495,6 +495,31 @@ svg {
   }
   .auth-font {
     font-family: "Manrope", "Segoe UI", Arial, sans-serif;
+    color-scheme: light;
+    color: #111827;
+  }
+  .auth-font input,
+  .auth-font input[type="text"],
+  .auth-font input[type="email"],
+  .auth-font input[type="password"] {
+    color: #111827 !important;
+    -webkit-text-fill-color: #111827 !important;
+    background-color: #ffffff !important;
+    caret-color: #111827 !important;
+  }
+  .auth-font input::placeholder {
+    color: #9ca3af !important;
+    -webkit-text-fill-color: #9ca3af !important;
+    opacity: 1;
+  }
+  .auth-font input:-webkit-autofill,
+  .auth-font input:-webkit-autofill:hover,
+  .auth-font input:-webkit-autofill:focus,
+  .auth-font input:-webkit-autofill:active {
+    -webkit-text-fill-color: #111827 !important;
+    caret-color: #111827 !important;
+    box-shadow: 0 0 0 1000px #ffffff inset !important;
+    transition: background-color 99999s ease-in-out 0s;
   }
   .auth-fade-up {
     animation: auth-fade-up 700ms ease-out both;

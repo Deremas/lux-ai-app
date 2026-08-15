@@ -9,15 +9,14 @@
 //   process.env.SEED_ORG_NAME ?? "Lux AI Consultancy & Automation";
 // const ADMIN_EMAIL = (
 //   process.env.SEED_ADMIN_EMAIL ??
-//   process.env.CONTACT_TO_EMAIL ??
-//   "admin@luxai.test"
+//   "derejemasresha27@gmail.com"
 // )
 //   .trim()
 //   .toLowerCase();
 // const CUSTOMER_EMAIL = (process.env.SEED_CUSTOMER_EMAIL ?? "user@luxai.test")
 //   .trim()
 //   .toLowerCase();
-// const DEFAULT_PASSWORD = process.env.SEED_PASSWORD ?? "LuxAI@1234";
+// const DEFAULT_PASSWORD = process.env.SEED_PASSWORD ?? "Luxai@123";
 
 // async function upsertUser(email: string, name: string) {
 //   const existingUser = await prisma.appUser.findFirst({

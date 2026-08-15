@@ -32,8 +32,10 @@ RUN apk add --no-cache openssl
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/prisma ./prisma
+COPY --from=build /app/db ./db
+COPY --from=build /app/lib/company.cjs ./lib/company.cjs
 COPY --from=build /app/public ./public
 COPY --from=build /app/.next ./.next
 
 EXPOSE 3000
-CMD ["sh","-c","npx prisma migrate deploy && npm run start"]
+CMD ["sh","-c","npx prisma migrate deploy && npm run db:seed:super-admins && npm run start"]

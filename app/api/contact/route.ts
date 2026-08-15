@@ -112,7 +112,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const adminEmail = process.env.CONTACT_ADMIN_EMAIL;
+    const adminEmail = (
+      process.env.CONTACT_ADMIN_EMAIL ??
+      process.env.CONTACT_TO_EMAIL ??
+      "molla@luxaiautomation.com"
+    )
+      .trim()
+      .toLowerCase();
     const from = process.env.CONTACT_FROM_EMAIL;
 
     if (!adminEmail || !from) {

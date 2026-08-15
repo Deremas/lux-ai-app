@@ -62,7 +62,17 @@ export default function SignInPage() {
         return;
       }
 
-      router.push(res.url ?? callbackUrl);
+      // Keep redirect on the current origin/port (dev often isn't on :3000).
+      let nextUrl = callbackUrl;
+      if (res.url) {
+        try {
+          const parsed = new URL(res.url, window.location.origin);
+          nextUrl = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+        } catch {
+          nextUrl = res.url.startsWith("/") ? res.url : callbackUrl;
+        }
+      }
+      router.push(nextUrl);
     } catch {
       setErrorMessage("Unable to sign in right now. Try again.");
       setSubmitting(false);
@@ -70,7 +80,7 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="auth-font relative min-h-screen overflow-hidden bg-[#f6f3ee]">
+    <div className="auth-font relative min-h-screen overflow-hidden bg-[#f6f3ee] text-gray-900">
       <div className="auth-blob auth-blob--one" />
       <div className="auth-blob auth-blob--two" />
       <div className="auth-blob auth-blob--three" />
@@ -140,6 +150,8 @@ export default function SignInPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
+                  className="!bg-white !text-gray-900 placeholder:!text-gray-400"
+                  style={{ color: "#111827", WebkitTextFillColor: "#111827" }}
                 />
               </div>
 
@@ -154,7 +166,8 @@ export default function SignInPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     autoComplete="current-password"
-                    className="pr-10"
+                    className="!bg-white pr-10 !text-gray-900 placeholder:!text-gray-400"
+                    style={{ color: "#111827", WebkitTextFillColor: "#111827" }}
                   />
                   <button
                     type="button"

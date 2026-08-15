@@ -133,7 +133,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="auth-font relative min-h-screen overflow-hidden bg-[#eef3f8]">
+    <div className="auth-font relative min-h-screen overflow-hidden bg-[#eef3f8] text-gray-900">
       <div className="auth-blob auth-blob--one" />
       <div className="auth-blob auth-blob--two" />
       <div className="auth-blob auth-blob--three" />
@@ -228,6 +228,8 @@ export default function SignUpPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     autoComplete="name"
+                    className="!bg-white !text-gray-900 placeholder:!text-gray-400"
+                    style={{ color: "#111827", WebkitTextFillColor: "#111827" }}
                   />
                 </div>
 
@@ -242,6 +244,8 @@ export default function SignUpPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     autoComplete="email"
+                    className="!bg-white !text-gray-900 placeholder:!text-gray-400"
+                    style={{ color: "#111827", WebkitTextFillColor: "#111827" }}
                   />
                 </div>
 
@@ -256,7 +260,8 @@ export default function SignUpPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="new-password"
-                      className="pr-10"
+                      className="!bg-white pr-10 !text-gray-900 placeholder:!text-gray-400"
+                      style={{ color: "#111827", WebkitTextFillColor: "#111827" }}
                     />
                     <button
                       type="button"

@@ -1,10 +1,16 @@
 import crypto from "crypto";
 
+import { COMPANY_ORG_NAME } from "@/lib/company";
 import { prisma } from "@/lib/prisma";
 import type { OrgRole } from "@/lib/scheduling/authz";
 
 const FALLBACK_TZ = "Europe/Luxembourg";
 const FALLBACK_LOCALE = "en";
+const CANONICAL_ORG_NAME = (() => {
+  const raw = (process.env.SEED_ORG_NAME ?? COMPANY_ORG_NAME).trim();
+  if (!raw || raw === "Default Organization") return COMPANY_ORG_NAME;
+  return raw;
+})();
 const DEFAULT_PAYMENT_CENTS = Number(
   process.env.DEFAULT_PAYMENT_CENTS ?? "15000"
 );
@@ -176,7 +182,7 @@ async function autoProvisionOrgForUser(
   });
 
   if (orgs.length === 0) {
-    const orgName = process.env.SEED_ORG_NAME ?? "Default Organization";
+    const orgName = CANONICAL_ORG_NAME;
     const orgId = crypto.randomUUID();
     const settingsId = crypto.randomUUID();
     const memberId = crypto.randomUUID();
@@ -271,22 +277,35 @@ export async function getOrCreateUserOrgContext(
 
 export async function getFirstOrgContext(): Promise<OrgContext | null> {
   let row = await prisma.org.findFirst({
+    where: { name: CANONICAL_ORG_NAME },
     include: { settings: true },
     orderBy: { createdAt: "asc" },
   });
 
   if (!row) {
+    row = await prisma.org.findFirst({
+      include: { settings: true },
+      orderBy: { createdAt: "asc" },
+    });
+  }
+
+  if (!row) {
     const shouldAutoProvision = process.env.AUTO_PROVISION_ORG !== "false";
     if (!shouldAutoProvision) return null;
 
-    const orgName = process.env.SEED_ORG_NAME ?? "Default Organization";
     const orgId = crypto.randomUUID();
     await prisma.org.create({
-      data: { id: orgId, name: orgName },
+      data: { id: orgId, name: CANONICAL_ORG_NAME },
     });
     await ensureOrgSettings(orgId);
     row = await prisma.org.findFirst({
       where: { id: orgId },
+      include: { settings: true },
+    });
+  } else if (row.name !== CANONICAL_ORG_NAME) {
+    row = await prisma.org.update({
+      where: { id: row.id },
+      data: { name: CANONICAL_ORG_NAME },
       include: { settings: true },
     });
   }

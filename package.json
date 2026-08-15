@@ -14,7 +14,11 @@
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:status": "prisma migrate status",
-    "db:seed": "node -r dotenv/config db/seed.ts dotenv_config_path=.env"
+    "db:seed": "node -r dotenv/config db/seed.ts dotenv_config_path=.env",
+    "db:seed:super-admins": "node db/seed_super_admins.cjs"
+  },
+  "prisma": {
+    "seed": "node db/seed_super_admins.cjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.86",
