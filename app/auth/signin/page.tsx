@@ -17,13 +17,21 @@ export default function SignInPage() {
     requestedCallbackUrl
   )}`;
   const authError = searchParams.get("error");
+  const verifyHint =
+    authError === "expired_token" || authError === "invalid_token"
+      ? "That verification link is invalid or expired. Sign up again or resend verification from the signup page."
+      : authError === "verify_failed"
+        ? "We couldn’t finish email verification just now. Please try the link again, or sign up once more."
+        : authError === "rate_limited"
+          ? "Too many attempts. Please wait a minute and try again."
+          : "";
 
   const EMAIL_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState(verifyHint);
   const [showPassword, setShowPassword] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {

@@ -9,7 +9,7 @@
 //   process.env.SEED_ORG_NAME ?? "Lux AI Consultancy & Automation";
 // const ADMIN_EMAIL = (
 //   process.env.SEED_ADMIN_EMAIL ??
-//   "derejemasresha27@gmail.com"
+//   "molla@luxaiautomation.com"
 // )
 //   .trim()
 //   .toLowerCase();

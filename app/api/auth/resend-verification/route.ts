@@ -5,6 +5,7 @@ import { render } from "@react-email/render";
 import { prisma } from "@/lib/prisma";
 import { isBodyTooLarge } from "@/lib/validation";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
+import { getPublicBaseUrl } from "@/lib/public-url";
 import VerifyEmail from "@/emails/auth/VerifyEmail";
 
 export async function POST(req: Request) {
@@ -98,10 +99,7 @@ export async function POST(req: Request) {
     }
 
     // Send verification email
-    const baseUrl = (process.env.NEXTAUTH_URL ?? "https://luxaiautomation.com").replace(
-        /\/+$/,
-        ""
-    );
+    const baseUrl = getPublicBaseUrl(req);
     const verifyUrl = `${baseUrl}/api/auth/verify?token=${token}`;
     const resend = new Resend(process.env.RESEND_API_KEY);
     const fromHeader = `"Lux AI Consultancy & Automation" <${fromEmail}>`;
