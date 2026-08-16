@@ -279,7 +279,11 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
         });
       })
       .catch(() => {
-        if (!cancelled) setProfileError("Failed to load profile");
+        if (!cancelled) {
+          setProfileError(
+            "Temporarily unavailable — the database connection failed. Please try again in a moment."
+          );
+        }
       })
       .finally(() => {
         if (!cancelled) setProfileLoading(false);
@@ -576,7 +580,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
                       </p>
                     )}
                     {notifError && (
-                      <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                      <div className="mt-3 lux-alert-danger text-xs">
                         {notifError}
                       </div>
                     )}
@@ -675,9 +679,7 @@ export default function AdminDashboardClient({ orgId, orgName, tz }: Props) {
         )}
 
         {error && (
-          <div className="mt-6 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
-          </div>
+          <div className="mt-6 lux-alert-danger">{error}</div>
         )}
 
         <div className="mt-6 grid gap-4 sm:grid-cols-1 md:grid-cols-3">

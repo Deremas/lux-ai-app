@@ -141,7 +141,6 @@ const sharedLocaleOverrides: Partial<Record<AppLanguage, LocaleOverrides>> = {
     teamMembers: [
       { role: "Fondateur & CEO", bio: "Pilote la stratégie de delivery autour de l’automatisation IA, des systèmes métier et de l’architecture d’intégration avec un fort focus sur les résultats concrets.", tags: ["Systèmes IA", "Automatisation des workflows", "MuleSoft Certified Integration Professional", "Conseil"] },
       { role: "Co-fondateur & Ingénieur intégrations", bio: "Conçoit et construit des couches d’intégration fiables, une architecture d’automatisation et des systèmes opérationnels connectés.", tags: ["API", "Intégrations", "Architecture d’automatisation", "Planification système"] },
-      { role: "Développeur full-stack & solutions IA", bio: "Construit des applications IA concrètes, des outils internes et des workflows sécurisés et scalables.", tags: ["Applications IA", "Delivery full-stack", "Systèmes cloud", "Outils internes"] },
     ],
     platformCards: [
       { title: "CRM et workflows pipeline", description: "Connectez capture de leads, qualification, relances et routage interne dans un seul flux opérationnel." },
@@ -214,7 +213,6 @@ const sharedLocaleOverrides: Partial<Record<AppLanguage, LocaleOverrides>> = {
     teamMembers: [
       { role: "Founder & CEO", bio: "Leitet die Delivery-Strategie für KI-Automatisierung, Geschäftssysteme und Integrationsarchitektur mit Fokus auf praktische Ergebnisse.", tags: ["KI-Systeme", "Workflow-Automatisierung", "MuleSoft Certified Integration Professional", "Beratung"] },
       { role: "Co-Founder & Integrations Engineer", bio: "Entwirft und baut verlässliche Integrationsschichten, Automatisierungsarchitekturen und vernetzte operative Systeme.", tags: ["APIs", "Integrationen", "Automatisierungsarchitektur", "Systemplanung"] },
-      { role: "Full-Stack & AI Solutions Developer", bio: "Entwickelt praxisnahe KI-Anwendungen, interne Tools und Workflow-Systeme für sichere und skalierbare Delivery.", tags: ["KI-Anwendungen", "Full-Stack-Delivery", "Cloud-Systeme", "Interne Tools"] },
     ],
     platformCards: [
       { title: "CRM- und Pipeline-Workflows", description: "Verbinden Sie Lead-Erfassung, Qualifizierung, Follow-up und internes Routing in einem operativen Fluss." },
@@ -287,7 +285,6 @@ const sharedLocaleOverrides: Partial<Record<AppLanguage, LocaleOverrides>> = {
     teamMembers: [
       { role: "Grënner & CEO", bio: "Leet d'Delivery-Strategie iwwer KI-Automatiséierung, Business-Systemer an Integratiounsarchitektur mat Fokus op praktesch Resultater.", tags: ["KI-Systemer", "Workflow-Automatiséierung", "MuleSoft Certified Integration Professional", "Berodung"] },
       { role: "Co-Founder & Integratiounsingenieur", bio: "Designt a baut zouverléisseg Integratiounsschichten, Automatiséierungsarchitekturen a verbonne operationell Systemer.", tags: ["APIs", "Integratiounen", "Automatiséierungsarchitektur", "Systemplanung"] },
-      { role: "Full-Stack & KI-Léisungsentwéckler", bio: "Baut praktesch KI-Uwendungen, intern Tools a Workflow-Systemer fir sécher a skaléierbar Delivery.", tags: ["KI-Uwendungen", "Full-Stack Delivery", "Cloud-Systemer", "Intern Tools"] },
     ],
     platformCards: [
       { title: "CRM- a Pipeline-Workflows", description: "Verbind Lead-Capture, Qualifikatioun, Follow-up an internt Routing an engem operationelle Flow." },

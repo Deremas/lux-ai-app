@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { motion } from "framer-motion";
 
@@ -8,6 +7,12 @@ import AnimatedSection from "@/components/AnimatedSection";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { useLanguage } from "@/components/LanguageProvider";
+import {
+  CtaLinks,
+  MARKETING_BRAND,
+  MarketingHero,
+  SectionHeading,
+} from "@/components/marketing/SectionHeading";
 import SearchablePhoneInput from "@/components/PhoneInputField";
 import { brand } from "@/lib/marketing-content";
 import { t } from "@/lib/site-copy";
@@ -480,55 +485,47 @@ export default function ContactPage() {
       <Header />
 
       <main>
-        <section className="relative overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_56%,#f8fafc_100%)] dark:bg-[linear-gradient(180deg,#020617_0%,#0b1120_46%,#0f172a_100%)]">
-          <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 sm:py-28">
-            <AnimatedSection className="mx-auto max-w-4xl text-center">
-              <h1 className="text-4xl font-semibold tracking-[-0.04em] text-slate-950 dark:text-white sm:text-5xl lg:text-[3.8rem]">
-                {extra.intro.title}
-              </h1>
-              <p className="mt-6 text-lg leading-8 text-slate-600 dark:text-slate-300">
-                {extra.intro.subtitle}
-              </p>
-              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <Link
-                  href="#free-audit-form"
-                  className="lux-button-primary"
-                >
-                  {extra.intro.primaryCta}
-                </Link>
-                <Link
-                  href="/scheduling?meetingTypeKey=free-audit"
-                  className="lux-button-secondary"
-                >
-                  {extra.schedulingBridge.primaryCta}
-                </Link>
-              </div>
-              <p className="mt-4 text-sm leading-7 text-slate-500 dark:text-slate-400">
-                {extra.heroHelper}
-              </p>
-            </AnimatedSection>
-          </div>
-        </section>
+        <MarketingHero>
+          <AnimatedSection direction="fade" className="mx-auto max-w-3xl space-y-7 text-center">
+            <SectionHeading
+              align="center"
+              titleAs="h1"
+              eyebrow={MARKETING_BRAND}
+              title={extra.intro.title}
+              body={extra.intro.subtitle}
+              titleClassName="text-[2.55rem] leading-[0.98] tracking-[-0.045em] sm:text-[3.1rem] lg:text-[3.6rem]"
+            />
+            <CtaLinks
+              primaryHref="#free-audit-form"
+              primaryLabel={extra.intro.primaryCta}
+              secondaryHref="/scheduling?meetingTypeKey=free-audit"
+              secondaryLabel={extra.schedulingBridge.primaryCta}
+              centered
+              quietSecondary
+              className="justify-center"
+            />
+            <p className="mx-auto max-w-xl text-sm font-medium leading-6 text-slate-600 dark:text-slate-300">
+              {extra.heroHelper}
+            </p>
+          </AnimatedSection>
+        </MarketingHero>
 
         <section className="py-24 sm:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr]">
-              <AnimatedSection direction="left">
-                <div
-                  id="free-audit-form"
-                  className="scroll-mt-28 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900"
-                >
+            <div className="grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
+              <AnimatedSection direction="fade">
+                <div id="free-audit-form" className="scroll-mt-28">
                   <div>
-                    <h2 className="text-3xl font-semibold tracking-[-0.04em]">
+                    <h2 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
                       {extra.form.title}
                     </h2>
-                    <p className="mt-4 text-base leading-8 text-slate-600 dark:text-slate-300">
+                    <p className="mt-4 text-base leading-8 text-slate-700 dark:text-slate-200">
                       {extra.form.description}
                     </p>
                   </div>
 
                   {showAlert ? (
-                    <div className="mt-10 space-y-6 rounded-[1.5rem] border border-emerald-200 bg-emerald-50/80 p-6 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                    <div className="mt-10 space-y-6 rounded-[1.5rem] border border-emerald-300/80 bg-emerald-50 p-6 dark:border-emerald-500/30 dark:bg-emerald-500/10">
                       <div>
                         <h3 className="text-2xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
                           {t<string>(lang as any, "contact.modal.title")}
@@ -537,7 +534,6 @@ export default function ContactPage() {
                           {t<string>(lang as any, "contact.modal.body")}
                         </p>
                       </div>
-
                       <div>
                         <p className="text-sm font-semibold text-slate-900 dark:text-white">
                           {structured.successNextTitle}
@@ -553,11 +549,10 @@ export default function ContactPage() {
                           ))}
                         </ol>
                       </div>
-
                       <button
                         type="button"
                         onClick={() => setShowAlert(false)}
-                        className="lux-button-secondary"
+                        className="text-sm font-semibold text-slate-700 underline-offset-4 hover:underline dark:text-slate-200"
                       >
                         {structured.resetLabel}
                       </button>
@@ -573,7 +568,6 @@ export default function ContactPage() {
                       tabIndex={-1}
                       autoComplete="off"
                     />
-
                     <div className="grid gap-6 md:grid-cols-2">
                       <div>
                         <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -585,11 +579,10 @@ export default function ContactPage() {
                           value={formData.name}
                           onChange={handleInputChange}
                           required
-                          className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-accent-400 dark:focus:ring-accent-400/15"
+                          className="lux-field w-full rounded-2xl border px-5 py-4 text-sm outline-none transition focus:ring-2 focus:ring-ring"
                           placeholder={copy.namePlaceholder}
                         />
                       </div>
-
                       <div>
                         <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                           {copy.companyLabel.replace(" *", "")}
@@ -599,29 +592,25 @@ export default function ContactPage() {
                           name="company"
                           value={formData.company}
                           onChange={handleInputChange}
-                          className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-accent-400 dark:focus:ring-accent-400/15"
+                          className="lux-field w-full rounded-2xl border px-5 py-4 text-sm outline-none transition focus:ring-2 focus:ring-ring"
                           placeholder={copy.companyPlaceholder}
                         />
                       </div>
                     </div>
-
                     <div>
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                          {copy.emailLabel}
-                        </label>
-                        <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          required
-                          className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-accent-400 dark:focus:ring-accent-400/15"
-                          placeholder={copy.emailPlaceholder}
-                        />
-                      </div>
+                      <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                        {copy.emailLabel}
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        required
+                        className="lux-field w-full rounded-2xl border px-5 py-4 text-sm outline-none transition focus:ring-2 focus:ring-ring"
+                        placeholder={copy.emailPlaceholder}
+                      />
                     </div>
-
                     <div>
                       <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                         {copy.phoneLabel}
@@ -633,13 +622,13 @@ export default function ContactPage() {
                           setFormData((prev) => ({ ...prev, phone }))
                         }
                         placeholder={copy.phonePlaceholder}
-                        containerClassName="rounded-2xl border border-slate-300 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
+                        containerClassName="lux-field rounded-2xl border px-3 py-2"
                         inputContainerClassName="border-0 shadow-none focus-within:ring-0"
-                        inputClassName="text-sm text-slate-900 dark:text-white"
+                        inputClassName="text-sm"
                         buttonClassName="text-slate-700 dark:text-slate-200"
                       />
                       {errors.phone && (
-                        <p className="mt-2 text-sm text-red-600">
+                        <p className="mt-2 text-sm text-red-700 dark:text-red-300">
                           {errors.phone}
                         </p>
                       )}
@@ -647,7 +636,6 @@ export default function ContactPage() {
                         {extra.form.phoneHint}
                       </p>
                     </div>
-
                     <div>
                       <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                         {structured.processLabel}
@@ -658,11 +646,10 @@ export default function ContactPage() {
                         onChange={handleInputChange}
                         required
                         rows={5}
-                        className="w-full resize-none rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-accent-400 dark:focus:ring-accent-400/15"
+                        className="lux-field w-full resize-none rounded-2xl border px-5 py-4 text-sm outline-none transition focus:ring-2 focus:ring-ring"
                         placeholder={structured.processPlaceholder}
                       />
                     </div>
-
                     <div>
                       <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                         {structured.toolsLabel}
@@ -672,11 +659,10 @@ export default function ContactPage() {
                         value={formData.currentTools}
                         onChange={handleInputChange}
                         rows={4}
-                        className="w-full resize-none rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-accent-400 dark:focus:ring-accent-400/15"
+                        className="lux-field w-full resize-none rounded-2xl border px-5 py-4 text-sm outline-none transition focus:ring-2 focus:ring-ring"
                         placeholder={structured.toolsPlaceholder}
                       />
                     </div>
-
                     <div>
                       <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                         {structured.goalLabel}
@@ -687,37 +673,33 @@ export default function ContactPage() {
                         onChange={handleInputChange}
                         required
                         rows={4}
-                        className="w-full resize-none rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-sm text-slate-900 outline-none transition-all duration-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-accent-400 dark:focus:ring-accent-400/15"
+                        className="lux-field w-full resize-none rounded-2xl border px-5 py-4 text-sm outline-none transition focus:ring-2 focus:ring-ring"
                         placeholder={structured.goalPlaceholder}
                       />
                     </div>
-
                     <motion.button
                       type="submit"
                       disabled={isSubmitting}
-                      className="inline-flex w-full items-center justify-center rounded-full bg-primary-600 px-6 py-4 text-base font-semibold text-white transition-all duration-200 hover:-translate-y-1 hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="lux-button-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
                       whileHover={{ scale: isSubmitting ? 1 : 1.01 }}
                       whileTap={{ scale: isSubmitting ? 1 : 0.99 }}
                     >
                       {isSubmitting ? copy.sendingLabel : extra.form.submit}
                     </motion.button>
-
                     {submitStatus && (
-                      <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-200">
-                        {submitStatus}
-                      </div>
+                      <div className="lux-alert-danger">{submitStatus}</div>
                     )}
                   </form>
                   )}
                 </div>
               </AnimatedSection>
 
-              <AnimatedSection direction="right" className="space-y-6">
-                <div className="rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900">
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary-600 dark:text-accent-400">
+              <AnimatedSection direction="fade" delay={0.06} className="space-y-10">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary-700 dark:text-accent-400">
                     {extra.panels.auditIncludes}
                   </p>
-                  <ul className="mt-5 space-y-4 text-sm text-slate-700 dark:text-slate-200">
+                  <ul className="mt-5 space-y-4 text-sm leading-7 text-slate-700 dark:text-slate-200">
                     {extra.intro.bullets.map((item) => (
                       <li key={item} className="flex items-start gap-3">
                         <i className="ri-check-line mt-0.5 text-primary-600 dark:text-accent-400" />
@@ -726,67 +708,47 @@ export default function ContactPage() {
                     ))}
                   </ul>
                 </div>
-
-                <div className="rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900">
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary-600 dark:text-accent-400">
+                <div className="border-t border-slate-200 pt-8 dark:border-slate-800">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary-700 dark:text-accent-400">
                     {extra.panels.nextSteps}
                   </p>
-                  <ol className="mt-5 space-y-4 text-sm text-slate-700 dark:text-slate-200">
+                  <ol className="mt-5 space-y-4 text-sm leading-7 text-slate-700 dark:text-slate-200">
                     {extra.intro.nextSteps.map((item, index) => (
                       <li key={item} className="flex items-start gap-3">
-                        <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white">
-                          {index + 1}
+                        <span className="font-semibold text-primary-700 dark:text-accent-400">
+                          0{index + 1}
                         </span>
                         <span>{item}</span>
                       </li>
                     ))}
                   </ol>
                 </div>
-
-                <div className="rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900">
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary-600 dark:text-accent-400">
+                <div className="border-t border-slate-200 pt-8 dark:border-slate-800">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary-700 dark:text-accent-400">
                     {extra.schedulingBridge.eyebrow}
                   </p>
-                  <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em]">
+                  <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
                     {extra.schedulingBridge.title}
                   </h2>
-                  <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                  <p className="mt-4 text-sm leading-7 text-slate-700 dark:text-slate-200">
                     {extra.schedulingBridge.description}
                   </p>
-                  <ul className="mt-5 space-y-3 text-sm text-slate-700 dark:text-slate-200">
-                    {extra.schedulingBridge.bullets.map((item) => (
-                      <li key={item} className="flex items-start gap-3">
-                        <i className="ri-arrow-right-up-line mt-0.5 text-primary-600 dark:text-accent-400" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                    <Link
-                      href="/scheduling?meetingTypeKey=free-audit"
-                      className="inline-flex items-center justify-center rounded-full bg-primary-600 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-700"
-                    >
-                      {extra.schedulingBridge.primaryCta}
-                    </Link>
-                    <Link
-                      href="#free-audit-form"
-                      className="inline-flex items-center justify-center rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-800 transition-colors duration-200 hover:border-primary-300 hover:text-primary-700 dark:border-slate-700 dark:text-slate-100 dark:hover:border-accent-400/40 dark:hover:text-accent-400"
-                    >
-                      {extra.schedulingBridge.secondaryCta}
-                    </Link>
-                  </div>
+                  <CtaLinks
+                    primaryHref="/scheduling?meetingTypeKey=free-audit"
+                    primaryLabel={extra.schedulingBridge.primaryCta}
+                    secondaryHref="#free-audit-form"
+                    secondaryLabel={extra.schedulingBridge.secondaryCta}
+                    quietSecondary
+                    className="mt-6"
+                  />
                 </div>
-
-                <div className="rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-[0_24px_55px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900">
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary-600 dark:text-accent-400">
+                <div className="border-t border-slate-200 pt-8 dark:border-slate-800">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary-700 dark:text-accent-400">
                     {extra.panels.contactDetails}
                   </p>
-                  <div className="mt-5 space-y-4">
+                  <div className="mt-5 space-y-5">
                     {contactInfo.map((item) => (
-                      <div
-                        key={item.title}
-                        className="flex items-start gap-4 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950"
-                      >
+                      <div key={item.title} className="flex items-start gap-4">
                         <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
                           <i className={`${item.icon} text-lg`} />
                         </span>
@@ -797,12 +759,12 @@ export default function ContactPage() {
                           {item.href ? (
                             <a
                               href={item.href}
-                              className="mt-1 block text-sm font-medium text-primary-600 hover:underline dark:text-accent-400"
+                              className="mt-1 block text-sm font-medium text-primary-700 hover:underline dark:text-accent-400"
                             >
                               {item.content}
                             </a>
                           ) : (
-                            <p className="mt-1 text-sm font-medium text-primary-600 dark:text-accent-400">
+                            <p className="mt-1 text-sm font-medium text-primary-700 dark:text-accent-400">
                               {item.content}
                             </p>
                           )}

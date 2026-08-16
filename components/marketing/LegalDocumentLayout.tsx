@@ -44,7 +44,7 @@ export function LegalDocumentLayout({
                 <h1 className="text-balance text-[2.3rem] font-semibold leading-[1.04] tracking-[-0.04em] text-slate-950 dark:text-white sm:text-[2.9rem]">
                   {title}
                 </h1>
-                <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600/90 dark:text-slate-300/85 sm:text-lg">
+                <p className="mt-4 max-w-2xl text-base leading-8 text-slate-700 dark:text-slate-200 sm:text-lg">
                   {subtitle}
                 </p>
                 <div className="mt-5 flex flex-wrap items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
@@ -71,7 +71,7 @@ export function LegalDocumentLayout({
                 <p className="text-sm font-semibold text-slate-900 dark:text-white">
                   {summaryTitle}
                 </p>
-                <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                <p className="mt-3 text-sm leading-7 text-slate-700 dark:text-slate-200">
                   {summaryBody}
                 </p>
               </div>
@@ -128,7 +128,7 @@ export function LegalSection({
       <h2 className="text-2xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
         {title}
       </h2>
-      <div className="mt-4 space-y-4 text-base leading-8 text-slate-600 dark:text-slate-300">
+      <div className="mt-4 space-y-4 text-base leading-8 text-slate-700 dark:text-slate-200">
         {children}
       </div>
     </section>

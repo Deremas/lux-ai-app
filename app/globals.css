@@ -92,15 +92,24 @@ svg {
   --secondary: 210 40% 96%;
   --secondary-foreground: 222 47% 11%;
   --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --ring: 213 94% 68%;
+  --muted-foreground: 215 20% 38%;
+  --border: 214 28% 84%;
+  --input: 214 28% 84%;
+  --ring: 214 71% 40%;
   --surface: 0 0% 100%;
-  --surface-2: 210 40% 98%;
+  --surface-2: 210 40% 97%;
   --text: 222 47% 11%;
-  --subtle: 215 28% 64%;
+  --subtle: 215 18% 42%;
   --link: 214 71% 29%;
+  --field: 0 0% 100%;
+  --field-foreground: 222 47% 11%;
+  --field-placeholder: 215 16% 46%;
+  --alert-danger-bg: 0 86% 97%;
+  --alert-danger-fg: 0 72% 35%;
+  --alert-danger-border: 0 70% 82%;
+  --alert-warning-bg: 48 96% 95%;
+  --alert-warning-fg: 32 80% 28%;
+  --alert-warning-border: 45 90% 72%;
   --status-success-bg: 142 76% 94%;
   --status-success-text: 142 76% 25%;
   --status-success-border: 142 60% 80%;
@@ -123,54 +132,63 @@ svg {
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 210 40% 96%;
   --sidebar-accent-foreground: 222 47% 11%;
-  --sidebar-border: 214 32% 91%;
-  --sidebar-ring: 213 94% 68%;
+  --sidebar-border: 214 28% 84%;
+  --sidebar-ring: 214 71% 40%;
 }
 .dark {
   --background: 222 47% 7%;
   --foreground: 210 40% 98%;
-  --card: 222 47% 11%;
+  --card: 222 40% 12%;
   --card-foreground: 210 40% 98%;
-  --popover: 222 47% 11%;
+  --popover: 222 40% 12%;
   --popover-foreground: 210 40% 98%;
-  --primary: 214 70% 45%;
+  --primary: 214 70% 52%;
   --primary-foreground: 0 0% 100%;
   --accent: 41 93% 54%;
   --accent-foreground: 20 14% 10%;
   --secondary: 222 47% 15%;
   --secondary-foreground: 210 40% 98%;
   --muted: 222 47% 15%;
-  --muted-foreground: 215 16% 70%;
-  --border: 217 16% 28%;
-  --input: 217 16% 28%;
+  --muted-foreground: 215 18% 78%;
+  --border: 217 18% 32%;
+  --input: 217 18% 32%;
   --ring: 213 94% 68%;
-  --surface: 222 47% 11%;
-  --surface-2: 223 47% 15%;
+  --surface: 222 40% 12%;
+  --surface-2: 223 40% 16%;
   --text: 210 40% 98%;
-  --subtle: 215 16% 65%;
-  --link: 213 94% 70%;
-  --status-success-bg: 142 76% 20%;
-  --status-success-text: 142 76% 80%;
-  --status-success-border: 142 60% 30%;
-  --status-warning-bg: 40 92% 20%;
-  --status-warning-text: 45 96% 80%;
-  --status-warning-border: 45 92% 35%;
-  --status-danger-bg: 0 62% 20%;
-  --status-danger-text: 0 85% 80%;
-  --status-danger-border: 0 62% 35%;
-  --status-info-bg: 214 50% 20%;
+  --subtle: 215 16% 72%;
+  --link: 213 94% 72%;
+  --field: 222 40% 14%;
+  --field-foreground: 210 40% 98%;
+  --field-placeholder: 215 16% 62%;
+  --alert-danger-bg: 0 45% 16%;
+  --alert-danger-fg: 0 90% 82%;
+  --alert-danger-border: 0 50% 32%;
+  --alert-warning-bg: 40 50% 16%;
+  --alert-warning-fg: 45 95% 78%;
+  --alert-warning-border: 40 45% 32%;
+  --status-success-bg: 142 50% 16%;
+  --status-success-text: 142 70% 78%;
+  --status-success-border: 142 40% 30%;
+  --status-warning-bg: 40 50% 16%;
+  --status-warning-text: 45 95% 78%;
+  --status-warning-border: 40 45% 32%;
+  --status-danger-bg: 0 45% 16%;
+  --status-danger-text: 0 90% 82%;
+  --status-danger-border: 0 50% 32%;
+  --status-info-bg: 214 45% 16%;
   --status-info-text: 214 90% 80%;
-  --status-info-border: 214 50% 35%;
+  --status-info-border: 214 40% 32%;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.35);
 
-  --sidebar-background: 222 47% 11%;
+  --sidebar-background: 222 40% 10%;
   --sidebar-foreground: 210 40% 98%;
-  --sidebar-primary: 214 70% 45%;
+  --sidebar-primary: 214 70% 52%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 222 47% 15%;
+  --sidebar-accent: 222 40% 16%;
   --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-border: 217 16% 28%;
+  --sidebar-border: 217 18% 28%;
   --sidebar-ring: 213 94% 68%;
 }
 .scheduling-shell {
@@ -473,25 +491,34 @@ svg {
     @apply mt-0 text-balance text-[2.3rem] font-semibold leading-[1.02] tracking-[-0.045em] text-slate-950 dark:text-white sm:text-[2.9rem] lg:text-[3.35rem];
   }
   .lux-section-subtitle {
-    @apply mt-0 text-balance text-lg font-medium leading-8 text-slate-600/90 dark:text-slate-300/85 sm:text-xl;
+    @apply mt-0 text-balance text-lg font-medium leading-8 text-slate-700 dark:text-slate-200 sm:text-xl;
   }
   .lux-section-copy {
-    @apply mt-0 max-w-[44rem] text-pretty text-base font-medium leading-8 text-slate-600/90 dark:text-slate-300/85 sm:text-lg;
+    @apply mt-0 max-w-[44rem] text-pretty text-base font-medium leading-8 text-slate-700 dark:text-slate-200 sm:text-lg;
   }
   .lux-button-primary {
     @apply inline-flex items-center justify-center rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-700;
   }
   .lux-button-secondary {
-    @apply inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 transition-colors duration-200 hover:border-primary-100 hover:text-primary-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-accent-400 dark:hover:text-accent-400;
+    @apply inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition-colors duration-200 hover:border-primary-100 hover:text-primary-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-50 dark:hover:border-accent-400 dark:hover:text-accent-400;
   }
   .lux-card {
-    @apply rounded-[1.6rem] border border-slate-200/80 bg-white shadow-[0_24px_55px_-40px_rgba(15,23,42,0.24)] dark:border-slate-800 dark:bg-slate-950;
+    @apply rounded-[1.6rem] border border-slate-300/90 bg-white text-slate-950 shadow-[0_24px_55px_-40px_rgba(15,23,42,0.24)] dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50;
   }
   .lux-card-soft {
-    @apply rounded-[1.6rem] border border-slate-200/80 bg-slate-50/85 shadow-[0_20px_40px_-34px_rgba(15,23,42,0.18)] dark:border-slate-800 dark:bg-slate-900/70;
+    @apply rounded-[1.6rem] border border-slate-300/90 bg-slate-50 text-slate-950 shadow-[0_20px_40px_-34px_rgba(15,23,42,0.18)] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50;
   }
   .lux-pill {
-    @apply inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200;
+    @apply inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100;
+  }
+  .lux-alert-danger {
+    @apply rounded-lg border border-[hsl(var(--alert-danger-border))] bg-[hsl(var(--alert-danger-bg))] px-3 py-2 text-sm text-[hsl(var(--alert-danger-fg))];
+  }
+  .lux-alert-warning {
+    @apply rounded-lg border border-[hsl(var(--alert-warning-border))] bg-[hsl(var(--alert-warning-bg))] px-3 py-2 text-sm text-[hsl(var(--alert-warning-fg))];
+  }
+  .lux-field {
+    @apply border-[hsl(var(--input))] bg-[hsl(var(--field))] text-[hsl(var(--field-foreground))] placeholder:text-[hsl(var(--field-placeholder))];
   }
   .auth-font {
     font-family: "Manrope", "Segoe UI", Arial, sans-serif;

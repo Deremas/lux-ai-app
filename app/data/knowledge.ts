@@ -141,36 +141,6 @@ export const BUSINESS_KB: BusinessKB = {
         "scalability",
       ],
     },
-
-    {
-      id: "team.dereje",
-      name: {
-        en: "Dereje Masresha",
-        fr: "Dereje Masresha",
-        de: "Dereje Masresha",
-        lb: "Dereje Masresha",
-      },
-      role: {
-        en: "AWS Cloud Enthusiast · Full-Stack & AI Solutions Developer",
-        fr: "Passionné AWS Cloud · Développeur Full-Stack & Solutions IA",
-        de: "AWS-Cloud-Enthusiast · Full-Stack- & KI-Lösungsentwickler",
-        lb: "AWS Cloud Enthusiast · Full-Stack & AI-Léisungs-Entwéckler",
-      },
-      quote: {
-        en: "Builds full-stack solutions that combine clean user interfaces, scalable cloud-backed systems, and practical AI automation to deliver reliable, user-focused applications.",
-        fr: "Développe des solutions full-stack combinant des interfaces claires, des systèmes cloud évolutifs et une automatisation IA pragmatique pour livrer des applications fiables et centrées utilisateur.",
-        de: "Entwickelt Full-Stack-Lösungen mit klaren Benutzeroberflächen, skalierbaren Cloud-Systemen und praxisnaher KI-Automatisierung für zuverlässige, nutzerorientierte Anwendungen.",
-        lb: "Entwéckelt Full-Stack-Léisungen mat propperen Interfaces, skaléierbare Cloud-Systemer an praktescher AI-Automatisatioun fir zouverlässeg, user-fokusséiert Uwendungen.",
-      },
-      keywords: [
-        "aws",
-        "cloud",
-        "full-stack",
-        "ai solutions",
-        "automation",
-        "scalable systems",
-      ],
-    },
   ] as const,
 
   services: [
@@ -1131,36 +1101,6 @@ export const BUSINESS_KB: BusinessKB = {
 //         "api",
 //         "systems engineering",
 //         "scalability",
-//       ],
-//     },
-
-//     {
-//       id: "team.dereje",
-//       name: {
-//         en: "Dereje Masresha",
-//         fr: "Dereje Masresha",
-//         de: "Dereje Masresha",
-//         lb: "Dereje Masresha",
-//       },
-//       role: {
-//         en: "AWS Cloud Enthusiast · Full-Stack & AI Solutions Developer",
-//         fr: "Passionné AWS Cloud · Développeur Full-Stack & Solutions IA",
-//         de: "AWS-Cloud-Enthusiast · Full-Stack- & KI-Lösungsentwickler",
-//         lb: "AWS Cloud Enthusiast · Full-Stack & AI-Léisungs-Entwéckler",
-//       },
-//       quote: {
-//         en: "Builds full-stack solutions that combine clean user interfaces, scalable cloud-backed systems, and practical AI automation to deliver reliable, user-focused applications.",
-//         fr: "Développe des solutions full-stack combinant des interfaces claires, des systèmes cloud évolutifs et une automatisation IA pragmatique pour livrer des applications fiables et centrées utilisateur.",
-//         de: "Entwickelt Full-Stack-Lösungen mit klaren Benutzeroberflächen, skalierbaren Cloud-Systemen und praxisnaher KI-Automatisierung für zuverlässige, nutzerorientierte Anwendungen.",
-//         lb: "Entwéckelt Full-Stack-Léisungen mat propperen Interfaces, skaléierbare Cloud-Systemer an praktescher AI-Automatisatioun fir zouverlässeg, user-fokusséiert Uwendungen.",
-//       },
-//       keywords: [
-//         "aws",
-//         "cloud",
-//         "full-stack",
-//         "ai solutions",
-//         "automation",
-//         "scalable systems",
 //       ],
 //     },
 //   ] as const,

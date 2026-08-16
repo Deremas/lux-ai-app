@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireUserIdFromSession } from "@/lib/scheduling/authz";
-import { isValidTimezone } from "@/lib/validation";
+import { jsonDatabaseError } from "@/lib/scheduling/runtime-errors";
+import { isValidPhone, isValidTimezone } from "@/lib/validation";
 
 function cleanString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -11,18 +12,23 @@ export async function GET() {
   const who = await requireUserIdFromSession();
   if (!who.ok) return NextResponse.json({ error: who.error }, { status: 401 });
 
-  const profile = await prisma.appUser.findFirst({
-    where: { id: who.userId },
-    select: {
-      id: true,
-      name: true,
-      phone: true,
-      timezone: true,
-      email: true,
-    },
-  });
+  try {
+    const profile = await prisma.appUser.findFirst({
+      where: { id: who.userId },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        timezone: true,
+        email: true,
+      },
+    });
 
-  return NextResponse.json({ profile: profile ?? null }, { status: 200 });
+    return NextResponse.json({ profile: profile ?? null }, { status: 200 });
+  } catch (error) {
+    console.error("[api/me/profile] GET failed", error);
+    return jsonDatabaseError(error, "Failed to load profile");
+  }
 }
 
 export async function POST(req: Request) {
@@ -48,7 +54,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid name" }, { status: 400 });
   }
 
-  if (phone && (phone.length < 6 || phone.length > 12)) {
+  if (phone && !isValidPhone(phone)) {
     return NextResponse.json({ error: "Invalid phone number" }, { status: 400 });
   }
 
@@ -56,22 +62,27 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid timezone" }, { status: 400 });
   }
 
-  const updated = await prisma.appUser.update({
-    where: { id: who.userId },
-    data: {
-      name: name || null,
-      phone: phone || null,
-      timezone: timezone || null,
-      updatedAt: new Date(),
-    },
-    select: {
-      id: true,
-      name: true,
-      phone: true,
-      timezone: true,
-      email: true,
-    },
-  });
+  try {
+    const updated = await prisma.appUser.update({
+      where: { id: who.userId },
+      data: {
+        name: name || null,
+        phone: phone || null,
+        timezone: timezone || null,
+        updatedAt: new Date(),
+      },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        timezone: true,
+        email: true,
+      },
+    });
 
-  return NextResponse.json({ profile: updated ?? null }, { status: 200 });
+    return NextResponse.json({ profile: updated ?? null }, { status: 200 });
+  } catch (error) {
+    console.error("[api/me/profile] POST failed", error);
+    return jsonDatabaseError(error, "Failed to save profile");
+  }
 }

@@ -59,7 +59,7 @@
 //   // 2b) Seed admin + staff users and org membership
 //   const adminEmail = (
 //     process.env.SEED_ADMIN_EMAIL ??
-//     "derejemasresha27@gmail.com"
+//     "molla@luxaiautomation.com"
 //   )
 //     .trim()
 //     .toLowerCase();

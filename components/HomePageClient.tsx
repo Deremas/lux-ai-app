@@ -126,102 +126,40 @@ export default function HomePageClient({
       <Header />
 
       <main className="overflow-x-clip">
-        <section className="relative overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_62%,#f8fafc_100%)] dark:bg-[linear-gradient(180deg,#020617_0%,#0b1120_48%,#0f172a_100%)]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(14,66,126,0.06),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.05),transparent_24%)]" />
+        <section className="relative overflow-hidden border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+            <AnimatedSection
+              direction="fade"
+              className="mx-auto max-w-3xl space-y-7 text-center"
+            >
+              <p className="font-mono text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-slate-600 dark:text-slate-300">
+                Lux AI Consultancy &amp; Automation
+              </p>
 
-          <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-16 sm:px-6 sm:pt-20 lg:px-8 lg:pb-24">
-            <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-12">
-              <AnimatedSection direction="left" className="space-y-8">
-                <SectionHeading
-                  titleAs="h1"
-                  title={copy.hero.headline}
-                  body={copy.hero.subheadline}
-                  className="max-w-[42rem] space-y-5"
-                  titleClassName="max-w-[13ch] text-[2.75rem] leading-[0.98] sm:text-[3.35rem] lg:text-[4rem]"
-                  bodyClassName="max-w-[60ch] text-base leading-7 sm:text-lg sm:leading-8"
-                />
+              <SectionHeading
+                align="center"
+                titleAs="h1"
+                title={copy.hero.headline}
+                body={copy.hero.subheadline}
+                className="space-y-5"
+                titleClassName="text-[2.6rem] leading-[0.98] tracking-[-0.045em] sm:text-[3.35rem] lg:text-[3.9rem]"
+                bodyClassName="mx-auto max-w-[52ch] text-base leading-7 text-slate-700 dark:text-slate-200 sm:text-lg sm:leading-8"
+              />
 
-                <div className="flex flex-wrap gap-3">
-                  {copy.hero.proofLine.map((item) => (
-                    <span key={item} className="lux-pill">
-                      {item}
-                    </span>
-                  ))}
-                </div>
+              <CtaLinks
+                primaryHref={PRIMARY_CTA_HREF}
+                primaryLabel={copy.hero.primary}
+                secondaryHref={heroSecondaryHref}
+                secondaryLabel={copy.hero.secondary}
+                centered
+                quietSecondary
+                className="justify-center"
+              />
 
-                <CtaLinks
-                  primaryHref={PRIMARY_CTA_HREF}
-                  primaryLabel={copy.hero.primary}
-                  secondaryHref={heroSecondaryHref}
-                  secondaryLabel={copy.hero.secondary}
-                  className="max-w-[22rem] sm:max-w-xl"
-                />
-
-                <p className="max-w-xl text-sm leading-7 text-slate-500 dark:text-slate-400">
-                  {copy.hero.urgency}
-                </p>
-              </AnimatedSection>
-
-              <AnimatedSection direction="right">
-                <div className="overflow-hidden rounded-[1.8rem] border border-slate-200/80 bg-white p-5 shadow-[0_28px_70px_-48px_rgba(15,23,42,0.25)] dark:border-slate-800 dark:bg-slate-950 sm:p-6">
-                  <div className="space-y-5">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="flex flex-wrap gap-3">
-                        <span className="lux-pill">{copy.hero.visualBadge}</span>
-                        <span className="lux-pill">{copy.hero.visualStatus}</span>
-                      </div>
-
-                      <div className="rounded-[1rem] border border-primary-100 bg-primary-50/80 px-4 py-3 dark:border-primary-500/20 dark:bg-primary-500/10">
-                        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-primary-700 dark:text-accent-400">
-                          {copy.hero.visualMetricLabel}
-                        </p>
-                        <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">
-                          {copy.hero.visualMetricValue}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="max-w-xl space-y-3">
-                      <p className="text-xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white sm:text-[1.65rem]">
-                        {copy.hero.visualTitle}
-                      </p>
-                      <p className="text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-base">
-                        {copy.hero.visualOverlay}
-                      </p>
-                    </div>
-
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {copy.hero.visualFlow.map((item, index) => (
-                        <div
-                          key={item}
-                          className="rounded-[1.2rem] border border-slate-200/80 bg-slate-50/70 px-4 py-4 dark:border-slate-800 dark:bg-slate-900/70"
-                        >
-                          <div className="flex items-start gap-3">
-                            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-600 text-[0.7rem] font-semibold text-white">
-                              0{index + 1}
-                            </span>
-                            <p className="text-sm leading-6 text-slate-700 dark:text-slate-200">
-                              {item}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="overflow-hidden rounded-[1.45rem] border border-slate-200 bg-slate-50 shadow-[0_24px_50px_-38px_rgba(15,23,42,0.2)] dark:border-slate-800 dark:bg-slate-900">
-                      <Image
-                        src="/images/analytics.png"
-                        alt={copy.hero.visualAlt}
-                        width={1400}
-                        height={1080}
-                        className="aspect-[4/3] w-full object-cover object-top"
-                        priority
-                      />
-                    </div>
-                  </div>
-                </div>
-              </AnimatedSection>
-            </div>
+              <p className="mx-auto max-w-xl text-sm font-medium leading-6 text-slate-600 dark:text-slate-300">
+                {copy.hero.urgency}
+              </p>
+            </AnimatedSection>
           </div>
         </section>
 
@@ -248,7 +186,7 @@ export default function HomePageClient({
                       <h2 className="text-xl font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
                         {item.title}
                       </h2>
-                      <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                      <p className="text-sm leading-7 text-slate-700 dark:text-slate-200">
                         {item.description}
                       </p>
                     </SurfaceCard>
@@ -289,7 +227,7 @@ export default function HomePageClient({
                         </p>
                       </div>
 
-                      <ul className="space-y-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                      <ul className="space-y-3 text-sm leading-7 text-slate-700 dark:text-slate-200">
                         {item.bullets.map((bullet) => (
                           <li key={bullet} className="flex items-start gap-3">
                             <i className="ri-check-line mt-1 text-primary-600 dark:text-accent-400" />
@@ -299,7 +237,7 @@ export default function HomePageClient({
                       </ul>
 
                       <div className="mt-auto rounded-[1.2rem] border border-slate-200/80 bg-slate-50/90 p-4 dark:border-slate-800 dark:bg-slate-900/75">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 dark:text-slate-300">
                           {copy.services.exampleLabel}
                         </p>
                         <p className="mt-2 text-sm leading-7 text-slate-700 dark:text-slate-200">
@@ -322,10 +260,10 @@ export default function HomePageClient({
                   title={sectionMeta.consultingTitle}
                   body={sectionMeta.consultingBody}
                 />
-                <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                <p className="text-sm leading-7 text-slate-700 dark:text-slate-200">
                   {consultingSection.intro}
                 </p>
-                <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                <p className="text-sm leading-7 text-slate-700 dark:text-slate-200">
                   {consultingSection.detail}
                 </p>
                 <Link href="/contact" className="lux-button-secondary w-fit">
@@ -338,7 +276,7 @@ export default function HomePageClient({
                   <p className="text-sm font-semibold text-slate-900 dark:text-white">
                     {sectionMeta.consultingCovers}
                   </p>
-                  <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                  <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-700 dark:text-slate-200">
                     {consultingSection.offerings.map((item) => (
                       <li key={item} className="flex items-start gap-3">
                         <i className="ri-check-line mt-1 text-primary-600 dark:text-accent-400" />
@@ -352,7 +290,7 @@ export default function HomePageClient({
                   <p className="text-sm font-semibold text-slate-900 dark:text-white">
                     {sectionMeta.consultingReceive}
                   </p>
-                  <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                  <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-700 dark:text-slate-200">
                     {consultingSection.deliverables.map((item) => (
                       <li key={item} className="flex items-start gap-3">
                         <i className="ri-arrow-right-line mt-1 text-primary-600 dark:text-accent-400" />
@@ -391,7 +329,7 @@ export default function HomePageClient({
                           {item.title}
                         </h2>
                       </div>
-                      <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                      <p className="text-sm leading-7 text-slate-700 dark:text-slate-200">
                         {item.body}
                       </p>
                     </SurfaceCard>
@@ -479,7 +417,7 @@ export default function HomePageClient({
                         </div>
 
                         <div className="space-y-3">
-                          <p className="text-base leading-9 text-slate-600 dark:text-slate-300">
+                          <p className="text-base leading-9 text-slate-700 dark:text-slate-200">
                             {step.description}
                           </p>
                         </div>
@@ -526,7 +464,7 @@ export default function HomePageClient({
                           {item.title}
                         </h2>
                       </div>
-                      <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                      <p className="text-sm leading-7 text-slate-700 dark:text-slate-200">
                         {item.body}
                       </p>
                     </SurfaceCard>
@@ -560,7 +498,7 @@ export default function HomePageClient({
               ))}
             </div>
 
-            <div className="mt-14 grid gap-6 lg:grid-cols-3">
+            <div className="mx-auto mt-14 grid max-w-4xl gap-6 md:grid-cols-2">
               {teamMembers.map((member, index) => (
                 <AnimatedSection
                   key={member.key}
@@ -589,7 +527,7 @@ export default function HomePageClient({
                   title={copy.final.title}
                   body={copy.final.body}
                 />
-                <ul className="mt-6 space-y-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                <ul className="mt-6 space-y-3 text-sm leading-7 text-slate-700 dark:text-slate-200">
                   {sectionMeta.finalBullets.map((item) => (
                     <li key={item} className="flex items-start justify-center gap-3">
                       <i className="ri-check-line mt-1 text-primary-600 dark:text-accent-400" />
@@ -597,7 +535,7 @@ export default function HomePageClient({
                     </li>
                   ))}
                 </ul>
-                <p className="mt-5 text-sm leading-7 text-slate-500 dark:text-slate-400">
+                <p className="mt-5 text-sm leading-7 text-slate-600 dark:text-slate-300">
                   {copy.final.urgency}
                 </p>
                 <CtaLinks

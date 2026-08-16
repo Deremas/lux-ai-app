@@ -106,6 +106,7 @@ export default function DashboardClient({ orgId }: Props) {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [detailTarget, setDetailTarget] = useState<Booking | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const modalOpen = Boolean(rescheduleTarget || detailTarget || requestTarget);
 
   const timezone = useMemo(() => "Europe/Luxembourg", []);
@@ -354,7 +355,7 @@ export default function DashboardClient({ orgId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [orgId, status, page, pageSize]);
+  }, [orgId, status, page, pageSize, reloadKey]);
 
   useEffect(() => {
     if (!rescheduleTarget && !requestTarget && !detailTarget) return;
@@ -503,8 +504,17 @@ export default function DashboardClient({ orgId }: Props) {
 
       <section className="mt-6 space-y-4">
         {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
+          <div className="flex flex-wrap items-center justify-between gap-3 lux-alert-danger">
+            <p>{error}</p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setReloadKey((key) => key + 1)}
+              disabled={loading}
+            >
+              Retry
+            </Button>
           </div>
         )}
 

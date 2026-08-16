@@ -209,12 +209,6 @@ export const copy: Record<Lang, DeepRecord> = {
           quote:
             "Specializes in designing and building robust system integrations and automation architectures that operate reliably in real-world business environments and scale with organizational growth.",
         },
-        dereje: {
-          name: "Dereje Masresha",
-          role: "AWS Cloud Enthusiast · Full-Stack & AI Solutions Developer",
-          quote:
-            "Builds full-stack solutions that integrate clean user interfaces, scalable cloud-backed systems, and practical AI automation to deliver reliable, user-focused applications.",
-        },
       },
       testimonialsBlock: {
         title: "What Our Clients Say",
@@ -316,7 +310,6 @@ export const copy: Record<Lang, DeepRecord> = {
           icon: "ri-mail-line",
           title: "Email",
           content: "molla@luxaiautomation.com",
-          // content: "derejemasresha27@gmail.com",
           description: "Project inquiries & consultations",
         },
         phone: {
@@ -1142,13 +1135,6 @@ export const copy: Record<Lang, DeepRecord> = {
             tag3: "Systèmes IA",
           },
         },
-
-        dereje: {
-          name: "Dereje Masresha",
-          role: "Passionné du cloud AWS · Développeur full-stack & solutions IA",
-          quote:
-            "Conçoit des solutions full-stack intégrant des interfaces utilisateur soignées, des systèmes cloud évolutifs et une automatisation IA pragmatique afin de fournir des applications fiables et centrées sur l’utilisateur.",
-        },
       },
       testimonialsBlock: {
         title: "Ce que disent nos clients",
@@ -1933,13 +1919,6 @@ export const copy: Record<Lang, DeepRecord> = {
             tag3: "KI-Systeme",
           },
         },
-
-        dereje: {
-          name: "Dereje Masresha",
-          role: "AWS-Cloud-Enthusiast · Full-Stack- & KI-Lösungsentwickler",
-          quote:
-            "Entwickelt Full-Stack-Lösungen, die saubere Benutzeroberflächen, skalierbare cloudbasierte Systeme und praxisnahe KI-Automatisierung verbinden, um zuverlässige und benutzerorientierte Anwendungen bereitzustellen.",
-        },
       },
       testimonialsBlock: {
         title: "Was unsere Kunden sagen",
@@ -2716,13 +2695,6 @@ export const copy: Record<Lang, DeepRecord> = {
             tag2: "Automatiséierungs-Engineering",
             tag3: "KI-Systemer",
           },
-        },
-
-        dereje: {
-          name: "Dereje Masresha",
-          role: "AWS-Cloud-Enthusiast · Full-Stack- & KI-Léisungsentwéckler",
-          quote:
-            "Entwéckelt Full-Stack-Léisungen, déi propper Benotzeroberflächen, skaléierbar cloud-baséiert Systemer an praktesch KI-Automatiséierung kombinéieren, fir zouverlässeg a benotzerorientéiert Applikatiounen ze liwweren.",
         },
       },
       testimonialsBlock: {

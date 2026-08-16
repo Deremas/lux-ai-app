@@ -5,7 +5,13 @@ import { motion } from "framer-motion";
 import AnimatedSection from "@/components/AnimatedSection";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import { CtaLinks, SectionHeading, SurfaceCard } from "@/components/marketing/SectionHeading";
+import {
+  CtaLinks,
+  MARKETING_BRAND,
+  MarketingHero,
+  SectionHeading,
+  SurfaceCard,
+} from "@/components/marketing/SectionHeading";
 import { useLanguage } from "@/components/LanguageProvider";
 import TeamMemberCard from "@/components/TeamMemberCard";
 import { brand } from "@/lib/marketing-content";
@@ -253,46 +259,36 @@ export default function AboutPage() {
     getLocalizedMarketingSharedContent(lang);
 
   return (
-    <div className="min-h-screen bg-white text-slate-950 transition-colors duration-300 dark:bg-slate-950 dark:text-white">
+    <div className="min-h-screen overflow-x-clip bg-white text-slate-950 transition-colors duration-300 dark:bg-slate-950 dark:text-white">
       <Header />
 
-      <main>
-        <section className="bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_58%,#f8fafc_100%)] py-24 dark:bg-[linear-gradient(180deg,#020617_0%,#0b1120_46%,#0f172a_100%)] sm:py-28">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid items-start gap-12 lg:grid-cols-[1.02fr_0.98fr]">
-              <AnimatedSection direction="left" className="space-y-8">
-                <SectionHeading
-                  titleAs="h1"
-                  title={copy.heroTitle}
-                  body={copy.heroBody}
-                  titleClassName="text-[2.55rem] sm:text-[3.1rem] lg:text-[3.75rem]"
+      <main className="overflow-x-clip">
+        <MarketingHero>
+          <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+            <AnimatedSection direction="fade" className="space-y-7">
+              <SectionHeading
+                titleAs="h1"
+                eyebrow={MARKETING_BRAND}
+                title={copy.heroTitle}
+                body={copy.heroBody}
+                titleClassName="text-[2.55rem] leading-[0.98] tracking-[-0.045em] sm:text-[3.1rem] lg:text-[3.6rem]"
+              />
+              <p className="max-w-2xl text-sm font-medium leading-7 text-slate-600 dark:text-slate-300">
+                {brand.description}
+              </p>
+            </AnimatedSection>
+
+            <AnimatedSection direction="fade" delay={0.08}>
+              <div className="overflow-hidden rounded-[1.4rem] border border-slate-300 bg-slate-100 shadow-[0_28px_60px_-40px_rgba(15,23,42,0.4)] dark:border-slate-700 dark:bg-slate-900">
+                <img
+                  src="/images/about.jpg"
+                  alt="Lux AI leadership and automation planning"
+                  className="aspect-[4/3] w-full object-cover"
                 />
-
-                <div className="flex flex-wrap gap-3">
-                  {copy.expertiseAreas.map((item) => (
-                    <span key={item} className="lux-pill">
-                      {item}
-                    </span>
-                  ))}
-                </div>
-
-                <p className="max-w-2xl text-sm leading-7 text-slate-500 dark:text-slate-400">
-                  {brand.description}
-                </p>
-              </AnimatedSection>
-
-              <AnimatedSection direction="right">
-                <SurfaceCard className="p-4">
-                  <img
-                    src="/images/about.jpg"
-                    alt="Lux AI leadership and automation planning"
-                    className="w-full rounded-[1.45rem] object-cover"
-                  />
-                </SurfaceCard>
-              </AnimatedSection>
-            </div>
+              </div>
+            </AnimatedSection>
           </div>
-        </section>
+        </MarketingHero>
 
         <section className="py-24 sm:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -302,33 +298,30 @@ export default function AboutPage() {
               body={copy.timelineBody}
             />
 
-            <div className="mt-14 grid gap-6 lg:grid-cols-3">
+            <div className="mt-14 grid gap-10 lg:grid-cols-3 lg:gap-12">
               {copy.timeline.map((item, index) => (
                 <AnimatedSection
                   key={item.title}
                   delay={index * 0.05}
                   direction="up"
+                  className="space-y-3 border-t border-slate-200 pt-6 dark:border-slate-800"
                 >
-                  <motion.div whileHover={{ y: -4 }}>
-                    <SurfaceCard className="gap-4">
-                      <span className="text-sm font-semibold text-primary-700 dark:text-accent-400">
-                        0{index + 1}
-                      </span>
-                      <h2 className="text-2xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
-                        {item.title}
-                      </h2>
-                      <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
-                        {item.body}
-                      </p>
-                    </SurfaceCard>
-                  </motion.div>
+                  <span className="text-sm font-semibold text-primary-700 dark:text-accent-400">
+                    0{index + 1}
+                  </span>
+                  <h2 className="text-2xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+                    {item.title}
+                  </h2>
+                  <p className="text-sm leading-7 text-slate-700 dark:text-slate-200">
+                    {item.body}
+                  </p>
                 </AnimatedSection>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="bg-slate-50/80 py-24 dark:bg-slate-900/50 sm:py-28">
+        <section className="border-y border-slate-200 bg-slate-50/70 py-24 dark:border-slate-800 dark:bg-slate-900/40 sm:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionHeading
               align="center"
@@ -343,17 +336,15 @@ export default function AboutPage() {
                   delay={index * 0.05}
                   direction="up"
                 >
-                  <motion.div whileHover={{ y: -4 }}>
+                  <motion.div whileHover={{ y: -3 }}>
                     <SurfaceCard subtle className="gap-4">
-                      <div className="flex items-center gap-3 sm:flex-col sm:items-start sm:gap-4">
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
-                          <i className={`${item.icon} text-xl`} />
-                        </span>
-                        <h2 className="text-xl font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
-                          {item.title}
-                        </h2>
-                      </div>
-                      <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
+                        <i className={`${item.icon} text-xl`} />
+                      </span>
+                      <h2 className="text-xl font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
+                        {item.title}
+                      </h2>
+                      <p className="text-sm leading-7 text-slate-700 dark:text-slate-200">
                         {item.body}
                       </p>
                     </SurfaceCard>
@@ -366,33 +357,33 @@ export default function AboutPage() {
 
         <section className="py-24 sm:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid items-start gap-10 lg:grid-cols-[0.95fr_1.05fr]">
-              <AnimatedSection direction="left">
-                <SurfaceCard className="p-4">
+            <div className="grid items-start gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16">
+              <AnimatedSection direction="fade">
+                <div className="overflow-hidden rounded-[1.4rem] border border-slate-300 dark:border-slate-700">
                   <img
                     src="/images/build-process.jpg"
                     alt="Automation architecture and workshop process"
-                    className="w-full rounded-[1.45rem] object-cover"
+                    className="aspect-[4/3] w-full object-cover"
                   />
-                </SurfaceCard>
+                </div>
               </AnimatedSection>
 
-              <AnimatedSection direction="right">
+              <AnimatedSection direction="fade" delay={0.06}>
                 <SectionHeading
                   title={copy.expectationsTitle}
                   body={copy.expectationsBody}
                 />
-                <div className="mt-8 space-y-4">
+                <ul className="mt-8 space-y-4">
                   {credibilityPoints.map((item) => (
-                    <div
+                    <li
                       key={item}
-                      className="lux-card-soft flex items-start gap-3 px-5 py-4 text-sm text-slate-700 dark:text-slate-200"
+                      className="flex items-start gap-3 border-b border-slate-200 pb-4 text-sm leading-7 text-slate-700 last:border-b-0 dark:border-slate-800 dark:text-slate-200"
                     >
                       <i className="ri-check-line mt-1 text-primary-600 dark:text-accent-400" />
                       <span>{item}</span>
-                    </div>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </AnimatedSection>
             </div>
           </div>
@@ -402,7 +393,7 @@ export default function AboutPage() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionHeading align="center" title={copy.teamTitle} />
 
-            <div className="mt-14 grid gap-6 lg:grid-cols-3">
+            <div className="mx-auto mt-14 grid max-w-4xl gap-6 md:grid-cols-2">
               {teamMembers.map((member, index) => (
                 <AnimatedSection
                   key={member.key}
@@ -418,7 +409,7 @@ export default function AboutPage() {
 
         <section className="pb-24 sm:pb-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="lux-card p-8 text-center sm:p-10 lg:p-12">
+            <div className="border-t border-slate-200 pt-14 text-center dark:border-slate-800">
               <SectionHeading
                 align="center"
                 title={copy.ctaTitle}
@@ -430,7 +421,8 @@ export default function AboutPage() {
                 secondaryHref="/contact"
                 secondaryLabel={copy.ctaSecondary}
                 centered
-                className="mt-8"
+                quietSecondary
+                className="mt-8 justify-center"
               />
             </div>
           </div>

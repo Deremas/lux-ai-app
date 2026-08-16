@@ -5,7 +5,13 @@ import { motion } from "framer-motion";
 import AnimatedSection from "@/components/AnimatedSection";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import { CtaLinks, SectionHeading, SurfaceCard } from "@/components/marketing/SectionHeading";
+import {
+  CtaLinks,
+  MARKETING_BRAND,
+  MarketingHero,
+  SectionHeading,
+  SurfaceCard,
+} from "@/components/marketing/SectionHeading";
 import { useLanguage } from "@/components/LanguageProvider";
 import { homepageCopy } from "@/lib/homepage-content";
 import { getLocalizedMarketingSharedContent } from "@/lib/marketing-shared-content";
@@ -145,39 +151,44 @@ export default function ServicesPage() {
       <Header />
 
       <main>
-        <section className="bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_58%,#f8fafc_100%)] py-24 dark:bg-[linear-gradient(180deg,#020617_0%,#0b1120_46%,#0f172a_100%)] sm:py-28">
+        <MarketingHero>
+          <AnimatedSection direction="fade" className="mx-auto max-w-3xl space-y-7 text-center">
+            <SectionHeading
+              align="center"
+              titleAs="h1"
+              eyebrow={MARKETING_BRAND}
+              title={copy.heroTitle}
+              body={copy.heroBody}
+              titleClassName="text-[2.55rem] leading-[0.98] tracking-[-0.045em] sm:text-[3.1rem] lg:text-[3.6rem]"
+            />
+            <CtaLinks
+              primaryHref="/scheduling?meetingTypeKey=free-audit"
+              primaryLabel={copy.heroPrimary}
+              secondaryHref="/how-it-works"
+              secondaryLabel={copy.heroSecondary}
+              centered
+              quietSecondary
+              className="justify-center"
+            />
+          </AnimatedSection>
+        </MarketingHero>
+
+        <section className="border-b border-slate-200 py-16 dark:border-slate-800 sm:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid items-start gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:gap-14">
-              <AnimatedSection direction="left" className="space-y-8">
-                <SectionHeading
-                  titleAs="h1"
-                  title={copy.heroTitle}
-                  body={copy.heroBody}
-                  titleClassName="text-[2.55rem] sm:text-[3.1rem] lg:text-[3.7rem]"
-                />
-
-                <CtaLinks
-                  primaryHref="/scheduling?meetingTypeKey=free-audit"
-                  primaryLabel={copy.heroPrimary}
-                  secondaryHref="/how-it-works"
-                  secondaryLabel={copy.heroSecondary}
-                />
-              </AnimatedSection>
-
-              <AnimatedSection direction="right">
-                <SurfaceCard className="gap-5">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {businessFit.map((item) => (
-                      <div
-                        key={item}
-                        className="rounded-[1.25rem] border border-slate-200/80 bg-slate-50/85 px-4 py-4 text-sm leading-7 text-slate-700 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-200"
-                      >
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                </SurfaceCard>
-              </AnimatedSection>
+            <SectionHeading
+              align="center"
+              title={copy.fitTitle}
+              body={copy.fitBody}
+            />
+            <div className="mx-auto mt-10 grid max-w-4xl gap-4 sm:grid-cols-2">
+              {businessFit.map((item) => (
+                <p
+                  key={item}
+                  className="border-t border-slate-200 pt-4 text-sm leading-7 text-slate-700 dark:border-slate-800 dark:text-slate-200"
+                >
+                  {item}
+                </p>
+              ))}
             </div>
           </div>
         </section>
@@ -197,7 +208,7 @@ export default function ServicesPage() {
                   delay={index * 0.05}
                   direction="up"
                 >
-                  <motion.div whileHover={{ y: -4 }}>
+                  <motion.div whileHover={{ y: -3 }}>
                     <SurfaceCard className="gap-5">
                       <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
                         <i className={`${item.icon} text-2xl`} />
@@ -207,21 +218,12 @@ export default function ServicesPage() {
                         <h2 className="text-2xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
                           {item.title}
                         </h2>
-                        <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        <p className="text-sm leading-7 text-slate-700 dark:text-slate-200">
                           {item.outcome}
                         </p>
                       </div>
 
-                      <div className="rounded-[1.25rem] border border-slate-200/80 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/70">
-                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                          {copy.fitTitle}
-                        </p>
-                        <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                          {copy.fitBody}
-                        </p>
-                      </div>
-
-                      <ul className="space-y-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                      <ul className="space-y-3 text-sm leading-7 text-slate-700 dark:text-slate-200">
                         {item.bullets.map((bullet) => (
                           <li key={bullet} className="flex items-start gap-3">
                             <i className="ri-check-line mt-1 text-primary-600 dark:text-accent-400" />
@@ -230,35 +232,13 @@ export default function ServicesPage() {
                         ))}
                       </ul>
 
-                      <div className="rounded-[1.2rem] border border-slate-200/80 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/70">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                          {homeCopy.services.exampleLabel}
-                        </p>
-                        <p className="mt-2 text-sm leading-7 text-slate-700 dark:text-slate-200">
-                          {item.example}
-                        </p>
-                      </div>
-
-                      <div className="rounded-[1.2rem] border border-primary-100 bg-primary-50/85 p-4 dark:border-primary-500/20 dark:bg-primary-500/10">
+                      <div className="mt-auto border-t border-slate-200 pt-4 dark:border-slate-800">
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-700 dark:text-accent-400">
                           {homeCopy.services.resultLabel}
                         </p>
                         <p className="mt-2 text-sm leading-7 text-slate-700 dark:text-slate-200">
                           {item.result}
                         </p>
-                      </div>
-
-                      <div className="mt-auto">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                          {homeCopy.services.deliverablesLabel}
-                        </p>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {item.deliverables.map((deliverable) => (
-                            <span key={deliverable} className="lux-pill">
-                              {deliverable}
-                            </span>
-                          ))}
-                        </div>
                       </div>
                     </SurfaceCard>
                   </motion.div>
@@ -268,28 +248,28 @@ export default function ServicesPage() {
           </div>
         </section>
 
-        <section className="bg-slate-50/80 py-24 dark:bg-slate-900/50 sm:py-28">
+        <section className="border-y border-slate-200 bg-slate-50/70 py-24 dark:border-slate-800 dark:bg-slate-900/40 sm:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
-              <AnimatedSection direction="left" className="space-y-6">
+            <div className="grid gap-10 lg:grid-cols-[1fr_1fr] lg:gap-14">
+              <AnimatedSection direction="fade" className="space-y-6">
                 <SectionHeading
                   title={copy.consultingTitle}
                   body={copy.consultingBody}
                 />
-                <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                <p className="text-sm leading-7 text-slate-700 dark:text-slate-200">
                   {consultingSection.intro}
                 </p>
-                <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                <p className="text-sm leading-7 text-slate-700 dark:text-slate-200">
                   {consultingSection.detail}
                 </p>
               </AnimatedSection>
 
-              <AnimatedSection direction="right" className="grid gap-5">
-                <SurfaceCard subtle>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
+              <AnimatedSection direction="fade" delay={0.06} className="space-y-8">
+                <div>
+                  <p className="text-sm font-semibold text-slate-950 dark:text-white">
                     {copy.consultingCovers}
                   </p>
-                  <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                  <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-700 dark:text-slate-200">
                     {consultingSection.offerings.map((item) => (
                       <li key={item} className="flex items-start gap-3">
                         <i className="ri-check-line mt-1 text-primary-600 dark:text-accent-400" />
@@ -297,13 +277,13 @@ export default function ServicesPage() {
                       </li>
                     ))}
                   </ul>
-                </SurfaceCard>
+                </div>
 
-                <SurfaceCard subtle>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                <div className="border-t border-slate-200 pt-8 dark:border-slate-800">
+                  <p className="text-sm font-semibold text-slate-950 dark:text-white">
                     {copy.consultingReceive}
                   </p>
-                  <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                  <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-700 dark:text-slate-200">
                     {consultingSection.deliverables.map((item) => (
                       <li key={item} className="flex items-start gap-3">
                         <i className="ri-arrow-right-line mt-1 text-primary-600 dark:text-accent-400" />
@@ -311,14 +291,7 @@ export default function ServicesPage() {
                       </li>
                     ))}
                   </ul>
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {consultingSection.offerings.slice(0, 4).map((item) => (
-                      <span key={item} className="lux-pill">
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                </SurfaceCard>
+                </div>
               </AnimatedSection>
             </div>
           </div>
@@ -339,7 +312,7 @@ export default function ServicesPage() {
                   delay={index * 0.05}
                   direction="up"
                 >
-                  <motion.div whileHover={{ y: -4 }}>
+                  <motion.div whileHover={{ y: -3 }}>
                     <SurfaceCard subtle className="gap-4">
                       <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
                         <i className={`${item.icon} text-xl`} />
@@ -347,7 +320,7 @@ export default function ServicesPage() {
                       <h2 className="text-xl font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
                         {item.title}
                       </h2>
-                      <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                      <p className="text-sm leading-7 text-slate-700 dark:text-slate-200">
                         {item.description}
                       </p>
                     </SurfaceCard>
@@ -360,37 +333,36 @@ export default function ServicesPage() {
 
         <section className="pb-24 sm:pb-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="lux-card p-8 sm:p-10 lg:p-12">
-              <div className="mx-auto max-w-3xl text-center">
-                <SectionHeading
-                  align="center"
-                  title={copy.conversionTitle}
-                  body={copy.conversionBody}
-                />
+            <div className="border-t border-slate-200 pt-14 text-center dark:border-slate-800">
+              <SectionHeading
+                align="center"
+                title={copy.conversionTitle}
+                body={copy.conversionBody}
+              />
 
-                <div className="mt-8 grid gap-3 text-left sm:grid-cols-2">
-                  {copy.conversionSteps.map((item, index) => (
-                    <div
-                      key={item}
-                      className="rounded-[1.15rem] border border-slate-200/80 bg-slate-50/85 px-4 py-4 text-sm leading-7 text-slate-700 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-200"
-                    >
-                      <span className="mr-2 text-primary-600 dark:text-accent-400">
-                        0{index + 1}
-                      </span>
-                      {item}
-                    </div>
-                  ))}
-                </div>
+              <ol className="mx-auto mt-8 grid max-w-3xl gap-3 text-left sm:grid-cols-2">
+                {copy.conversionSteps.map((item, index) => (
+                  <li
+                    key={item}
+                    className="border-t border-slate-200 pt-4 text-sm leading-7 text-slate-700 dark:border-slate-800 dark:text-slate-200"
+                  >
+                    <span className="mr-2 font-semibold text-primary-700 dark:text-accent-400">
+                      0{index + 1}
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ol>
 
-                <CtaLinks
-                  primaryHref="/scheduling?meetingTypeKey=free-audit"
-                  primaryLabel={copy.conversionPrimary}
-                  secondaryHref="/contact"
-                  secondaryLabel={copy.conversionSecondary}
-                  centered
-                  className="mt-8"
-                />
-              </div>
+              <CtaLinks
+                primaryHref="/scheduling?meetingTypeKey=free-audit"
+                primaryLabel={copy.conversionPrimary}
+                secondaryHref="/contact"
+                secondaryLabel={copy.conversionSecondary}
+                centered
+                quietSecondary
+                className="mt-8 justify-center"
+              />
             </div>
           </div>
         </section>

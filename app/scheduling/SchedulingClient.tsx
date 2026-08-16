@@ -4,14 +4,12 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
-import { ChevronRight, PanelLeft } from "lucide-react";
 import { DateTime } from "luxon";
 import { toast } from "sonner";
 
 import AvailabilityCalendar from "@/components/scheduling/AvailabilityCalendar";
 import { useLanguage } from "@/components/LanguageProvider";
 import Stepper from "@/components/scheduling/Stepper";
-import { useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -1345,60 +1343,13 @@ function SchedulingFlowHeader({
     isActive?: boolean;
   }>;
 }) {
-  const { toggleSidebar, open, openMobile, isMobile } = useSidebar();
-  const isOpen = isMobile ? openMobile : open;
-  const leftColumnWidth = isOpen
-    ? "var(--sidebar-width)"
-    : "var(--sidebar-width-icon)";
-
   return (
-    <>
-      <div
-        className="hidden items-stretch gap-4 md:grid"
-        style={{ gridTemplateColumns: `${leftColumnWidth} minmax(0, 1fr)` }}
-      >
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          aria-expanded={isOpen}
-          aria-label={isOpen ? "Close menu" : "Open menu"}
-          className={[
-            "flex min-h-[4.25rem] items-center rounded-[1.5rem] border border-white/70 bg-white/85 px-3 text-left shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur transition hover:bg-white/95 active:bg-white/90 dark:border-slate-700/60 dark:bg-slate-900/70 dark:hover:bg-slate-900/85",
-            isOpen ? "justify-between gap-3" : "justify-center px-0",
-          ].join(" ")}
-        >
-          <span
-            className={[
-              "flex items-center",
-              isOpen ? "gap-3" : "justify-center",
-            ].join(" ")}
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 shadow-sm ring-1 ring-slate-200/70 dark:text-slate-200 dark:ring-slate-700/60">
-              <PanelLeft className="h-4 w-4" />
-            </span>
-            {isOpen ? (
-              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                Close menu
-              </span>
-            ) : null}
-          </span>
-          {isOpen ? (
-            <ChevronRight className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-          ) : null}
-        </button>
-
-        <div className="min-w-0 rounded-[1.8rem] border border-white/70 bg-white/85 p-3.5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
-          <Stepper
-            className="min-w-0 flex-nowrap justify-start overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            steps={steps}
-          />
-        </div>
-      </div>
-
-      <div className="rounded-[1.8rem] border border-white/70 bg-white/85 p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 md:hidden">
-        <Stepper className="justify-start" steps={steps} />
-      </div>
-    </>
+    <div className="rounded-[1.8rem] border border-white/70 bg-white/85 p-3.5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 md:p-3.5">
+      <Stepper
+        className="min-w-0 flex-nowrap justify-start overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        steps={steps}
+      />
+    </div>
   );
 }
 

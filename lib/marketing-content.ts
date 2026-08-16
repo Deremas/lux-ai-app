@@ -508,21 +508,6 @@ export const teamMembers = [
       facebook: "https://www.facebook.com/fikremariam.mekonnen",
       email: "mailto:fikremariam2012@gmail.com",
     },
-    {
-      key: "dereje",
-      name: "Dereje Masresha",
-      role: "Full-Stack & AI Solutions Developer",
-      bio:
-        "Builds practical AI-enabled applications, internal tools, and workflow systems that support secure and scalable delivery.",
-      tags: ["AI applications", "Full-stack delivery", "Cloud systems", "Internal tools"],
-      image: "/avatars/dere.png",
-      linkedin: "https://linkedin.com/in/DerejeMasresha",
-      twitter: "https://x.com/Deremas27",
-      telegram: "https://t.me/Dere2224",
-      whatsapp: "https://wa.me/251922243038",
-      facebook: "https://www.facebook.com/dbazmm3",
-      email: "mailto:derejemasresha27@gmail.com",
-    },
 ] as const satisfies readonly TeamMember[];
 
 export const platformCards = [

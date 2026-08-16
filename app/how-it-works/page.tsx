@@ -6,7 +6,13 @@ import { motion } from "framer-motion";
 import AnimatedSection from "@/components/AnimatedSection";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import { CtaLinks, SectionHeading, SurfaceCard } from "@/components/marketing/SectionHeading";
+import {
+  CtaLinks,
+  MARKETING_BRAND,
+  MarketingHero,
+  SectionHeading,
+  SurfaceCard,
+} from "@/components/marketing/SectionHeading";
 import { useLanguage } from "@/components/LanguageProvider";
 import { getLocalizedMarketingSharedContent } from "@/lib/marketing-shared-content";
 
@@ -247,39 +253,18 @@ export default function HowItWorksPage() {
       <Header />
 
       <main>
-        <section className="bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_58%,#f8fafc_100%)] py-24 dark:bg-[linear-gradient(180deg,#020617_0%,#0b1120_46%,#0f172a_100%)] sm:py-28">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <MarketingHero>
+          <AnimatedSection direction="fade" className="mx-auto max-w-3xl space-y-7 text-center">
             <SectionHeading
               titleAs="h1"
               align="center"
+              eyebrow={MARKETING_BRAND}
               title={copy.heroTitle}
               body={copy.heroBody}
-              titleClassName="text-[2.6rem] sm:text-[3.2rem] lg:text-[3.8rem]"
+              titleClassName="text-[2.6rem] leading-[0.98] tracking-[-0.045em] sm:text-[3.2rem] lg:text-[3.7rem]"
             />
-
-            <div className="mt-14 grid gap-4 lg:grid-cols-5">
-              {processSteps.map((step, index) => (
-                <AnimatedSection
-                  key={step.step}
-                  delay={index * 0.04}
-                  direction="up"
-                >
-                  <div className="lux-card-soft h-full px-4 py-5 text-center">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary-600 text-sm font-semibold text-white">
-                      0{index + 1}
-                    </span>
-                    <p className="mt-4 text-lg font-semibold text-slate-950 dark:text-white">
-                      {step.step}
-                    </p>
-                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                      {step.duration}
-                    </p>
-                  </div>
-                </AnimatedSection>
-              ))}
-            </div>
-          </div>
-        </section>
+          </AnimatedSection>
+        </MarketingHero>
 
         <section className="py-24 sm:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -289,86 +274,61 @@ export default function HowItWorksPage() {
               body={copy.diagramBody}
             />
 
-            <div className="mt-14 space-y-6">
+            <div className="mt-14 space-y-14">
               {processSteps.map((step, index) => (
                 <AnimatedSection
                   key={step.step}
                   delay={index * 0.04}
-                  className="grid items-center gap-6 lg:grid-cols-[0.92fr_1.08fr]"
+                  className="grid items-center gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:gap-12"
                 >
-                  <SurfaceCard
+                  <div
                     className={[
-                      "overflow-hidden p-4",
+                      "overflow-hidden rounded-[1.4rem] border border-slate-300 dark:border-slate-700",
                       index % 2 === 1 ? "lg:order-2" : "",
                     ].join(" ")}
                   >
                     <img
                       src={step.image}
                       alt={step.step}
-                      className="w-full rounded-[1.4rem] object-cover"
+                      className="aspect-[16/10] w-full object-cover"
                     />
-                  </SurfaceCard>
+                  </div>
 
-                  <SurfaceCard
-                    subtle
-                    className={index % 2 === 1 ? "lg:order-1" : ""}
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary-600 text-sm font-semibold text-white">
-                          0{index + 1}
-                        </span>
-                        <h2 className="text-2xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
-                          {step.step}
-                        </h2>
-                      </div>
-                      <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
+                  <div className={index % 2 === 1 ? "lg:order-1" : ""}>
+                    <div className="flex flex-wrap items-center gap-4">
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary-600 text-sm font-semibold text-white">
+                        0{index + 1}
+                      </span>
+                      <h2 className="text-2xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+                        {step.step}
+                      </h2>
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
                         {step.duration}
                       </span>
                     </div>
 
-                    <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                    <p className="mt-4 text-sm leading-7 text-slate-700 dark:text-slate-200">
                       {step.description}
                     </p>
 
-                    <div className="mt-6 grid gap-5 xl:grid-cols-[1fr_0.9fr]">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                          Work in this step
-                        </p>
-                        <ul className="mt-3 grid gap-3 sm:grid-cols-2">
-                          {step.points.map((point) => (
-                            <li
-                              key={point}
-                              className="rounded-[1.1rem] border border-slate-200/80 bg-white px-4 py-3 text-sm leading-7 text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
-                            >
-                              {point}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                          Outputs
-                        </p>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {(step.outputs ?? []).map((item) => (
-                            <span key={item} className="lux-pill">
-                              {item}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </SurfaceCard>
+                    <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+                      {step.points.map((point) => (
+                        <li
+                          key={point}
+                          className="border-t border-slate-200 pt-3 text-sm leading-7 text-slate-700 dark:border-slate-800 dark:text-slate-200"
+                        >
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </AnimatedSection>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="bg-slate-50/80 py-24 dark:bg-slate-900/50 sm:py-28">
+        <section className="border-y border-slate-200 bg-slate-50/70 py-24 dark:border-slate-800 dark:bg-slate-900/40 sm:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionHeading
               align="center"
@@ -383,17 +343,15 @@ export default function HowItWorksPage() {
                   delay={index * 0.05}
                   direction="up"
                 >
-                  <motion.div whileHover={{ y: -4 }}>
+                  <motion.div whileHover={{ y: -3 }}>
                     <SurfaceCard subtle className="gap-4">
-                      <div className="flex items-center gap-3 sm:flex-col sm:items-start sm:gap-4">
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
-                          <i className={`${item.icon} text-xl`} />
-                        </span>
-                        <h2 className="text-xl font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
-                          {item.title}
-                        </h2>
-                      </div>
-                      <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-600/10 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
+                        <i className={`${item.icon} text-xl`} />
+                      </span>
+                      <h2 className="text-xl font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
+                        {item.title}
+                      </h2>
+                      <p className="text-sm leading-7 text-slate-700 dark:text-slate-200">
                         {item.body}
                       </p>
                     </SurfaceCard>
@@ -413,7 +371,7 @@ export default function HowItWorksPage() {
 
         <section className="pb-24 sm:pb-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="lux-card p-8 text-center sm:p-10 lg:p-12">
+            <div className="border-t border-slate-200 pt-14 text-center dark:border-slate-800">
               <SectionHeading
                 align="center"
                 title={copy.ctaTitle}
@@ -425,7 +383,8 @@ export default function HowItWorksPage() {
                 secondaryHref="/services"
                 secondaryLabel={copy.ctaSecondary}
                 centered
-                className="mt-8"
+                quietSecondary
+                className="mt-8 justify-center"
               />
             </div>
           </div>

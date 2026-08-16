@@ -216,7 +216,7 @@ export default function ResetPasswordPage() {
           )}
 
           {error && (
-            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div role="alert" className="mt-4 lux-alert-danger">
               {error}
             </div>
           )}

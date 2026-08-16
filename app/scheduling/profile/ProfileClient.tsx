@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,21 @@ type Profile = {
   email: string | null;
 };
 
+function detectTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  } catch {
+    return "";
+  }
+}
+
 export default function ProfileClient() {
   const { data: session, status } = useSession();
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileSaving, setProfileSaving] = useState(false);
+  const [saveOk, setSaveOk] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [profileForm, setProfileForm] = useState({
     name: "",
     phone: "",
@@ -51,29 +61,47 @@ export default function ProfileClient() {
     return fallback;
   }, []);
 
+  const seedFromSession = useCallback(() => {
+    setProfileForm((prev) => ({
+      name: prev.name || session?.user?.name || "",
+      phone: prev.phone || "",
+      timezone: prev.timezone || detectTimezone(),
+    }));
+  }, [session?.user?.name]);
+
   useEffect(() => {
     if (status !== "authenticated") return;
     let cancelled = false;
     setProfileLoading(true);
     setProfileError(null);
+    setSaveOk(false);
 
     fetch("/api/me/profile", { cache: "no-store" })
-      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        return { ok: res.ok, data };
+      })
       .then(({ ok, data }) => {
         if (cancelled) return;
         if (!ok) {
           setProfileError(data?.error ?? "Failed to load profile");
+          seedFromSession();
           return;
         }
         const next = (data?.profile ?? null) as Profile | null;
         setProfileForm({
-          name: next?.name ?? "",
+          name: next?.name || session?.user?.name || "",
           phone: next?.phone ?? "",
-          timezone: next?.timezone ?? "",
+          timezone: next?.timezone || detectTimezone(),
         });
       })
       .catch(() => {
-        if (!cancelled) setProfileError("Failed to load profile");
+        if (!cancelled) {
+          setProfileError(
+            "Temporarily unavailable — the database connection failed. Please try again in a moment."
+          );
+          seedFromSession();
+        }
       })
       .finally(() => {
         if (!cancelled) setProfileLoading(false);
@@ -82,11 +110,12 @@ export default function ProfileClient() {
     return () => {
       cancelled = true;
     };
-  }, [status]);
+  }, [status, reloadKey, seedFromSession, session?.user?.name]);
 
   const handleProfileSave = async () => {
     setProfileSaving(true);
     setProfileError(null);
+    setSaveOk(false);
     try {
       const res = await fetch("/api/me/profile", {
         method: "POST",
@@ -98,8 +127,11 @@ export default function ProfileClient() {
         setProfileError(json?.error ?? "Failed to save profile");
         return;
       }
+      setSaveOk(true);
     } catch {
-      setProfileError("Failed to save profile");
+      setProfileError(
+        "Temporarily unavailable — the database connection failed. Please try again in a moment."
+      );
     } finally {
       setProfileSaving(false);
     }
@@ -162,8 +194,22 @@ export default function ProfileClient() {
           </p>
         )}
         {profileError && (
-          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {profileError}
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 lux-alert-danger">
+            <p>{profileError}</p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setReloadKey((key) => key + 1)}
+              disabled={profileLoading}
+            >
+              Retry
+            </Button>
+          </div>
+        )}
+        {saveOk && !profileError && (
+          <div className="mt-4 rounded-lg border border-emerald-300/80 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
+            Profile saved.
           </div>
         )}
         {!profileLoading && (
@@ -173,7 +219,7 @@ export default function ProfileClient() {
                 Full name
               </label>
               <input
-                className="mt-1 h-10 w-full rounded-lg border border-white/70 bg-white/80 px-3 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-gray-400 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-100"
+                className="lux-field mt-1 h-10 w-full rounded-lg border px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                 value={profileForm.name}
                 onChange={(e) =>
                   setProfileForm((prev) => ({ ...prev, name: e.target.value }))
@@ -185,11 +231,12 @@ export default function ProfileClient() {
                 Phone
               </label>
               <input
-                className="mt-1 h-10 w-full rounded-lg border border-white/70 bg-white/80 px-3 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-gray-400 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-100"
+                className="lux-field mt-1 h-10 w-full rounded-lg border px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                 value={profileForm.phone}
                 onChange={(e) =>
                   setProfileForm((prev) => ({ ...prev, phone: e.target.value }))
                 }
+                placeholder="+352…"
               />
             </div>
             <div>
@@ -197,7 +244,7 @@ export default function ProfileClient() {
                 Timezone
               </label>
               <select
-                className="mt-1 h-10 w-full rounded-lg border border-white/70 bg-white/80 px-3 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-gray-400 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-gray-100"
+                className="lux-field mt-1 h-10 w-full rounded-lg border px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                 value={profileForm.timezone}
                 onChange={(e) =>
                   setProfileForm((prev) => ({

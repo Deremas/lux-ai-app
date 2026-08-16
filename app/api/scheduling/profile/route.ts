@@ -13,6 +13,7 @@ import {
   isValidTimezone,
 } from "@/lib/validation";
 import { applyRateLimit, RATE_LIMIT_RULES } from "@/lib/rate-limit";
+import { jsonDatabaseError } from "@/lib/scheduling/runtime-errors";
 
 type Body = {
   orgId?: string;
@@ -61,11 +62,16 @@ export async function GET(req: Request) {
   const who = await requireUserIdFromSession();
   if (!who.ok) return NextResponse.json({ error: who.error }, { status: 401 });
 
-  const profile = await prisma.bookingProfile.findFirst({
-    where: { userId: who.userId },
-  });
+  try {
+    const profile = await prisma.bookingProfile.findFirst({
+      where: { userId: who.userId },
+    });
 
-  return NextResponse.json({ profile: profile ?? null }, { status: 200 });
+    return NextResponse.json({ profile: profile ?? null }, { status: 200 });
+  } catch (error) {
+    console.error("[api/scheduling/profile] GET failed", error);
+    return jsonDatabaseError(error, "Failed to load profile");
+  }
 }
 
 export async function POST(req: Request) {
@@ -136,34 +142,39 @@ export async function POST(req: Request) {
     );
   }
 
-  const orgId = await normalizeOrgId(body.orgId);
-  const now = new Date();
+  try {
+    const orgId = await normalizeOrgId(body.orgId);
+    const now = new Date();
 
-  const profile = await prisma.bookingProfile.upsert({
-    where: { userId: who.userId },
-    create: {
-      id: crypto.randomUUID(),
-      orgId,
-      userId: who.userId,
-      fullName,
-      phone,
-      company: company || null,
-      companyRole: companyRole || null,
-      timezone,
-      notes: notes || "",
-      updatedAt: now,
-    },
-    update: {
-      orgId,
-      fullName,
-      phone,
-      company: company || null,
-      companyRole: companyRole || null,
-      timezone,
-      notes: notes || "",
-      updatedAt: now,
-    },
-  });
+    const profile = await prisma.bookingProfile.upsert({
+      where: { userId: who.userId },
+      create: {
+        id: crypto.randomUUID(),
+        orgId,
+        userId: who.userId,
+        fullName,
+        phone,
+        company: company || null,
+        companyRole: companyRole || null,
+        timezone,
+        notes: notes || "",
+        updatedAt: now,
+      },
+      update: {
+        orgId,
+        fullName,
+        phone,
+        company: company || null,
+        companyRole: companyRole || null,
+        timezone,
+        notes: notes || "",
+        updatedAt: now,
+      },
+    });
 
-  return NextResponse.json({ profile }, { status: 200 });
+    return NextResponse.json({ profile }, { status: 200 });
+  } catch (error) {
+    console.error("[api/scheduling/profile] POST failed", error);
+    return jsonDatabaseError(error, "Failed to save profile");
+  }
 }

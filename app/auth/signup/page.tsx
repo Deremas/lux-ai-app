@@ -297,7 +297,7 @@ export default function SignUpPage() {
                 {errorMessage && (
                   <div
                     role="alert"
-                    className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                    className="lux-alert-danger"
                   >
                     {errorMessage}
                   </div>

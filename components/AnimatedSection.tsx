@@ -56,7 +56,7 @@ export default function AnimatedSection({
       animate={inView ? "visible" : "hidden"}
       variants={variants[direction]}
       transition={{
-        duration: 0.8,
+        duration: direction === "fade" ? 0.55 : 0.8,
         delay: delay,
         ease: [0.25, 0.4, 0.25, 1]
       }}
